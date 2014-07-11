@@ -90,17 +90,20 @@ public class SparkConfigure{
                 double memory = Double.parseDouble(memoryPerNode);
                 double fraction = 1.0;
 		if(memory < 1.0){
-			fraction = 0.65;
-		}else if(memory < 10.0){
 			fraction = 0.7;
+		}else if(memory < 10.0){
+			fraction = 0.75;
 		}else if(memory < 50.0){
-			fraction = 0.8;
-		}else if(memory < 100.0){
 			fraction = 0.85;
-		}else if(memory < 500.0){
+		}else if(memory < 100.0){
 			fraction = 0.90;
-		}else{
+		}else if(memory < 500.0){
 			fraction = 0.95;
+		}else{
+			fraction = 0.98;
+		}
+		if(master.equals("yarn")){
+			fraction = fraction-0.05;
 		}
 		double totalAvailableMemory = fraction*memory/Double.parseDouble(numJobs);
 		executorMemory = (int)totalAvailableMemory + "";
