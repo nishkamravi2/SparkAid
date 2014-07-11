@@ -63,6 +63,7 @@ public class SparkConfigure{
 	static String maxFailures = "4";
 	static String broadcastBlockSize = "4096";
 	static String blockManagerSlaveTimeoutMs = "45000"; //milliseconds
+	static String yarnExecutorMemoryOverhead = "384"; //MB
 
 	static String extraJavaOptions = ""; //gcOptions and such 
  	static String storageLevel = "";
@@ -89,17 +90,17 @@ public class SparkConfigure{
                 double memory = Double.parseDouble(memoryPerNode);
                 double fraction = 1.0;
 		if(memory < 1.0){
-			fraction = 0.7;
+			fraction = 0.65;
 		}else if(memory < 10.0){
-			fraction = 0.75;
+			fraction = 0.7;
 		}else if(memory < 50.0){
-			fraction = 0.85;
+			fraction = 0.8;
 		}else if(memory < 100.0){
-			fraction = 0.9;
+			fraction = 0.85;
 		}else if(memory < 500.0){
-			fraction = 0.95;
+			fraction = 0.90;
 		}else{
-			fraction = 0.98;
+			fraction = 0.95;
 		}
 		double totalAvailableMemory = fraction*memory/Double.parseDouble(numJobs);
 		executorMemory = (int)totalAvailableMemory + "";
@@ -291,6 +292,12 @@ public class SparkConfigure{
 
 	}
 
+	public static void setYarnExecutorMemoryOverhead(){
+		double memory = Double.parseDouble(executorMemory);
+		yarnExecutorMemoryOverhead = (int)((memory/10)*1024) + "" ; //in MB
+		ht1.put("spark.yarn.executor.memoryOverhead", yarnExecutorMemoryOverhead);
+	}
+
 	public static void setExtraJavaOptions(){
 		ht1.put("spark.driver.extraJavaOptions",  "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps");
 		ht1.put("spark.executor.extraJavaOptions",  "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps");
@@ -394,6 +401,7 @@ public class SparkConfigure{
 		setMaxFailures();
 		setBroadcastBlockSize();
 		setBlockManagerSlaveTimeoutMs();
+		setYarnExecutorMemoryOverhead();
 		setDriverMemory();
 		setExecutorInstances();
 		setExecutorCores();
