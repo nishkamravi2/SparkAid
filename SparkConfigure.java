@@ -297,7 +297,7 @@ public class SparkConfigure{
 
 	public static void setYarnExecutorMemoryOverhead(){
 		double memory = Double.parseDouble(executorMemory);
-		yarnExecutorMemoryOverhead = (int)((memory/10)*1024) + "" ; //in MB
+		yarnExecutorMemoryOverhead = (int)((memory*0.07)*1024) + "" ; //in MB
 		ht1.put("spark.yarn.executor.memoryOverhead", yarnExecutorMemoryOverhead);
 	}
 
