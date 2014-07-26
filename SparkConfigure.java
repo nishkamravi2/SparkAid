@@ -64,6 +64,7 @@ public class SparkConfigure{
 	static String broadcastBlockSize = "4096";
 	static String blockManagerSlaveTimeoutMs = "45000"; //milliseconds
 	static String yarnExecutorMemoryOverhead = "384"; //MB
+        static String yarnDriverMemoryOverhead = "383"; //MB
 
 	static String extraJavaOptions = ""; //gcOptions and such 
  	static String storageLevel = "";
@@ -297,8 +298,14 @@ public class SparkConfigure{
 
 	public static void setYarnExecutorMemoryOverhead(){
 		double memory = Double.parseDouble(executorMemory);
-		yarnExecutorMemoryOverhead = (int)((memory*0.07)*1024) + "" ; //in MB
+		yarnExecutorMemoryOverhead = (int)((memory*0.06)*1024) + "" ; //in MB
 		ht1.put("spark.yarn.executor.memoryOverhead", yarnExecutorMemoryOverhead);
+	}
+
+	public static void setYarnDriverMemoryOverhead(){
+		double memory = Double.parseDouble(driverMemory);
+		yarnDriverMemoryOverhead = (int)((memory*0.06)*1024) + "" ; //in MB
+		ht1.put("spark.yarn.driver.memoryOverhead", yarnDriverMemoryOverhead);
 	}
 
 	public static void setExtraJavaOptions(){
@@ -308,8 +315,9 @@ public class SparkConfigure{
 	}
 
 	public static void setDriverMemory(){
-		ht1.put("spark.driver.memory", executorMemory + "g");
-		ht3.put("--driver-memory", executorMemory + "g");
+		driverMemory = executorMemory;
+		ht1.put("spark.driver.memory", driverMemory + "g");
+		ht3.put("--driver-memory", driverMemory + "g");
 	}
 
 	public static void setExecutorInstances(){
@@ -406,6 +414,7 @@ public class SparkConfigure{
 		setBlockManagerSlaveTimeoutMs();
 		setYarnExecutorMemoryOverhead();
 		setDriverMemory();
+		setYarnDriverMemoryOverhead();
 		setExecutorInstances();
 		setExecutorCores();
 		setDriverCores();
