@@ -159,7 +159,7 @@ public class Standalone {
 		private static void setDriverMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.memory", driverMemory);
 			recommendationsTable.put("spark.driver.memory", "");
-			//always set --driver-memory
+			
 			commandLineParamsTable.put("--driver-memory", driverMemory);
 			
 		}
@@ -192,22 +192,16 @@ public class Standalone {
 		private static void setDriverExtraClassPath(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.extraClassPath", driverExtraClassPath);
 			recommendationsTable.put("spark.driver.extraClassPath", "");
-			//always set it in terminal
-			commandLineParamsTable.put("--driver-class-path", driverExtraClassPath);
 		}
 	
 		private static void setDriverExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.extraJavaOptions", driverExtraJavaOptions);
 			recommendationsTable.put("spark.driver.extraJavaOptions", "");
-			//always set it in terminal
-			commandLineParamsTable.put("--driver-java-options", driverExtraJavaOptions);
 		}
 	
 		private static void setDriverExtraLibraryPath(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.extraLibraryPath", driverExtraLibraryPath);
 			recommendationsTable.put("spark.driver.extraLibraryPath", "");
-			//always set it in terminal
-			commandLineParamsTable.put("--driver-library-path", driverExtraLibraryPath);
 		}
 	
 		private static void setDriverUserClassPathFirst(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){

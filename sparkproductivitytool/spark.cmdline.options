@@ -1,1 +1,2 @@
+--driver-memory 			512m
 --driver-cores 			1

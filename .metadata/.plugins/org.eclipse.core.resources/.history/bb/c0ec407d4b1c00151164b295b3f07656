@@ -205,7 +205,7 @@ public class ConfigurationConsole {
 		String master = inputsTable.get("master");
 		String deployMode = inputsTable.get("deployMode");
 		String className = inputsTable.get("className");
-		String appJar = inputsTable.get("appJar");
+		String appJar = inputsTable.get("appjar");
 		String appArgs = inputsTable.get("appArgs");
 		String cmdLine = "spark-submit --master " + master 
 				+ " --deploy-mode " + deployMode 

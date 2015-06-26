@@ -165,10 +165,6 @@ public class ConfigurationConsole {
 			while (it.hasMoreElements()) {
 				String key = (String) it.nextElement();
 				String value = (String) commandLineParamsTable.get(key);
-				// if nothing was set, do not add it to command line params
-				if (value.equals("")) {
-					continue;
-				}
 				b3.write(key + " 			" + value + "\n");
 				cmdLineParams += " " + key + " " + value;
 			}
@@ -205,13 +201,12 @@ public class ConfigurationConsole {
 		String master = inputsTable.get("master");
 		String deployMode = inputsTable.get("deployMode");
 		String className = inputsTable.get("className");
-		String appJar = inputsTable.get("appJar");
+		String appJar = inputsTable.get("appjar");
 		String appArgs = inputsTable.get("appArgs");
-		String cmdLine = "spark-submit --master " + master 
-				+ " --deploy-mode " + deployMode 
-				+ " --class " + className 
-				+ " --properties-file spark.conf " 
-				+ cmdLineParams + " " + appJar + " " + appArgs;
+		String cmdLine = "Invalid --deploy-mode argument";
+
+		cmdLine = "spark-submit --master " + master + " --deploy-mode " + deployMode + " --class " + className + " --properties-file spark.conf " + cmdLineParams + " " + 
+				appJar + " " + appArgs;
 		
 		System.out.println("\nAuto-generated files: spark.conf, spark.conf.advise and spark.cmdline.options\n");
 		System.out.println("Invoke command line: " + cmdLine + "\n");

@@ -14,6 +14,7 @@ import dynamicallocation.src.main.DynamicAllocation;
 
 public class ConfigurationConsole {
 	
+	@SuppressWarnings("unused")
 	public static void main(String[] args) {
 
 		// input config parameters
@@ -165,10 +166,6 @@ public class ConfigurationConsole {
 			while (it.hasMoreElements()) {
 				String key = (String) it.nextElement();
 				String value = (String) commandLineParamsTable.get(key);
-				// if nothing was set, do not add it to command line params
-				if (value.equals("")) {
-					continue;
-				}
 				b3.write(key + " 			" + value + "\n");
 				cmdLineParams += " " + key + " " + value;
 			}
@@ -181,23 +178,23 @@ public class ConfigurationConsole {
 	}
 	public static void printUsage() {
 		System.out.println("\nUsage: \n"
-				+ "java SparkConfigure \n"
-				+ "<input data size in GB> \n"
-				+ "<number of nodes in cluster> \n"
-				+ "<number of cores per node> \n"
-				+ "<memory per node in GB> \n"
-				+ "<number of jobs> \n"
-				+ "<filesystem type> \n"
-				+ "<master: standalone URL/yarn> \n"
-				+ "<deployMode: cluster/client> \n"
-				+ "<clusterManger: standalone/yarn> \n"
-				+ "<sql: y/n> \n"
-				+ "<streaming: y/n> \n"
-				+ "<dynamicAllocation: y/n> \n"
-				+ "<security: y/n> \n"
-				+ "<sparkR: y/n> \n"
-				+ "<app className> \n"
-				+ "<app JAR location> \n"
+				+ "java SparkConfigure "
+				+ "<input data size in GB> "
+				+ "<number of nodes in cluster> "
+				+ "<number of cores per node> "
+				+ "<memory per node in GB> "
+				+ "<number of jobs> "
+				+ "<filesystem type> "
+				+ "<master: standalone URL/yarn> "
+				+ "<deployMode: cluster/client> "
+				+ "<clusterManger: standalone/yarn> "
+				+ "<sql: y/n> "
+				+ "<streaming: y/n> "
+				+ "<dynamicAllocation: y/n> "
+				+ "<security: y/n> "
+				+ "<sparkR: y/n> "
+				+ "<app className> "
+				+ "<app JAR location> "
 				+ "<app arguments as one string>\n");
 	}
 
@@ -205,14 +202,35 @@ public class ConfigurationConsole {
 		String master = inputsTable.get("master");
 		String deployMode = inputsTable.get("deployMode");
 		String className = inputsTable.get("className");
-		String appJar = inputsTable.get("appJar");
+		String appJar = inputsTable.get("appjar");
 		String appArgs = inputsTable.get("appArgs");
-		String cmdLine = "spark-submit --master " + master 
-				+ " --deploy-mode " + deployMode 
-				+ " --class " + className 
-				+ " --properties-file spark.conf " 
-				+ cmdLineParams + " " + appJar + " " + appArgs;
-		
+		String driverMemory = optionsTable.get("spark.driver.memory");
+		String driverExtraClassPath = optionsTable.get("spark.driver.extraClassPath");
+		String driverExtraJavaOptions = optionsTable.get("spark.driver.extraJavaOptions");
+		String driverExtraLibraryPath = optionsTable.get("spark.driver.extraLibraryPath");
+		String cmdLine = "Invalid --deploy-mode argument";
+		if (deployMode.equals("client")){
+			//Some arguments needs to be run at command line in client mode
+			String clientModeOnlyArguments = "";
+			if (driverExtraClassPath.length() > 0){
+				clientModeOnlyArguments += " --driver-class-path " + driverExtraClassPath;
+			}
+			if (driverExtraJavaOptions.length() > 0){
+				clientModeOnlyArguments += " --driver-java-options " + driverExtraJavaOptions;
+			}
+			if (driverExtraLibraryPath.length() > 0){
+				clientModeOnlyArguments += " --driver-library-path " + driverExtraLibraryPath;
+			}
+			System.out.println(clientModeOnlyArguments);
+			cmdLine = "spark-submit --master " + master + " --deploy-mode " + deployMode + " --driver-memory " + driverMemory + clientModeOnlyArguments + " --class " + className + " --properties-file spark.conf " + cmdLineParams + " " + 
+					appJar + " " + appArgs;
+		}
+		else if (deployMode.equals("cluster")){
+			cmdLine = "spark-submit --master " + master + " --deploy-mode " + deployMode + " --driver-memory " + driverMemory + " --class " + className + " --properties-file spark.conf " + cmdLineParams + " " + 
+					appJar + " " + appArgs;
+		}else{
+			cmdLine = "Invalid Argument for deployMode";
+		}
 		System.out.println("\nAuto-generated files: spark.conf, spark.conf.advise and spark.cmdline.options\n");
 		System.out.println("Invoke command line: " + cmdLine + "\n");
 	}
