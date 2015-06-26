@@ -14,62 +14,62 @@ public class DynamicAllocation {
 	static String dynamicAllocationSchedulerBacklogTimeout = ""; //1s
 	static String dynamicAllocationSustainedSchedulerBackLogTimeout = ""; //schedulerBacklogTimeout
 	
-	public static void configureDynamicAllocationSettings(String[] args,
+	public static void configureDynamicAllocationSettings(Hashtable<String, String> inputsTable,
 			Hashtable<String, String> optionsTable,
 			Hashtable<String, String> recommendationsTable,
 			Hashtable<String, String> commandLineParamsTable) {
 		// Set Dynamic Allocation
-		setDynamicAllocation(args, optionsTable, recommendationsTable, commandLineParamsTable);
+		setDynamicAllocation(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
 	
 	
-	public static void setDynamicAllocation(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
-		setDynamicAllocationEnabled(args, optionsTable, recommendationsTable, commandLineParamsTable);
-	    setDynamicAllocationExecutorIdleTimeout(args, optionsTable, recommendationsTable, commandLineParamsTable);
-	    setDynamicAllocationCachedExecutorIdleTimeout(args, optionsTable, recommendationsTable, commandLineParamsTable);
-	    setInitialExecutors(args, optionsTable, recommendationsTable, commandLineParamsTable);
-	    setDynamicAllocationMaxExecutors(args, optionsTable, recommendationsTable, commandLineParamsTable);
-	    setDynamicAllocationMinExecutors(args, optionsTable, recommendationsTable, commandLineParamsTable);
-	    setDynamicAllocationSchedulerBacklogTimeout(args, optionsTable, recommendationsTable, commandLineParamsTable);
-	    setDynamicAllocationSustainedSchedulerBackLogTimeout(args, optionsTable, recommendationsTable, commandLineParamsTable);
+	public static void setDynamicAllocation(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
+		setDynamicAllocationEnabled(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+	    setDynamicAllocationExecutorIdleTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+	    setDynamicAllocationCachedExecutorIdleTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+	    setInitialExecutors(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+	    setDynamicAllocationMaxExecutors(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+	    setDynamicAllocationMinExecutors(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+	    setDynamicAllocationSchedulerBacklogTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+	    setDynamicAllocationSustainedSchedulerBackLogTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
 	
-	private static void setDynamicAllocationEnabled(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+	private static void setDynamicAllocationEnabled(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.dynamicAllocation.enabled", dynamicAllocationEnabled);
 		recommendationsTable.put("spark.dynamicAllocation.enabled", "");
 	}
 
-	private static void setDynamicAllocationExecutorIdleTimeout(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+	private static void setDynamicAllocationExecutorIdleTimeout(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.dynamicAllocation.executorIdleTimeout", dynamicAllocationExecutorIdleTimeout);
 		recommendationsTable.put("spark.dynamicAllocation.executorIdleTimeout", "");
 	}
 
-	private static void setDynamicAllocationCachedExecutorIdleTimeout(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+	private static void setDynamicAllocationCachedExecutorIdleTimeout(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.dynamicAllocation.cachedExecutorIdleTimeout", dynamicAllocationCachedExecutorIdleTimeout);
 		recommendationsTable.put("spark.dynamicAllocation.cachedExecutorIdleTimeout", "");
 	}
 
-	private static void setInitialExecutors(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+	private static void setInitialExecutors(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.dynamicAllocation.initialExecutors", initialExecutors);
 		recommendationsTable.put("spark.dynamicAllocation.initialExecutors", "");
 	}
 
-	private static void setDynamicAllocationMaxExecutors(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+	private static void setDynamicAllocationMaxExecutors(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.dynamicAllocation.maxExecutors", dynamicAllocationMaxExecutors);
 		recommendationsTable.put("spark.dynamicAllocation.maxExecutors", "");
 	}
 
-	private static void setDynamicAllocationMinExecutors(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+	private static void setDynamicAllocationMinExecutors(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.dynamicAllocation.minExecutors", dynamicAllocationMinExecutors);
 		recommendationsTable.put("spark.dynamicAllocation.minExecutors", "");
 	}
 
-	private static void setDynamicAllocationSchedulerBacklogTimeout(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+	private static void setDynamicAllocationSchedulerBacklogTimeout(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.dynamicAllocation.schedulerBacklogTimeout", dynamicAllocationSchedulerBacklogTimeout);
 		recommendationsTable.put("spark.dynamicAllocation.schedulerBacklogTimeout", "");
 	}
 
-	private static void setDynamicAllocationSustainedSchedulerBackLogTimeout(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+	private static void setDynamicAllocationSustainedSchedulerBackLogTimeout(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.dynamicAllocation.sustainedSchedulerBacklogTimeout", dynamicAllocationSustainedSchedulerBackLogTimeout);
 		recommendationsTable.put("spark.dynamicAllocation.sustainedSchedulerBacklogTimeout", "");
 	}

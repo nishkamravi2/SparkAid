@@ -36,6 +36,9 @@ public class ConfigurationConsole {
 		String appJar = ""; // app Jar URL
 		String appArgs = ""; // app args as a single string
 		
+		//input table
+		Hashtable<String, String> inputsTable = new Hashtable<String, String>();
+		
 		//output tables
 		Hashtable<String, String> optionsTable = new Hashtable<String, String>();
 		Hashtable<String, String> recommendationsTable = new Hashtable<String, String>();
@@ -65,28 +68,46 @@ public class ConfigurationConsole {
 			className = args[14];
 			appJar = args[15];
 			appArgs = args[16];
+			
+			inputsTable.put("inputDataSize", inputDataSize);
+			inputsTable.put("numNodes", numNodes);
+			inputsTable.put("numCoresPerNode", numCoresPerNode);
+			inputsTable.put("memoryPerNode", memoryPerNode);
+			inputsTable.put("numJobs", numJobs);			
+			inputsTable.put("fileSystem", fileSystem);
+			inputsTable.put("master", master);
+			inputsTable.put("deployMode", deployMode);
+			inputsTable.put("clusterManager", clusterManager);
+			inputsTable.put("sqlFlag", sqlFlag);
+			inputsTable.put("streamingFlag", streamingFlag);
+			inputsTable.put("dynamicAllocationFlag", dynamicAllocationFlag);
+			inputsTable.put("securityFlag", securityFlag);
+			inputsTable.put("sparkRFlag", sparkRFlag);
+			inputsTable.put("className", className);
+			inputsTable.put("appJar", appJar);
+			inputsTable.put("appArgs", appArgs);
 		}
 		
 		//first initalize standard/standalone parameters
-		Standalone.configureStandardSettings(args, optionsTable, recommendationsTable, commandLineParamsTable);
+		Standalone.configureStandardSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		
 		//if it is yarn, add in the Yarn settings
-		if (clusterManager.equals("yarn")){ Yarn.configureYarnSettings(args, optionsTable, recommendationsTable, commandLineParamsTable);}
+		if (clusterManager.equals("yarn")){ Yarn.configureYarnSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);}
 		
 		//configure necessary Dynamic Allocation settings
-		if (dynamicAllocationFlag.equals("y")){ DynamicAllocation.configureDynamicAllocationSettings(args, optionsTable, recommendationsTable, commandLineParamsTable);}
+		if (dynamicAllocationFlag.equals("y")){ DynamicAllocation.configureDynamicAllocationSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);}
 		
 		//configure necessary SQL settings
-		if (sqlFlag.equals("y")){ SQL.configureSQLSettings(args, optionsTable, recommendationsTable, commandLineParamsTable); }
+		if (sqlFlag.equals("y")){ SQL.configureSQLSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable); }
 		
 		//configure necessary Streaming settings
-		if (streamingFlag.equals("y")){ Streaming.configureStreamingSettings(args, optionsTable, recommendationsTable, commandLineParamsTable);}
+		if (streamingFlag.equals("y")){ Streaming.configureStreamingSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);}
 		
 		//configure necessary Security settings
-		if (securityFlag.equals("y")){ Security.configureSecuritySettings(args, optionsTable, recommendationsTable, commandLineParamsTable);}
+		if (securityFlag.equals("y")){ Security.configureSecuritySettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);}
 		
 		//configure necessary SparkR settings
-		if (sparkRFlag.equals("y")){ SparkR.configureSparkRSettings(args, optionsTable, recommendationsTable, commandLineParamsTable);}
+		if (sparkRFlag.equals("y")){ SparkR.configureSparkRSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);}
 
 		try {
 			//Creating the .conf file
@@ -153,7 +174,7 @@ public class ConfigurationConsole {
 			e.printStackTrace();
 		}
 
-		constructCmdLine(args, optionsTable, recommendationsTable, commandLineParamsTable, cmdLineParams);
+		constructCmdLine(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable, cmdLineParams);
 	}
 	public static void printUsage() {
 		System.out.println("\nUsage: \n"
@@ -177,12 +198,12 @@ public class ConfigurationConsole {
 				+ "<app arguments as one string>\n");
 	}
 
-	public static void constructCmdLine(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable, String cmdLineParams){
-		String master = args[6];
-		String deployMode = args[7];
-		String className = args[14];
-		String appJar = args[15];
-		String appArgs = args[16];
+	public static void constructCmdLine(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable, String cmdLineParams){
+		String master = inputsTable.get("master");
+		String deployMode = inputsTable.get("deployMode");
+		String className = inputsTable.get("className");
+		String appJar = inputsTable.get("appjar");
+		String appArgs = inputsTable.get("appArgs");
 		String driverMemory = optionsTable.get("spark.driver.memory");
 		String driverExtraClassPath = optionsTable.get("spark.driver.extraClassPath");
 		String driverExtraJavaOptions = optionsTable.get("spark.driver.extraJavaOptions");

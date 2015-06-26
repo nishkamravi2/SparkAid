@@ -6,20 +6,29 @@ public class SparkR {
 	
 	//SparkR
 	static String rNumRBackendThreads = ""; //2
-	
-	//Spark R
-	public static void setRNumRBackendThreads(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.r.numRBackendThreads", rNumRBackendThreads);
-		recommendationsTable.put("spark.r.numRBackendThreads", "");
-	}
 
-	public static void configureSparkRSettings(String[] args,
+	public static void configureSparkRSettings(Hashtable<String, String> inputsTable,
 			Hashtable<String, String> optionsTable,
 			Hashtable<String, String> recommendationsTable,
 			Hashtable<String, String> commandLineParamsTable) {
 		
-		setRNumRBackendThreads(args, optionsTable, recommendationsTable, commandLineParamsTable);
+		setSparkR(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		
+	}
+	
+	private static void setSparkR(Hashtable<String, String> inputsTable,
+			Hashtable<String, String> optionsTable,
+			Hashtable<String, String> recommendationsTable,
+			Hashtable<String, String> commandLineParamsTable) {
+		setRNumRBackendThreads(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		//add in more method/settings in the future
+	}
+	
+	
+	
+	public static void setRNumRBackendThreads(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		optionsTable.put("spark.r.numRBackendThreads", rNumRBackendThreads);
+		recommendationsTable.put("spark.r.numRBackendThreads", "");
 	}
 
 
