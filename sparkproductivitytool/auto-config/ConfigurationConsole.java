@@ -4,13 +4,13 @@ import java.io.FileWriter;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import security.Security;
-import sparkR.SparkR;
-import sql.SQL;
-import streaming.Streaming;
-import core.standalone.*;
-import core.yarn.CoreYarn;
-import dynamicallocation.DynamicAllocation;
+import security.src.main.Security;
+import sparkR.src.main.SparkR;
+import sql.src.main.SQL;
+import streaming.src.main.Streaming;
+import core.src.main.standalone.Standalone;
+import core.src.main.yarn.Yarn;
+import dynamicallocation.src.main.DynamicAllocation;
 
 public class ConfigurationConsole {
 	
@@ -68,10 +68,10 @@ public class ConfigurationConsole {
 		}
 		
 		//first initalize standard/standalone parameters
-		CoreStandalone.configureStandardSettings(args, optionsTable, recommendationsTable, commandLineParamsTable);
+		Standalone.configureStandardSettings(args, optionsTable, recommendationsTable, commandLineParamsTable);
 		
 		//if it is yarn, add in the Yarn settings
-		if (clusterManager.equals("yarn")){ CoreYarn.configureYarnSettings(args, optionsTable, recommendationsTable, commandLineParamsTable);}
+		if (clusterManager.equals("yarn")){ Yarn.configureYarnSettings(args, optionsTable, recommendationsTable, commandLineParamsTable);}
 		
 		//configure necessary Dynamic Allocation settings
 		if (dynamicAllocationFlag.equals("y")){ DynamicAllocation.configureDynamicAllocationSettings(args, optionsTable, recommendationsTable, commandLineParamsTable);}
