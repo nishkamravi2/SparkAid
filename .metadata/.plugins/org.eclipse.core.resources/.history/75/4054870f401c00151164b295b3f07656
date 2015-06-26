@@ -142,107 +142,107 @@ public class Standalone {
 		//Application Settings Methods
 		private static void setAppName(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.app.name", appName);
-			recommendationsTable.put("spark.app.name", "");
+			recommendationsTable.put("spark.app.name", "default recommendation");
 		}
 	
 		private static void setDriverCores(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.cores", driverCores);
-			recommendationsTable.put("spark.driver.cores", "");
+			recommendationsTable.put("spark.driver.cores", "default recommendation");
 		}
 	
 		private static void setMaxResultSize(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.maxResultSize", maxResultSize);
-			recommendationsTable.put("spark.driver.maxResultSize", "");
+			recommendationsTable.put("spark.driver.maxResultSize", "default recommendation");
 		}
 	
 		private static void setDriverMemory(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.memory", driverMemory);
-			recommendationsTable.put("spark.driver.memory", "");
+			recommendationsTable.put("spark.driver.memory", "default recommendation");
 		}
 	
 		private static void setExecutorMemory(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.memory	", executorMemory);
-			recommendationsTable.put("spark.executor.memory	", "");
+			recommendationsTable.put("spark.executor.memory	", "default recommendation");
 		}
 	
 		private static void setExtraListeners(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.extraListeners", extraListeners);
-			recommendationsTable.put("spark.extraListeners", "");
+			recommendationsTable.put("spark.extraListeners", "default recommendation");
 		}
 	
 		private static void setLocalDir(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.local.dir", localDir);
-			recommendationsTable.put("spark.local.dir", "");
+			recommendationsTable.put("spark.local.dir", "default recommendation");
 		}
 	
 		private static void setLogConf(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.logConf", logConf);
-			recommendationsTable.put("spark.logConf", "");
+			recommendationsTable.put("spark.logConf", "default recommendation");
 		}
 	
 		private static void setMaster(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.master", master);
-			recommendationsTable.put("spark.master", "");
+			recommendationsTable.put("spark.master", "default recommendation");
 		}
 	
 		private static void setDriverExtraClassPath(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.extraClassPath", driverExtraClassPath);
-			recommendationsTable.put("spark.driver.extraClassPath", "");
+			recommendationsTable.put("spark.driver.extraClassPath", "default recommendation");
 		}
 	
 		private static void setDriverExtraJavaOptions(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.extraJavaOptions", driverExtraJavaOptions);
-			recommendationsTable.put("spark.driver.extraJavaOptions", "");
+			recommendationsTable.put("spark.driver.extraJavaOptions", "default recommendation");
 		}
 	
 		private static void setDriverExtraLibraryPath(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.extraLibraryPath", driverExtraLibraryPath);
-			recommendationsTable.put("spark.driver.extraLibraryPath", "");
+			recommendationsTable.put("spark.driver.extraLibraryPath", "default recommendation");
 		}
 	
 		private static void setDriverUserClassPathFirst(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.userClassPathFirst", driverUserClassPathFirst);
-			recommendationsTable.put("spark.driver.userClassPathFirst", "");
+			recommendationsTable.put("spark.driver.userClassPathFirst", "default recommendation");
 		}
 	
 		private static void setExecutorExtraClassPath(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.extraClassPath", executorExtraClassPath);
-			recommendationsTable.put("spark.executor.extraClassPath", "");
+			recommendationsTable.put("spark.executor.extraClassPath", "default recommendation");
 		}
 	
 		private static void setExecutorExtraJavaOptions(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.extraJavaOptions", executorExtraJavaOptions);
-			recommendationsTable.put("spark.executor.extraJavaOptions", "");
+			recommendationsTable.put("spark.executor.extraJavaOptions", "default recommendation");
 		}
 	
 		private static void setExecutorExtraLibraryPath(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.extraLibraryPath", executorExtraLibraryPath);
-			recommendationsTable.put("spark.executor.extraLibraryPath", "");
+			recommendationsTable.put("spark.executor.extraLibraryPath", "default recommendation");
 		}
 	
 		private static void setExecutorLogsRollingMaxRetainedFiles(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.logs.rolling.maxRetainedFiles", executorLogsRollingMaxRetainedFiles);
-			recommendationsTable.put("spark.executor.logs.rolling.maxRetainedFiles", "");
+			recommendationsTable.put("spark.executor.logs.rolling.maxRetainedFiles", "default recommendation");
 		}
 	
 		private static void setExecutorLogsRollingMaxSize(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.logs.rolling.maxSize", executorLogsRollingMaxSize);
-			recommendationsTable.put("spark.executor.logs.rolling.maxSize", "");
+			recommendationsTable.put("spark.executor.logs.rolling.maxSize", "default recommendation");
 		}
 	
 		private static void setExecutorLogsRollingStrategy(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.logs.rolling.strategy", executorLogsRollingStrategy);
-			recommendationsTable.put("spark.executor.logs.rolling.strategy", "");
+			recommendationsTable.put("spark.executor.logs.rolling.strategy", "default recommendation");
 		}
 	
 		private static void setExecutorLogsRollingTimeInterval(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.logs.rolling.time.interval", executorLogsRollingTimeInterval);
-			recommendationsTable.put("spark.executor.logs.rolling.time.interval", "");
+			recommendationsTable.put("spark.executor.logs.rolling.time.interval", "default recommendation");
 		}
 	
 		private static void setExecutorUserClassPathFirst(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.userClassPathFirst", executorUserClassPathFirst);
-			recommendationsTable.put("spark.executor.userClassPathFirst", "");
+			recommendationsTable.put("spark.executor.userClassPathFirst", "default recommendation");
 		}
 		
 		private static void setExecutorEnvEnvironmentVariableName(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -250,470 +250,470 @@ public class Standalone {
 			for (int i = 0; i < executorEnvVariablesArray.size(); i++){
 				String optionVariable = "spark.executorEnv." + executorEnvVariablesArray.get(i);
 				optionsTable.put(executorEnvValuesArray.get(i), optionVariable);
-				recommendationsTable.put(optionVariable, "");
+				recommendationsTable.put(optionVariable, "default recommendation");
 			}
 			
 		}
 	
 		private static void setPythonProfile(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.python.profile", pythonProfile);
-			recommendationsTable.put("spark.python.profile", "");
+			recommendationsTable.put("spark.python.profile", "default recommendation");
 		}
 	
 		private static void setPythonProfileDump(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.python.profile.dump", pythonProfileDump);
-			recommendationsTable.put("spark.python.profile.dump", "");
+			recommendationsTable.put("spark.python.profile.dump", "default recommendation");
 		}
 	
 		private static void setPythonWorkerMemory(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.python.worker.memory", pythonWorkerMemory);
-			recommendationsTable.put("spark.python.worker.memory", "");
+			recommendationsTable.put("spark.python.worker.memory", "default recommendation");
 		}
 	
 		private static void setPythonWorkerReuse(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.python.worker.reuse", pythonWorkerReuse);
-			recommendationsTable.put("spark.python.worker.reuse", "");
+			recommendationsTable.put("spark.python.worker.reuse", "default recommendation");
 		}
 		
 		//Shuffle Behavior
 		private static void setReducerMaxSizeInFlight(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.reducer.maxSizeInFlight", reducerMaxSizeInFlight);
-			recommendationsTable.put("spark.reducer.maxSizeInFlight", "");
+			recommendationsTable.put("spark.reducer.maxSizeInFlight", "default recommendation");
 		}
 	
 		private static void setShuffleBlockTransferService(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.blockTransferService", shuffleBlockTransferService);
-			recommendationsTable.put("spark.shuffle.blockTransferService", "");
+			recommendationsTable.put("spark.shuffle.blockTransferService", "default recommendation");
 		}
 	
 		private static void setShuffleCompress(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.compress", shuffleCompress);
-			recommendationsTable.put("spark.shuffle.compress", "");
+			recommendationsTable.put("spark.shuffle.compress", "default recommendation");
 		}
 	
 		private static void setConsolidateFiles(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.consolidateFiles", consolidateFiles);
-			recommendationsTable.put("spark.shuffle.consolidateFiles", "");
+			recommendationsTable.put("spark.shuffle.consolidateFiles", "default recommendation");
 		}
 	
 		private static void setShuffleFileBuffer(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.file.buffer", shuffleFileBuffer);
-			recommendationsTable.put("spark.shuffle.file.buffer", "");
+			recommendationsTable.put("spark.shuffle.file.buffer", "default recommendation");
 		}
 	
 		private static void setShuffleIOMaxRetries(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.io.maxRetries", shuffleIOMaxRetries);
-			recommendationsTable.put("spark.shuffle.io.maxRetries", "");
+			recommendationsTable.put("spark.shuffle.io.maxRetries", "default recommendation");
 		}
 	
 		private static void setShuffleIONumConnectionsPerPeer(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.io.numConnectionsPerPeer", shuffleIONumConnectionsPerPeer);
-			recommendationsTable.put("spark.shuffle.io.numConnectionsPerPeer", "");
+			recommendationsTable.put("spark.shuffle.io.numConnectionsPerPeer", "default recommendation");
 		}
 	
 		private static void setShuffleIOPreferDirectBufs(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.io.preferDirectBufs", shuffleIOPreferDirectBufs);
-			recommendationsTable.put("spark.shuffle.io.preferDirectBufs", "");
+			recommendationsTable.put("spark.shuffle.io.preferDirectBufs", "default recommendation");
 		}
 	
 		private static void setShuffleIORetryWait(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.io.retryWait", shuffleIORetryWait);
-			recommendationsTable.put("spark.shuffle.io.retryWait", "");
+			recommendationsTable.put("spark.shuffle.io.retryWait", "default recommendation");
 		}
 	
 		private static void setShuffleManager(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.manager", shuffleManager);
-			recommendationsTable.put("spark.shuffle.manager", "");
+			recommendationsTable.put("spark.shuffle.manager", "default recommendation");
 		}
 	
 		private static void setShuffleMemoryFraction(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.memoryFraction", shuffleMemoryFraction);
-			recommendationsTable.put("spark.shuffle.memoryFraction", "");
+			recommendationsTable.put("spark.shuffle.memoryFraction", "default recommendation");
 		}
 	
 		private static void setSortBypassMergeThreshold(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.sort.bypassMergeThreshold", sortBypassMergeThreshold);
-			recommendationsTable.put("spark.shuffle.sort.bypassMergeThreshold", "");
+			recommendationsTable.put("spark.shuffle.sort.bypassMergeThreshold", "default recommendation");
 		}
 	
 		private static void setShuffleSpill(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.spill", shuffleSpill);
-			recommendationsTable.put("spark.shuffle.spill", "");
+			recommendationsTable.put("spark.shuffle.spill", "default recommendation");
 		}
 	
 		private static void setShuffleSpillCompress(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.spill.compress", shuffleSpillCompress);
-			recommendationsTable.put("spark.shuffle.spill.compress", "");
+			recommendationsTable.put("spark.shuffle.spill.compress", "default recommendation");
 		}
 		
 		//Spark UI
 		private static void setEventLogCompress(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.eventLog.compress", eventLogCompress);
-			recommendationsTable.put("spark.eventLog.compress", "");
+			recommendationsTable.put("spark.eventLog.compress", "default recommendation");
 		}
 	
 		private static void setEventLogDir(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.eventLog.dir", eventLogDir);
-			recommendationsTable.put("spark.eventLog.dir", "");
+			recommendationsTable.put("spark.eventLog.dir", "default recommendation");
 		}
 	
 		private static void setEventLogEnabled(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.eventLog.enabled", eventLogEnabled);
-			recommendationsTable.put("spark.eventLog.enabled", "");
+			recommendationsTable.put("spark.eventLog.enabled", "default recommendation");
 		}
 	
 		private static void setUiKillEnabled(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.ui.killEnabled", uiKillEnabled);
-			recommendationsTable.put("spark.ui.killEnabled", "");
+			recommendationsTable.put("spark.ui.killEnabled", "default recommendation");
 		}
 	
 		private static void setUiPort(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.ui.port", uiPort);
-			recommendationsTable.put("spark.ui.port", "");
+			recommendationsTable.put("spark.ui.port", "default recommendation");
 		}
 	
 		private static void setRetainedJobs(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.ui.retainedJobs", retainedJobs);
-			recommendationsTable.put("spark.ui.retainedJobs", "");
+			recommendationsTable.put("spark.ui.retainedJobs", "default recommendation");
 		}
 	
 		private static void setRetainedStages(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.ui.retainedStages", retainedStages);
-			recommendationsTable.put("spark.ui.retainedStages", "");
+			recommendationsTable.put("spark.ui.retainedStages", "default recommendation");
 		}
 	
 		//Compression and Serialization
 		private static void setBroadcastCompress(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.broadcast.compress", broadcastCompress);
-			recommendationsTable.put("spark.broadcast.compress", "");
+			recommendationsTable.put("spark.broadcast.compress", "default recommendation");
 		}
 	
 		private static void setClosureSerializer(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.closure.serializer", closureSerializer);
-			recommendationsTable.put("spark.closure.serializer", "");
+			recommendationsTable.put("spark.closure.serializer", "default recommendation");
 		}
 	
 		private static void setCompressionCodec(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.io.compression.codec", compressionCodec);
-			recommendationsTable.put("spark.io.compression.codec", "");
+			recommendationsTable.put("spark.io.compression.codec", "default recommendation");
 		}
 	
 		private static void setIOCompressionLz4BlockSize(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.io.compression.lz4.blockSize", IOCompressionLz4BlockSize);
-			recommendationsTable.put("spark.io.compression.lz4.blockSize", "");
+			recommendationsTable.put("spark.io.compression.lz4.blockSize", "default recommendation");
 		}
 	
 		private static void setIOCompressionSnappyBlockSize(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.io.compression.snappy.blockSize", IOCompressionSnappyBlockSize);
-			recommendationsTable.put("spark.io.compression.snappy.blockSize", "");
+			recommendationsTable.put("spark.io.compression.snappy.blockSize", "default recommendation");
 		}
 	
 		private static void setKryoClassesToRegister(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.kryo.classesToRegister", kryoClassesToRegister);
-			recommendationsTable.put("spark.kryo.classesToRegister", "");
+			recommendationsTable.put("spark.kryo.classesToRegister", "default recommendation");
 		}
 	
 		private static void setKryoReferenceTracking(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.kryo.referenceTracking", kryoReferenceTracking);
-			recommendationsTable.put("spark.kryo.referenceTracking", "");
+			recommendationsTable.put("spark.kryo.referenceTracking", "default recommendation");
 		}
 	
 		private static void setKryoRegistrationRequired(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.kryo.registrationRequired", registrationRequried);
-			recommendationsTable.put("spark.kryo.registrationRequired", "");
+			recommendationsTable.put("spark.kryo.registrationRequired", "default recommendation");
 		}
 	
 		private static void setKryoRegistrator(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.kryo.registrator", kryoRegistrator);
-			recommendationsTable.put("spark.kryo.registrator", "");
+			recommendationsTable.put("spark.kryo.registrator", "default recommendation");
 		}
 	
 		private static void setKyroserializerBufferMax(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.kryoserializer.buffer.max", kyroserializerBufferMax);
-			recommendationsTable.put("spark.kryoserializer.buffer.max", "");
+			recommendationsTable.put("spark.kryoserializer.buffer.max", "default recommendation");
 		}
 	
 		private static void setKryoserializerBuffer(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.kryoserializer.buffer", kryoserializerBuffer);
-			recommendationsTable.put("spark.kryoserializer.buffer", "");
+			recommendationsTable.put("spark.kryoserializer.buffer", "default recommendation");
 		}
 	
 		private static void setRddCompress(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.rdd.compress", rddCompress);
-			recommendationsTable.put("spark.rdd.compress", "");
+			recommendationsTable.put("spark.rdd.compress", "default recommendation");
 		}
 	
 		private static void setSerializer(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.serializer", serializer);
-			recommendationsTable.put("spark.serializer", "");
+			recommendationsTable.put("spark.serializer", "default recommendation");
 		}
 	
 		private static void setSerializerObjectStreamReset(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.serializer.objectStreamReset", serializerObjectStreamReset);
-			recommendationsTable.put("spark.serializer.objectStreamReset", "");
+			recommendationsTable.put("spark.serializer.objectStreamReset", "default recommendation");
 		}
 		
 		//Execution Behavior
 		private static void setBroadCastBlockSize(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.broadcast.blockSize", broadCastBlockSize);
-			recommendationsTable.put("spark.broadcast.blockSize", "");
+			recommendationsTable.put("spark.broadcast.blockSize", "default recommendation");
 		}
 	
 		private static void setBroadCastFactory(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.broadcast.factory", broadCastFactory);
-			recommendationsTable.put("spark.broadcast.factory", "");
+			recommendationsTable.put("spark.broadcast.factory", "default recommendation");
 		}
 	
 		private static void setCleanerTtl(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.cleaner.ttl", cleanerTtl);
-			recommendationsTable.put("spark.cleaner.ttl", "");
+			recommendationsTable.put("spark.cleaner.ttl", "default recommendation");
 		}
 	
 		private static void setExecutorCores(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.cores", executorCores);
-			recommendationsTable.put("spark.executor.cores", "");
+			recommendationsTable.put("spark.executor.cores", "default recommendation");
 		}
 	
 		private static void setDefaultParallelism(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.default.parallelism", defaultParallelism);
-			recommendationsTable.put("spark.default.parallelism", "");
+			recommendationsTable.put("spark.default.parallelism", "default recommendation");
 		}
 	
 		private static void setExecutorHeartBeatInterval(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.heartbeatInterval", executorHeartBeatInterval);
-			recommendationsTable.put("spark.executor.heartbeatInterval", "");
+			recommendationsTable.put("spark.executor.heartbeatInterval", "default recommendation");
 		}
 	
 		private static void setFilesFetchTimeout(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.files.fetchTimeout", filesFetchTimeout);
-			recommendationsTable.put("spark.files.fetchTimeout", "");
+			recommendationsTable.put("spark.files.fetchTimeout", "default recommendation");
 		}
 	
 		private static void setFilesUseFetchCache(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.files.useFetchCache", filesUseFetchCache);
-			recommendationsTable.put("spark.files.useFetchCache", "");
+			recommendationsTable.put("spark.files.useFetchCache", "default recommendation");
 		}
 	
 		private static void setFilesOverwrite(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.files.overwrite", filesOverwrite);
-			recommendationsTable.put("spark.files.overwrite", "");
+			recommendationsTable.put("spark.files.overwrite", "default recommendation");
 		}
 	
 		private static void setHadoopCloneClonf(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.hadoop.cloneConf", hadoopCloneClonf);
-			recommendationsTable.put("spark.hadoop.cloneConf", "");
+			recommendationsTable.put("spark.hadoop.cloneConf", "default recommendation");
 		}
 	
 		private static void setHadoopValidateOutputSpecs(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.hadoop.validateOutputSpecs", hadoopValidateOutputSpecs);
-			recommendationsTable.put("spark.hadoop.validateOutputSpecs", "");
+			recommendationsTable.put("spark.hadoop.validateOutputSpecs", "default recommendation");
 		}
 	
 		private static void setStorageMemoryFraction(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.storage.memoryFraction", storageMemoryFraction);
-			recommendationsTable.put("spark.storage.memoryFraction", "");
+			recommendationsTable.put("spark.storage.memoryFraction", "default recommendation");
 		}
 	
 		private static void setStorageMemoryMapThreshold(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.storage.memoryMapThreshold", storageMemoryMapThreshold);
-			recommendationsTable.put("spark.storage.memoryMapThreshold", "");
+			recommendationsTable.put("spark.storage.memoryMapThreshold", "default recommendation");
 		}
 	
 		private static void setStorageUnrollFraction(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.storage.unrollFraction", storageUnrollFraction);
-			recommendationsTable.put("spark.storage.unrollFraction", "");
+			recommendationsTable.put("spark.storage.unrollFraction", "default recommendation");
 		}
 	
 		private static void setExternalBlockStoreBlockManager(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.externalBlockStore.blockManager", externalBlockStoreBlockManager);
-			recommendationsTable.put("spark.externalBlockStore.blockManager", "");
+			recommendationsTable.put("spark.externalBlockStore.blockManager", "default recommendation");
 		}
 	
 		private static void setExternalBlockStoreBaseDir(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.externalBlockStore.baseDir", externalBlockStoreBaseDir);
-			recommendationsTable.put("spark.externalBlockStore.baseDir", "");
+			recommendationsTable.put("spark.externalBlockStore.baseDir", "default recommendation");
 		}
 	
 		private static void setExternalBlockStoreURL(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.externalBlockStore.url", externalBlockStoreURL);
-			recommendationsTable.put("spark.externalBlockStore.url", "");
+			recommendationsTable.put("spark.externalBlockStore.url", "default recommendation");
 		}
 		
 		//Networking
 		private static void setAkkaFailureDetectorThreshold(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.akka.failure-detector.threshold", akkaFailureDetectorThreshold);
-			recommendationsTable.put("spark.akka.failure-detector.threshold", "");
+			recommendationsTable.put("spark.akka.failure-detector.threshold", "default recommendation");
 		}
 	
 		private static void setAkkaFrameSize(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.akka.frameSize", akkaFrameSize);
-			recommendationsTable.put("spark.akka.frameSize", "");
+			recommendationsTable.put("spark.akka.frameSize", "default recommendation");
 		}
 	
 		private static void setAkkaHeartbeatInterval(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.akka.heartbeat.interval", akkaHeartbeatInterval);
-			recommendationsTable.put("spark.akka.heartbeat.interval", "");
+			recommendationsTable.put("spark.akka.heartbeat.interval", "default recommendation");
 		}
 	
 		private static void setAkkaHeartbeatPauses(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.akka.heartbeat.pauses", akkaHeartbeatPauses);
-			recommendationsTable.put("spark.akka.heartbeat.pauses", "");
+			recommendationsTable.put("spark.akka.heartbeat.pauses", "default recommendation");
 		}
 	
 		private static void setAkkaThreads(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.akka.threads", akkaThreads);
-			recommendationsTable.put("spark.akka.threads", "");
+			recommendationsTable.put("spark.akka.threads", "default recommendation");
 		}
 	
 		private static void setAkkaTimeout(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.akka.timeout", akkaTimeout);
-			recommendationsTable.put("spark.akka.timeout", "");
+			recommendationsTable.put("spark.akka.timeout", "default recommendation");
 		}
 	
 		private static void setBlockManagerPort(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.blockManager.port", blockManagerPort);
-			recommendationsTable.put("spark.blockManager.port", "");
+			recommendationsTable.put("spark.blockManager.port", "default recommendation");
 		}
 	
 		private static void setBroadcastPort(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.broadcast.port", broadcastPort);
-			recommendationsTable.put("spark.broadcast.port", "");
+			recommendationsTable.put("spark.broadcast.port", "default recommendation");
 		}
 	
 		private static void setDriverHost(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.host", driverHost);
-			recommendationsTable.put("spark.driver.host", "");
+			recommendationsTable.put("spark.driver.host", "default recommendation");
 		}
 	
 		private static void setDriverPort(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.port", driverPort);
-			recommendationsTable.put("spark.driver.port", "");
+			recommendationsTable.put("spark.driver.port", "default recommendation");
 		}
 	
 		private static void setExecutorPort(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.por", executorPort);
-			recommendationsTable.put("spark.executor.por", "");
+			recommendationsTable.put("spark.executor.por", "default recommendation");
 		}
 	
 		private static void setFileserverPort(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.fileserver.port", fileserverPort);
-			recommendationsTable.put("spark.fileserver.port", "");
+			recommendationsTable.put("spark.fileserver.port", "default recommendation");
 		}
 	
 		private static void setNetworkTimeout(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.network.timeout", networkTimeout);
-			recommendationsTable.put("spark.network.timeout", "");
+			recommendationsTable.put("spark.network.timeout", "default recommendation");
 		}
 	
 		private static void setPortMaxRetries(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.port.maxRetries", portMaxRetries);
-			recommendationsTable.put("spark.port.maxRetries", "");
+			recommendationsTable.put("spark.port.maxRetries", "default recommendation");
 		}
 	
 		private static void setReplClassServerPort(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.replClassServer.port", replClassServerPort);
-			recommendationsTable.put("spark.replClassServer.port", "");
+			recommendationsTable.put("spark.replClassServer.port", "default recommendation");
 		}
 	
 		private static void setRpcNumRetries(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.rpc.numRetries", rpcNumRetries);
-			recommendationsTable.put("spark.rpc.numRetries", "");
+			recommendationsTable.put("spark.rpc.numRetries", "default recommendation");
 		}
 	
 		private static void setRpcRetryWait(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.rpc.retry.wait", rpcRetryWait);
-			recommendationsTable.put("spark.rpc.retry.wait", "");
+			recommendationsTable.put("spark.rpc.retry.wait", "default recommendation");
 		}
 	
 		private static void setRpcAskTimeout(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.rpc.askTimeout", rpcAskTimeout);
-			recommendationsTable.put("spark.rpc.askTimeout", "");
+			recommendationsTable.put("spark.rpc.askTimeout", "default recommendation");
 		}
 	
 		private static void setRpcLookupTimeout(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.rpc.lookupTimeout", rpcLookupTimeout);
-			recommendationsTable.put("spark.rpc.lookupTimeout", "");
+			recommendationsTable.put("spark.rpc.lookupTimeout", "default recommendation");
 		}
 		
 		//Scheduling
 		private static void setCoresMax(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.cores.max", coresMax);
-			recommendationsTable.put("spark.cores.max", "");
+			recommendationsTable.put("spark.cores.max", "default recommendation");
 		}
 	
 		private static void setLocalExecutionEnabled(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.localExecution.enabled", localExecutionEnabled);
-			recommendationsTable.put("spark.localExecution.enabled", "");
+			recommendationsTable.put("spark.localExecution.enabled", "default recommendation");
 		}
 	
 		private static void setLocalityWait(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.locality.wait", localityWait);
-			recommendationsTable.put("spark.locality.wait", "");
+			recommendationsTable.put("spark.locality.wait", "default recommendation");
 		}
 	
 		private static void setLocalityWaitNode(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.locality.wait.node", localityWaitNode);
-			recommendationsTable.put("spark.locality.wait.node", "");
+			recommendationsTable.put("spark.locality.wait.node", "default recommendation");
 		}
 	
 		private static void setLocalityWaitProcess(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.locality.wait.process", localityWaitProcess);
-			recommendationsTable.put("spark.locality.wait.process", "");
+			recommendationsTable.put("spark.locality.wait.process", "default recommendation");
 		}
 	
 		private static void setLocalityWaitRack(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.locality.wait.rack", localityWaitRack);
-			recommendationsTable.put("spark.locality.wait.rack", "");
+			recommendationsTable.put("spark.locality.wait.rack", "default recommendation");
 		}
 	
 		private static void setSchedulerMaxRegisteredResourcesWaitingTime(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.scheduler.maxRegisteredResourcesWaitingTime", schedulerMaxRegisteredResourcesWaitingTime);
-			recommendationsTable.put("spark.scheduler.maxRegisteredResourcesWaitingTime", "");
+			recommendationsTable.put("spark.scheduler.maxRegisteredResourcesWaitingTime", "default recommendation");
 		}
 	
 		private static void setSchedulerMinRegisteredResourcesRatio(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.scheduler.minRegisteredResourcesRatio", schedulerMinRegisteredResourcesRatio);
-			recommendationsTable.put("spark.scheduler.minRegisteredResourcesRatio", "");
+			recommendationsTable.put("spark.scheduler.minRegisteredResourcesRatio", "default recommendation");
 		}
 	
 		private static void setSchedulerMode(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.scheduler.mode", schedulerMode);
-			recommendationsTable.put("spark.scheduler.mode", "");
+			recommendationsTable.put("spark.scheduler.mode", "default recommendation");
 		}
 	
 		private static void setSchedulerReviveInterval(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.scheduler.revive.interval", schedulerReviveInterval);
-			recommendationsTable.put("spark.scheduler.revive.interval", "");
+			recommendationsTable.put("spark.scheduler.revive.interval", "default recommendation");
 		}
 	
 		private static void setSpeculation(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.speculation", speculation);
-			recommendationsTable.put("spark.speculation", "");
+			recommendationsTable.put("spark.speculation", "default recommendation");
 		}
 	
 		private static void setSpeculationInterval(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.speculation.interval", speculationInterval);
-			recommendationsTable.put("spark.speculation.interval", "");
+			recommendationsTable.put("spark.speculation.interval", "default recommendation");
 		}
 	
 		private static void setSpeculationMultiplier(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.speculation.multiplier", speculationMultiplier);
-			recommendationsTable.put("spark.speculation.multiplier", "");
+			recommendationsTable.put("spark.speculation.multiplier", "default recommendation");
 		}
 	
 		private static void setSpeculationQuantile(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.speculation.quantile", speculationQuantile);
-			recommendationsTable.put("spark.speculation.quantile", "");
+			recommendationsTable.put("spark.speculation.quantile", "default recommendation");
 		}
 	
 		private static void setTaskCpus(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.task.cpus", taskCpus);
-			recommendationsTable.put("spark.task.cpus", "");
+			recommendationsTable.put("spark.task.cpus", "default recommendation");
 		}
 	
 		private static void setTaskMaxFailures(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.task.maxFailures", taskMaxFailures);
-			recommendationsTable.put("spark.task.maxFailures", "");
+			recommendationsTable.put("spark.task.maxFailures", "default recommendation");
 		}
 
 		public static void setNetworking(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {

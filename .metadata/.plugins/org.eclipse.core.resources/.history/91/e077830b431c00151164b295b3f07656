@@ -32,37 +32,37 @@ public class Streaming {
 	
 	private static void setStreamingBlockInterval(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.streaming.blockInterval", streamingBlockInterval);
-		recommendationsTable.put("spark.streaming.blockInterval", "");
+		recommendationsTable.put("spark.streaming.blockInterval", "default recommendation");
 	}
 
 	private static void setStreamingReceiverMaxRate(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.streaming.receiver.maxRate", streamingReceiverMaxRate);
-		recommendationsTable.put("spark.streaming.receiver.maxRate", "");
+		recommendationsTable.put("spark.streaming.receiver.maxRate", "default recommendation");
 	}
 
 	private static void setStreamingReceiverWriteAheadLogEnable(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.streaming.receiver.writeAheadLog.enable", streamingReceiverWriteAheadLogEnable);
-		recommendationsTable.put("spark.streaming.receiver.writeAheadLog.enable", "");
+		recommendationsTable.put("spark.streaming.receiver.writeAheadLog.enable", "default recommendation");
 	}
 
 	private static void setStreamingUnpersist(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.streaming.unpersist", streamingUnpersist);
-		recommendationsTable.put("spark.streaming.unpersist", "");
+		recommendationsTable.put("spark.streaming.unpersist", "default recommendation");
 	}
 
 	private static void setStreamingKafkaMaxRatePerPartition(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.streaming.kafka.maxRatePerPartition", streamingKafkaMaxRatePerPartition);
-		recommendationsTable.put("spark.streaming.kafka.maxRatePerPartition", "");
+		recommendationsTable.put("spark.streaming.kafka.maxRatePerPartition", "default recommendation");
 	}
 
 	private static void setStreamingKafkaMaxRetries(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.streaming.kafka.maxRetries", streamingKafkaMaxRetries);
-		recommendationsTable.put("spark.streaming.kafka.maxRetries", "");
+		recommendationsTable.put("spark.streaming.kafka.maxRetries", "default recommendation");
 	}
 
 	private static void setStreamingUIRetainedBatches(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.streaming.ui.retainedBatches", streamingUIRetainedBatches);
-		recommendationsTable.put("spark.streaming.ui.retainedBatches", "");
+		recommendationsTable.put("spark.streaming.ui.retainedBatches", "default recommendation");
 	}
 
 

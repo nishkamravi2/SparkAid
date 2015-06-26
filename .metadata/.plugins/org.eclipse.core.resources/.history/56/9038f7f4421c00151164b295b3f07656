@@ -79,7 +79,7 @@ public class Yarn {
 		//If Deploy Mode == Client
 		if (args[7].equals("client")){
 			optionsTable.put("spark.yarn.am.memory", yarnAMMemory);
-			recommendationsTable.put("spark.yarn.am.memory", "");
+			recommendationsTable.put("spark.yarn.am.memory", "default recommendation");
 		}
 	}
 	
@@ -89,7 +89,7 @@ public class Yarn {
 		//If Deploy Mode == Cluster
 		if (args[7].equals("cluster")){
 			optionsTable.put("spark.driver.cores", driverCores);
-			recommendationsTable.put("spark.driver.cores", "");
+			recommendationsTable.put("spark.driver.cores", "default recommendation");
 		}
 	}
 	
@@ -98,63 +98,63 @@ public class Yarn {
 		//If Deploy Mode == Client
 		if (args[7].equals("client")){
 			optionsTable.put("spark.yarn.am.cores", yarnAMCores);
-			recommendationsTable.put("spark.yarn.am.cores", "");
+			recommendationsTable.put("spark.yarn.am.cores", "default recommendation");
 		}
 	}
 
 	public static void setYarnAMWaitTime(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.am.waitTime", yarnAMWaitTime);
-		recommendationsTable.put("spark.yarn.am.waitTime", "");
+		recommendationsTable.put("spark.yarn.am.waitTime", "default recommendation");
 	}
 
 	public static void setYarnSubmitFileReplication(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.submit.file.replication", yarnSubmitFileReplication);
-		recommendationsTable.put("spark.yarn.submit.file.replication", "");
+		recommendationsTable.put("spark.yarn.submit.file.replication", "default recommendation");
 	}
 
 	public static void setYarnPreserveStagingFiles(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.preserve.staging.files", yarnPreserveStagingFiles);
-		recommendationsTable.put("spark.yarn.preserve.staging.files", "");
+		recommendationsTable.put("spark.yarn.preserve.staging.files", "default recommendation");
 	}
 
 	public static void setYarnSchedulerHeartbeatIntervalms(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.scheduler.heartbeat.interval-ms", yarnSchedulerHeartbeatIntervalms);
-		recommendationsTable.put("spark.yarn.scheduler.heartbeat.interval-ms", "");
+		recommendationsTable.put("spark.yarn.scheduler.heartbeat.interval-ms", "default recommendation");
 	}
 
 	public static void setYarnMaxExecutorFailures(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.max.executor.failures", yarnMaxExecutorFailures);
-		recommendationsTable.put("spark.yarn.max.executor.failures", "");
+		recommendationsTable.put("spark.yarn.max.executor.failures", "default recommendation");
 	}
 
 	public static void setYarnHistoryServerAddress(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.historyServer.address", yarnHistoryServerAddress);
-		recommendationsTable.put("spark.yarn.historyServer.address", "");
+		recommendationsTable.put("spark.yarn.historyServer.address", "default recommendation");
 	}
 
 	public static void setYarnDistArchives(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.dist.archives", yarnDistArchives);
-		recommendationsTable.put("spark.yarn.dist.archives", "");
+		recommendationsTable.put("spark.yarn.dist.archives", "default recommendation");
 	}
 
 	public static void setYarnDistFiles(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.dist.files", yarnDistFiles);
-		recommendationsTable.put("spark.yarn.dist.files", "");
+		recommendationsTable.put("spark.yarn.dist.files", "default recommendation");
 	}
 
 	public static void setExecutorInstances(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.executor.instances", executorInstances);
-		recommendationsTable.put("spark.executor.instances", "");
+		recommendationsTable.put("spark.executor.instances", "default recommendation");
 	}
 
 	public static void setYarnExecutorMemoryOverhead(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.executor.memoryOverhead", yarnExecutorMemoryOverhead);
-		recommendationsTable.put("spark.yarn.executor.memoryOverhead", "");
+		recommendationsTable.put("spark.yarn.executor.memoryOverhead", "default recommendation");
 	}
 
 	public static void setYarnDriverMemoryOverhead(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.driver.memoryOverhead", yarnDriverMemoryOverhead);
-		recommendationsTable.put("spark.yarn.driver.memoryOverhead", "");
+		recommendationsTable.put("spark.yarn.driver.memoryOverhead", "default recommendation");
 	}
 
 	//Same as spark.yarn.driver.memoryOverhead, but for the Application Master in client mode.
@@ -162,29 +162,29 @@ public class Yarn {
 		//If Deploy Mode == Client
 		if (args[7].equals("client")){
 			optionsTable.put("spark.yarn.am.memoryOverhead", yarnAMMemoryOverhead);
-			recommendationsTable.put("spark.yarn.am.memoryOverhead", "");
+			recommendationsTable.put("spark.yarn.am.memoryOverhead", "default recommendation");
 		}
 	}
 
 	// In YARN client mode, this is used to communicate between the Spark driver running on a gateway and the Application Master running on YARN. In YARN cluster mode, this is used for the dynamic executor feature, where it handles the kill from the scheduler backend.
 	public static void setYarnAMPort(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.am.port", yarnAMPort);
-		recommendationsTable.put("spark.yarn.am.port", "");
+		recommendationsTable.put("spark.yarn.am.port", "default recommendation");
 	}
 
 	public static void setYarnQueue(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.queue", yarnQueue);
-		recommendationsTable.put("spark.yarn.queue", "");
+		recommendationsTable.put("spark.yarn.queue", "default recommendation");
 	}
 
 	public static void setYarnJar(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.jar", yarnJar);
-		recommendationsTable.put("spark.yarn.jar", "");
+		recommendationsTable.put("spark.yarn.jar", "default recommendation");
 	}
 
 	public static void setYarnAccessNameNodes(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.access.namenodes", yarnAccessNameNodes);
-		recommendationsTable.put("spark.yarn.access.namenodes", "");
+		recommendationsTable.put("spark.yarn.access.namenodes", "default recommendation");
 	}
 
 	//In yarn-cluster mode this controls the environment of the SPARK driver and in yarn-client mode it only controls the environment of the executor launcher.
@@ -192,13 +192,13 @@ public class Yarn {
 		for (int i = 0; i < yarnAppMasterEnvVariablesArray.size(); i++){
 			String optionVariable = "spark.yarn.appMasterEnv." + yarnAppMasterEnvVariablesArray.get(i);
 			optionsTable.put(yarnAppMasterEnvValuesArray.get(i), optionVariable);
-			recommendationsTable.put(optionVariable, "");
+			recommendationsTable.put(optionVariable, "default recommendation");
 		}
 	}
 
 	public static void setYarnContainerLauncherMaxThreads(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.containerLauncherMaxThreads", yarnContainerLauncherMaxThreads);
-		recommendationsTable.put("spark.yarn.containerLauncherMaxThreads", "");
+		recommendationsTable.put("spark.yarn.containerLauncherMaxThreads", "default recommendation");
 	}
 
 	public static void setYarnAMExtraJavaOptions(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -206,7 +206,7 @@ public class Yarn {
 		//If Deploy Mode == Client
 		if (args[7].equals("client")){
 			optionsTable.put("spark.yarn.am.extraJavaOptions", yarnAMExtraJavaOptions);
-			recommendationsTable.put("spark.yarn.am.extraJavaOptions", "");
+			recommendationsTable.put("spark.yarn.am.extraJavaOptions", "default recommendation");
 		}
 	}
 
@@ -214,17 +214,17 @@ public class Yarn {
 		//If Deploy Mode == Client
 		if (args[7].equals("client")){		
 		optionsTable.put("spark.yarn.am.extraLibraryPath", yarnAMExtraLibraryPath);
-		recommendationsTable.put("spark.yarn.am.extraLibraryPath", "");
+		recommendationsTable.put("spark.yarn.am.extraLibraryPath", "default recommendation");
 		}
 	}
 
 	public static void setYarnMaxAppAttempts(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.maxAppAttempts", yarnMaxAppAttempts);
-		recommendationsTable.put("spark.yarn.maxAppAttempts", "");
+		recommendationsTable.put("spark.yarn.maxAppAttempts", "default recommendation");
 	}
 
 	public static void setYarnSubmitWaitAppCompletion(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.submit.waitAppCompletion", yarnSubmitWaitAppCompletion);
-		recommendationsTable.put("spark.yarn.submit.waitAppCompletion", "");
+		recommendationsTable.put("spark.yarn.submit.waitAppCompletion", "default recommendation");
 	}
 }

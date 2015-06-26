@@ -61,88 +61,88 @@ public class Security {
 	//Security
 	private static void setSparkAclsEnable(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.acls.enable", sparkAclsEnable);
-		recommendationsTable.put("spark.acls.enable", "");
+		recommendationsTable.put("spark.acls.enable", "default recommendation");
 	}
 
 	private static void setAdminAcls(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.admin.acls", adminAcls);
-		recommendationsTable.put("spark.admin.acls", "");
+		recommendationsTable.put("spark.admin.acls", "default recommendation");
 	}
 
 	private static void setAuthenticate(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.authenticate", authenticate);
-		recommendationsTable.put("spark.authenticate", "");
+		recommendationsTable.put("spark.authenticate", "default recommendation");
 	}
 
 	private static void setAuthenticateSecret(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.authenticate.secret", authenticateSecret);
-		recommendationsTable.put("spark.authenticate.secret", "");
+		recommendationsTable.put("spark.authenticate.secret", "default recommendation");
 	}
 
 	private static void setCoreConnectionAckWaitTimeout(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.core.connection.ack.wait.timeout", coreConnectionAckWaitTimeout);
-		recommendationsTable.put("spark.core.connection.ack.wait.timeout", "");
+		recommendationsTable.put("spark.core.connection.ack.wait.timeout", "default recommendation");
 	}
 
 	private static void setCoreConnectionAuthWaitTimeout(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.core.connection.auth.wait.timeout", coreConnectionAuthWaitTimeout);
-		recommendationsTable.put("spark.core.connection.auth.wait.timeout", "");
+		recommendationsTable.put("spark.core.connection.auth.wait.timeout", "default recommendation");
 	}
 
 	private static void setModifyAcls(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.modify.acls", modifyAcls);
-		recommendationsTable.put("spark.modify.acls", "");
+		recommendationsTable.put("spark.modify.acls", "default recommendation");
 	}
 
 	private static void setUiFilters(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.ui.filters", uiFilters);
-		recommendationsTable.put("spark.ui.filters", "");
+		recommendationsTable.put("spark.ui.filters", "default recommendation");
 	}
 
 	private static void setUiViewAcls(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.ui.view.acls", uiViewAcls);
-		recommendationsTable.put("spark.ui.view.acls", "");
+		recommendationsTable.put("spark.ui.view.acls", "default recommendation");
 	}
 	
 	//Encryption
 	private static void setSSLEnabled(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.ssl.enabled", sslEnbaled);
-		recommendationsTable.put("spark.ssl.enabled", "");
+		recommendationsTable.put("spark.ssl.enabled", "default recommendation");
 	}
 
 	private static void setSSLEnabledAlgorithms(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.ssl.enabledAlgorithms", sslEnabledAlgorithms);
-		recommendationsTable.put("spark.ssl.enabledAlgorithms", "");
+		recommendationsTable.put("spark.ssl.enabledAlgorithms", "default recommendation");
 	}
 
 	private static void setSSLKeyPassword(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.ssl.keyPassword", sslKeyPassword);
-		recommendationsTable.put("spark.ssl.keyPassword", "");
+		recommendationsTable.put("spark.ssl.keyPassword", "default recommendation");
 	}
 
 	private static void setSSLKeyStore(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.ssl.keyStore", sslKeyStore);
-		recommendationsTable.put("spark.ssl.keyStore", "");
+		recommendationsTable.put("spark.ssl.keyStore", "default recommendation");
 	}
 
 	private static void setSSLKeyStorePassword(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.ssl.keyStorePassword", sslKeyStorePassword);
-		recommendationsTable.put("spark.ssl.keyStorePassword", "");
+		recommendationsTable.put("spark.ssl.keyStorePassword", "default recommendation");
 	}
 
 	private static void setSSLProtocol(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.ssl.protocol", sslProtocol);
-		recommendationsTable.put("spark.ssl.protocol", "");
+		recommendationsTable.put("spark.ssl.protocol", "default recommendation");
 	}
 
 	private static void setSSLTrustStore(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.ssl.trustStore", sslTrustStore);
-		recommendationsTable.put("spark.ssl.trustStore", "");
+		recommendationsTable.put("spark.ssl.trustStore", "default recommendation");
 	}
 
 	private static void setSSLTrustStorePassword(String[] args, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.ssl.trustStorePassword", sslTrustStorePassword);
-		recommendationsTable.put("spark.ssl.trustStorePassword", "");
+		recommendationsTable.put("spark.ssl.trustStorePassword", "default recommendation");
 	}
 
 }

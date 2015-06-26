@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/sparkproductivitytool/autoconfiguration/ConfigurationConsole.java"/>
+<listEntry value="/sparkproductivitytool/auto-config/ConfigurationConsole.java"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="1"/>
 </listAttribute>
+<booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="ConfigurationConsole"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="32 6 16 40 1 hdfs spark://c1906.halxg.cloudera.com:7077 client standalone y y y y y pagerank_exp_1 /home/ethan.chan/spark-apps/first_app/target/scala-2.10/simple-project_2.10-1.0.jar &quot;&quot;"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="sparkproductivitytool"/>
 </launchConfiguration>
