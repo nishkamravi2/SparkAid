@@ -87,7 +87,7 @@ public class ConfigurationConsole {
 			inputsTable.put("appArgs", appArgs);
 		}
 		
-		//first initalize standard/standalone parameters
+		//first initialize standard/standalone parameters
 		Standalone.configureStandardSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		
 		//if it is yarn, add in the Yarn settings
