@@ -16,7 +16,8 @@ public class Standalone {
 		static String extraListeners = "";
 		static String localDir = "/tmp"; 
 		static String logConf = "false";	
-		static String master = "";			
+		static String master = "";
+		
 			
 		//Runtime Environment
 		static String driverExtraClassPath = "";
