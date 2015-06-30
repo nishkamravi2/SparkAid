@@ -137,8 +137,8 @@ public class ConfigurationConsole {
 			//Populating Options
 			Enumeration<String> it = optionsTable.keys();
 			while (it.hasMoreElements()) {
-				String key = (String) it.nextElement();
-				String value = (String) optionsTable.get(key);
+				String key = it.nextElement();
+				String value = optionsTable.get(key);
 				// if nothing was set, do not add it to .conf file
 				if (value.equals("")) {
 					continue;
@@ -150,8 +150,8 @@ public class ConfigurationConsole {
 			//Populating Recommendations
 			it = recommendationsTable.keys();
 			while (it.hasMoreElements()) {
-				String key = (String) it.nextElement();
-				String value = (String) recommendationsTable.get(key);
+				String key = it.nextElement();
+				String value = recommendationsTable.get(key);
 				// if nothing was set, do not add it to .conf file
 				if (value.equals("")) {
 					continue;
@@ -163,8 +163,8 @@ public class ConfigurationConsole {
 			//Populating Command Line Params
 			it = commandLineParamsTable.keys();
 			while (it.hasMoreElements()) {
-				String key = (String) it.nextElement();
-				String value = (String) commandLineParamsTable.get(key);
+				String key = it.nextElement();
+				String value = commandLineParamsTable.get(key);
 				// if nothing was set, do not add it to command line params
 				if (value.equals("")) {
 					continue;
