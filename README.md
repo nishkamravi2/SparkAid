@@ -7,10 +7,10 @@ Mesos cluster manager and Zookeeper configuration are not supported.
 Console Inputs have minimal error checking.
 Heuristics have yet to be implemented.
 
-How to Run
-cd SparkAid
-mkdir build
-javac -d build @build.txt
-cd build
-java ConfigurationConsole
+How to Run 
+cd SparkAid 
+mkdir build 
+javac -d build @build.txt 
+cd build 
+java ConfigurationConsole 
 
