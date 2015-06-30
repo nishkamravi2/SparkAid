@@ -181,7 +181,7 @@ public class ConfigurationConsole {
 	}
 	public static void printUsage() {
 		System.out.println("\nUsage: \n"
-				+ "java SparkConfigure \n"
+				+ "./run.sh \n"
 				+ "<input data size in GB> \n"
 				+ "<number of nodes in cluster> \n"
 				+ "<number of cores per node> \n"
