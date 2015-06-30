@@ -1,10 +1,10 @@
 SparkAid
 ===============
-
+A simple tool for setting up config values for Spark and providing advise to the user
 
 How to Run
 ===============
-./run.sh 
+./run.sh    
 [input data size in GB]   
 [number of nodes in cluster]   
 [number of cores per node]   
