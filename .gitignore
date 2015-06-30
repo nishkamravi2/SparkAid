@@ -8,3 +8,4 @@ build
 spark.conf
 spark.cmdline.options
 spark.conf.advise
+.settings
