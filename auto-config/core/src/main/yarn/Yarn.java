@@ -2,6 +2,11 @@ package core.src.main.yarn;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import utils.UtilsConversion;
+
+import com.sun.corba.se.impl.javax.rmi.CORBA.Util;
+import com.sun.deploy.uitoolkit.impl.fx.Utils;
+
 public class Yarn {
 	
 	static String yarnAMMemory = ""; //512m
@@ -37,7 +42,15 @@ public class Yarn {
 	
 	//these variables are in tuning guide 2014, but not yarn configs
 	//yarn.nodemanager.resource.memory-mb controls the maximum sum of memory used by the containers on each node.
+	static String yarnSchedulerMaximumAllocationMb = "40960"; //currently in CM the default is 64GB, but for c1906 config it is 40GB
 	//yarn.nodemanager.resource.cpu-vcores controls the maximum sum of cores used by the containers on each node.
+	static String yarnNodeManagerResourceCpuVcores = "16"; //currently in CM the default is 16
+	
+	
+	//created own variable for default Overhead Memory Setting
+	static double executorMemoryOverheadFraction = 0.10;
+	//created own constant variable for now
+	static int targetExecutorNumPerNode = 5;
 	
 	public static void configureYarnSettings(
 			Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable,
@@ -47,6 +60,7 @@ public class Yarn {
 	}
 	
 	public static void setYarn(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
+		setExecutorMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAMMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAMCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -72,6 +86,27 @@ public class Yarn {
 		setYarnAMExtraLibraryPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnMaxAppAttempts(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnSubmitWaitAppCompletion(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+	}
+	
+	//for YARN, it is not memory per node, but memory per container yarn.scheduler.maximum-allocation-mb
+	private static void setExecutorMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+
+		//for now assum container memory = nodeMemory
+		double totalNodeMemory = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
+		System.out.println(totalNodeMemory);
+		
+		
+		double totalMemoryPerExecutor = totalNodeMemory / targetExecutorNumPerNode;
+		
+		System.out.println(totalMemoryPerExecutor);
+		//assuming a default of 0.10 overhead per executor, calculate and set executor memory. this will override standalone setting
+		double executorPerMemory = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction) * 1;
+		optionsTable.put("spark.executor.memory", Integer.toString((int)executorPerMemory) + "g");
+		//calculate and set executor overhead
+		double yarnExecutorOverhead = executorPerMemory * executorMemoryOverheadFraction *1024; //convert back to mb
+		yarnExecutorMemoryOverhead = String.valueOf((int)(yarnExecutorOverhead));
+		optionsTable.put("spark.yarn.executor.memoryOverhead", yarnExecutorMemoryOverhead);
+		
 	}
 	
 	//Only modify this for Client mode, in cluster mode, use spark.driver.memory instead.
@@ -147,6 +182,7 @@ public class Yarn {
 		recommendationsTable.put("spark.executor.instances", "");
 	}
 
+	//might need to delete this method if we follow heuristics as we calculate this for user instead
 	public static void setYarnExecutorMemoryOverhead(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.executor.memoryOverhead", yarnExecutorMemoryOverhead);
 		recommendationsTable.put("spark.yarn.executor.memoryOverhead", "");

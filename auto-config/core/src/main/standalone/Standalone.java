@@ -1,4 +1,4 @@
-package core.src.main.standalone;
+ package core.src.main.standalone;
 import java.util.*;
 
 public class Standalone {
@@ -166,7 +166,7 @@ public class Standalone {
 		}
 	
 		private static void setExecutorMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			optionsTable.put("spark.executor.memory	", executorMemory);
+			optionsTable.put("spark.executor.memory", executorMemory);
 			recommendationsTable.put("spark.executor.memory	", "");
 		}
 	
