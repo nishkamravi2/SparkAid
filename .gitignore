@@ -1,0 +1,11 @@
+.metadata
+.recommenders
+bin
+.DS_Store
+.classpath
+.project
+build
+spark.conf
+spark.cmdline.options
+spark.conf.advise
+.settings
