@@ -1,8 +1,11 @@
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Arrays;
 
 import security.src.main.Security;
 import sparkR.src.main.SparkR;
@@ -12,9 +15,18 @@ import core.src.main.standalone.Standalone;
 import core.src.main.yarn.Yarn;
 import dynamicallocation.src.main.DynamicAllocation;
 
+
 public class ConfigurationConsole {
 	
 	public static void main(String[] args) {
+		
+		/** 
+		 * Simple tool to initialize and configure Spark config params, generate the command line and advise
+		 * @author Nishkam Ravi (nravi@cloudera.com), Ethan Chan (yish.chan@gmail.com)
+		 */
+		
+		printUsage();
+		System.out.println("Input Args: " + Arrays.toString(args));
 
 		// input config parameters
 		String inputDataSize = ""; // in GB
@@ -47,12 +59,14 @@ public class ConfigurationConsole {
 		
 		// get input parameters
 		if (args.length != 17) {
+			System.out.println("Invalid Input\n");
 			printUsage();
 			System.exit(0);
 		} else {
 			inputDataSize = args[0];
 			numNodes = args[1];
 			numCoresPerNode = args[2];
+			//for yarn it is container memory, for standalone will be node memory
 			memoryPerNode = args[3];
 			numJobs = args[4];
 			fileSystem = args[5];
@@ -180,7 +194,7 @@ public class ConfigurationConsole {
 		constructCmdLine(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable, cmdLineParams);
 	}
 	public static void printUsage() {
-		System.out.println("\nUsage: \n"
+		System.out.println("Usage: \n"
 				+ "./run.sh \n"
 				+ "<input data size in GB> \n"
 				+ "<number of nodes in cluster> \n"

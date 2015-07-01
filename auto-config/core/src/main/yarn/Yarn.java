@@ -44,20 +44,20 @@ public class Yarn {
 	static String yarnNodeManagerResourceCpuVcores = "16"; //currently in CM the default is 16
 	
 	
-	//created own variable for default Overhead Memory Setting
+	//created own variable for default Overhead Memory Setting, this is an inferred setting
 	static double executorMemoryOverheadFraction = 0.10;
-	//created own constant variable for now
-	static int targetExecutorNumPerNode = 5;
+	
 	
 	public static void configureYarnSettings(
 			Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable,
 			Hashtable<String, String> recommendationsTable,
 			Hashtable<String, String> commandLineParamsTable) {
-		setYarn(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		
+		setYarnDefaults(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		setExecMemCoresInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
 	
-	public static void setYarn(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
-		setExecutorMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+	public static void setYarnDefaults(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 		setYarnAMMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAMCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -70,7 +70,7 @@ public class Yarn {
 		setYarnDistArchives(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnDistFiles(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setExecutorInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnExecutorMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+//		setYarnExecutorMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnDriverMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAMMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAMPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -85,24 +85,65 @@ public class Yarn {
 		setYarnSubmitWaitAppCompletion(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
 	
-	//for YARN, it is not memory per node, but memory per container yarn.scheduler.maximum-allocation-mb
-	private static void setExecutorMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+	
+	private static void setExecMemCoresInstances(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 
-		//for now assum container memory = nodeMemory
-		double totalNodeMemory = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
-//		System.out.println(totalNodeMemory);
+		//for now assume container memory = nodeMemory for YARN
+		double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
+		int numNodes = Integer.parseInt(inputsTable.get("numNodes"));
+		int numWorkerNodes = numNodes - 1;
+		int numCoresPerNode = Integer.parseInt(inputsTable.get("numCoresPerNode"));
 		
+		//add in heuristics inputDataSize soon
+		int inputDataSize = Integer.parseInt(inputsTable.get("inputDataSize"));
+		//numJobs, for now assume numJobs = 1 and user gets to use 100% of resources.
+		int numJobs = Integer.parseInt(inputsTable.get("numJobs"));
 		
-		double totalMemoryPerExecutor = totalNodeMemory / targetExecutorNumPerNode;
-		
-//		System.out.println(totalMemoryPerExecutor);
+		//for now we decide to assign 4 cores per executor.
+		int desiredCoresPerExecutor = 4; //for now 16, 8 and 4 executors are recommended. They run on average at the same time for pagerank
+		int targetExecutorNumPerNode = numCoresPerNode / desiredCoresPerExecutor;
+		double totalMemoryPerExecutor = memoryPerNode / targetExecutorNumPerNode;
+
 		//assuming a default of 0.10 overhead per executor, calculate and set executor memory. this will override standalone setting
 		double executorPerMemory = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction) * 1;
-		optionsTable.put("spark.executor.memory", Integer.toString((int)executorPerMemory) + "g");
+		setExecutorMemory(Integer.toString((int)executorPerMemory) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
+		
 		//calculate and set executor overhead
 		double yarnExecutorOverhead = executorPerMemory * executorMemoryOverheadFraction *1024; //convert back to mb
 		yarnExecutorMemoryOverhead = String.valueOf((int)(yarnExecutorOverhead));
-		optionsTable.put("spark.yarn.executor.memoryOverhead", yarnExecutorMemoryOverhead);
+		setYarnExecutorMemoryOverhead (yarnExecutorMemoryOverhead, "",  optionsTable, recommendationsTable, commandLineParamsTable);
+		
+		//set executor.cores
+		setExecutorCores (Integer.toString(desiredCoresPerExecutor), "",  optionsTable, recommendationsTable, commandLineParamsTable);
+		
+		//set executor.instances
+		int totalExecutorInstances =  targetExecutorNumPerNode * numWorkerNodes;
+		setExecutorInstances (Integer.toString(totalExecutorInstances), "",  optionsTable, recommendationsTable, commandLineParamsTable);
+		
+		
+	}
+	
+	private static void setExecutorInstances (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		
+		optionsTable.put("spark.executor.instances", value);
+		if (recommendation.length() > 0)
+			recommendationsTable.put("spark.executor.instances", recommendation);
+		
+	}
+
+	private static void setExecutorCores (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		
+		optionsTable.put("spark.executor.cores", value);
+		if (recommendation.length() > 0)
+			recommendationsTable.put("spark.executor.cores", recommendation);
+		
+	}
+	
+	private static void setExecutorMemory (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		
+		optionsTable.put("spark.executor.memory", value);
+		if (recommendation.length() > 0)
+			recommendationsTable.put("spark.executor.memory", recommendation);
 		
 	}
 	
@@ -180,9 +221,11 @@ public class Yarn {
 	}
 
 	//might need to delete this method if we follow heuristics as we calculate this for user instead
-	public static void setYarnExecutorMemoryOverhead(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.yarn.executor.memoryOverhead", yarnExecutorMemoryOverhead);
-		recommendationsTable.put("spark.yarn.executor.memoryOverhead", "");
+	public static void setYarnExecutorMemoryOverhead(String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		optionsTable.put("spark.yarn.executor.memoryOverhead", value);
+		if (recommendation.length() > 0) {
+			recommendationsTable.put("spark.yarn.executor.memoryOverhead", "");
+		}
 	}
 
 	public static void setYarnDriverMemoryOverhead(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){

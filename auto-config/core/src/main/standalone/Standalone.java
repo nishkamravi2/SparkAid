@@ -1,21 +1,19 @@
  package core.src.main.standalone;
 import java.util.*;
 
+import utils.UtilsConversion;
+
 public class Standalone {
-		/** 
-		 * Simple tool to initialize and configure Spark config params, generate the command line and advise
-		 * @author Nishkam Ravi (nravi@cloudera.com), Ethan Chan (yish.chan@gmail.com)
-		 */
-		
+	
 		//Application Properties
 		static String appName = "";
-		static String driverCores = "1";
-		static String maxResultSize = "1g"; 
+		static String driverCores = "";
+		static String maxResultSize = "0"; 
 		static String driverMemory = "512m";  
 		static String executorMemory = "512m"; 
 		static String extraListeners = "";
-		static String localDir = "/tmp"; 
-		static String logConf = "false";	
+		static String localDir = ""; //tmp
+		static String logConf = "";	//false
 		static String master = "";
 		
 			
@@ -51,16 +49,16 @@ public class Standalone {
 		static String shuffleIONumConnectionsPerPeer = ""; //1
 		static String shuffleIOPreferDirectBufs = ""; //true
 		static String shuffleIORetryWait = ""; //5s
-		static String shuffleManager = ""; //sort
+		static String shuffleManager = "sort"; //sort
 		static String shuffleMemoryFraction = ""; //0.2
 		static String sortBypassMergeThreshold = ""; //200
-		static String shuffleSpill = ""; //true
-		static String shuffleSpillCompress = ""; //true
+		static String shuffleSpill = "true"; //true
+		static String shuffleSpillCompress = "true"; //true
 		
 		//Spark UI
 		static String eventLogCompress = ""; //false
 		static String eventLogDir = ""; // "file:///tmp/spark-events"
-		static String eventLogEnabled = "false"; //false
+		static String eventLogEnabled = ""; //false
 		static String uiKillEnabled = ""; //true
 		static String uiPort = ""; //4040
 		static String retainedJobs = ""; //4040
@@ -79,7 +77,7 @@ public class Standalone {
 		static String kyroserializerBufferMax = ""; //64m
 		static String kryoserializerBuffer = ""; //64k
 		static String rddCompress = ""; //false
-		static String serializer = ""; //org.apache.spark.serializer.JavaSerializer, else org.apache.spark.serializer.KryoSerializer when using Spark SQL Thrift Server
+		static String serializer = "org.apache.spark.serializer.KryoSerializer"; //org.apache.spark.serializer.JavaSerializer, else org.apache.spark.serializer.KryoSerializer when using Spark SQL Thrift Server
 		static String serializerObjectStreamReset = ""; //100
 		
 		//Execution Behavior
@@ -146,7 +144,10 @@ public class Standalone {
 			recommendationsTable.put("spark.app.name", "");
 		}
 	
+		//heuristic is now that the driver uses one whole node to itself
 		private static void setDriverCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			String numCoresPerNode = inputsTable.get("numCoresPerNode");
+			driverCores = numCoresPerNode;
 			optionsTable.put("spark.driver.cores", driverCores);
 			recommendationsTable.put("spark.driver.cores", "");
 			commandLineParamsTable.put("--driver-cores", driverCores);
@@ -158,9 +159,13 @@ public class Standalone {
 		}
 	
 		private static void setDriverMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			
+			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
+			//Set driver memory 0.8 of current node's memory 
+			double targetDriverMemory = memoryPerNode * 0.8;
+			driverMemory = Integer.toString((int)targetDriverMemory) + "g";
 			optionsTable.put("spark.driver.memory", driverMemory);
 			recommendationsTable.put("spark.driver.memory", "");
-			//always set --driver-memory
 			commandLineParamsTable.put("--driver-memory", driverMemory);
 			
 		}
