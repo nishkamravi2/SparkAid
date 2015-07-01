@@ -4,9 +4,6 @@ import java.util.Hashtable;
 
 import utils.UtilsConversion;
 
-import com.sun.corba.se.impl.javax.rmi.CORBA.Util;
-import com.sun.deploy.uitoolkit.impl.fx.Utils;
-
 public class Yarn {
 	
 	static String yarnAMMemory = ""; //512m
@@ -93,12 +90,12 @@ public class Yarn {
 
 		//for now assum container memory = nodeMemory
 		double totalNodeMemory = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
-		System.out.println(totalNodeMemory);
+//		System.out.println(totalNodeMemory);
 		
 		
 		double totalMemoryPerExecutor = totalNodeMemory / targetExecutorNumPerNode;
 		
-		System.out.println(totalMemoryPerExecutor);
+//		System.out.println(totalMemoryPerExecutor);
 		//assuming a default of 0.10 overhead per executor, calculate and set executor memory. this will override standalone setting
 		double executorPerMemory = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction) * 1;
 		optionsTable.put("spark.executor.memory", Integer.toString((int)executorPerMemory) + "g");

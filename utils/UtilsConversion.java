@@ -5,7 +5,6 @@ public class UtilsConversion {
 	public static Double parseMemory (String s){
 		//return value of function is in Megabytes MB
 		try{
-			System.out.println(s);
 			char unitType = s.charAt(s.length()-1);
 			double value = Double.parseDouble(s.substring(0,s.length()-1));
 			
