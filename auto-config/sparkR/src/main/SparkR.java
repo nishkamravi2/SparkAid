@@ -28,7 +28,6 @@ public class SparkR {
 	
 	public static void setRNumRBackendThreads(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.r.numRBackendThreads", rNumRBackendThreads);
-		recommendationsTable.put("spark.r.numRBackendThreads", "");
 	}
 
 

@@ -66,85 +66,69 @@ public class SQL {
 	//SQL Tuning
 	public static void setSQLInMemoryColumnarStorageCompressed(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.inMemoryColumnarStorage.compressed", SQLInMemoryColumnarStorageCompressed);
-		recommendationsTable.put("spark.sql.inMemoryColumnarStorage.compressed", "");
 	}
 
 	public static void setSQLInMemoryColumnarStorageBatchSize(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.inMemoryColumnarStorage.batchSize", SQLInMemoryColumnarStorageBatchSize);
-		recommendationsTable.put("spark.sql.inMemoryColumnarStorage.batchSize", "");
 	}
 
 	public static void setSQLAutoBroadcastJoinThreshold(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.autoBroadcastJoinThreshold", SQLAutoBroadcastJoinThreshold);
-		recommendationsTable.put("spark.sql.autoBroadcastJoinThreshold", "");
 	}
 
 	public static void setSQLCodegen(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.codegen", SQLCodegen);
-		recommendationsTable.put("spark.sql.codegen", "");
 	}
 
 	public static void setSQLShufflePartitions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.shuffle.partitions", SQLShufflePartitions);
-		recommendationsTable.put("spark.sql.shuffle.partitions", "");
 	}
 
 	public static void setSQLPlannerExternalSort(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.planner.externalSort", SQLPlannerExternalSort);
-		recommendationsTable.put("spark.sql.planner.externalSort", "");
 	}
 	
 	//Parquet
 	
 	public static void setSQLParquetBinaryAsString(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.parquet.binaryAsString", SQLParquetBinaryAsString);
-		recommendationsTable.put("spark.sql.parquet.binaryAsString", "");
 	}
 
 	public static void setSQLParquetInt96AsTimestamp(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.parquet.int96AsTimestamp", SQLParquetInt96AsTimestamp);
-		recommendationsTable.put("spark.sql.parquet.int96AsTimestamp", "");
 	}
 
 	public static void setSQLParquetCacheMetadata(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.parquet.cacheMetadata", SQLParquetCacheMetadata);
-		recommendationsTable.put("spark.sql.parquet.cacheMetadata", "");
 	}
 
 	public static void setSQLParquetCompressionCodec(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.parquet.compression.codec", SQLParquetCompressionCodec);
-		recommendationsTable.put("spark.sql.parquet.compression.codec", "");
 	}
 
 	public static void setSQLParquetFilterPushdown(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.parquet.filterPushdown", SQLParquetFilterPushdown);
-		recommendationsTable.put("spark.sql.parquet.filterPushdown", "");
 	}
 
 	public static void setSQLHiveConvertMetastoreParquet(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.hive.convertMetastoreParquet", SQLHiveConvertMetastoreParquet);
-		recommendationsTable.put("spark.sql.hive.convertMetastoreParquet", "");
 	}
 	
 	//Hive
 	public static void setSQLHiveMetastoreVersion(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.hive.metastore.version", SQLHiveMetastoreVersion);
-		recommendationsTable.put("spark.sql.hive.metastore.version", "");
 	}
 	
 	public static void setSQLHiveMetastoreJars(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.hive.metastore.jars", SQLHiveMetastoreVersion);
-		recommendationsTable.put("spark.sql.hive.metastore.jars", "");
 	}
 
 	public static void setSQLHiveMetastoreSharedPrefixes(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.hive.metastore.sharedPrefixes", SQLHiveMetastoreSharedPrefixes);
-		recommendationsTable.put("spark.sql.hive.metastore.sharedPrefixes", "");
 	}
 
 	public static void setSQLHiveMetastoreBarrierPrefixes(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.sql.hive.metastore.barrierPrefixes", SQLHiveMetastoreBarrierPrefixes);
-		recommendationsTable.put("spark.sql.hive.metastore.barrierPrefixes", "");
 	}
 
 }
