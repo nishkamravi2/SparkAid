@@ -33,7 +33,7 @@ public class ConfigurationConsole {
 		String numNodes = "";
 		String numCoresPerNode = "";
 		String memoryPerNode = ""; // in GB
-		String numJobs = "";
+		String resourceFraction = "";
 		String fileSystem = ""; // ext4, ext3, etc
 		String master = ""; // standalone, yarn
 		String deployMode = ""; // client, cluster
@@ -68,7 +68,7 @@ public class ConfigurationConsole {
 			numCoresPerNode = args[2];
 			//for yarn it is container memory, for standalone will be node memory
 			memoryPerNode = args[3];
-			numJobs = args[4];
+			resourceFraction = args[4];
 			fileSystem = args[5];
 			master = args[6];
 			deployMode = args[7];
@@ -86,7 +86,7 @@ public class ConfigurationConsole {
 			inputsTable.put("numNodes", numNodes);
 			inputsTable.put("numCoresPerNode", numCoresPerNode);
 			inputsTable.put("memoryPerNode", memoryPerNode);
-			inputsTable.put("numJobs", numJobs);			
+			inputsTable.put("resourceFraction", resourceFraction);			
 			inputsTable.put("fileSystem", fileSystem);
 			inputsTable.put("master", master);
 			inputsTable.put("deployMode", deployMode);
@@ -200,7 +200,7 @@ public class ConfigurationConsole {
 				+ "<number of nodes in cluster> \n"
 				+ "<number of cores per node> \n"
 				+ "<memory per node in GB> \n"
-				+ "<number of jobs> \n"
+				+ "<fraction of resources used 0-1.0> \n"
 				+ "<filesystem type> \n"
 				+ "<master: standalone URL/yarn> \n"
 				+ "<deployMode: cluster/client> \n"

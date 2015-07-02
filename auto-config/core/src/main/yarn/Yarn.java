@@ -96,14 +96,19 @@ public class Yarn {
 		
 		//add in heuristics inputDataSize soon
 		int inputDataSize = Integer.parseInt(inputsTable.get("inputDataSize"));
-		//numJobs, for now assume numJobs = 1 and user gets to use 100% of resources.
-		int numJobs = Integer.parseInt(inputsTable.get("numJobs"));
+		
+		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+		double effectiveMemoryPerNode = resourceFraction * memoryPerNode;
+		int effectiveCoresPerNode = (int) (resourceFraction * numCoresPerNode);
 		
 		//for now we decide to assign 4 cores per executor.
 		int desiredCoresPerExecutor = 4; //for now 16, 8 and 4 executors are recommended. They run on average at the same time for pagerank
-		int targetExecutorNumPerNode = numCoresPerNode / desiredCoresPerExecutor;
-		double totalMemoryPerExecutor = memoryPerNode / targetExecutorNumPerNode;
-
+		int targetExecutorNumPerNode = effectiveCoresPerNode / desiredCoresPerExecutor;
+		
+		System.out.println(targetExecutorNumPerNode);
+		
+		double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode;
+		System.out.println(totalMemoryPerExecutor);
 		//assuming a default of 0.10 overhead per executor, calculate and set executor memory. this will override standalone setting
 		double executorPerMemory = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction) * 1;
 		setExecutorMemory(Integer.toString((int)executorPerMemory) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
