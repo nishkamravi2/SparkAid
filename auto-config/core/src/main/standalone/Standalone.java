@@ -145,8 +145,10 @@ public class Standalone {
 	
 		//heuristic is now that the driver uses one whole node to itself
 		private static void setDriverCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
 			String numCoresPerNode = inputsTable.get("numCoresPerNode");
-			driverCores = numCoresPerNode;
+			double effectiveDriverCores = resourceFraction * Double.parseDouble(numCoresPerNode);
+			driverCores = Integer.toString((int)effectiveDriverCores);
 			optionsTable.put("spark.driver.cores", driverCores);
 			commandLineParamsTable.put("--driver-cores", driverCores);
 		}
@@ -156,14 +158,13 @@ public class Standalone {
 		}
 	
 		private static void setDriverMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			
+			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
 			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
 			//Set driver memory 0.8 of current node's memory 
-			double targetDriverMemory = memoryPerNode * 0.8;
+			double targetDriverMemory = memoryPerNode * 0.8 * resourceFraction;
 			driverMemory = Integer.toString((int)targetDriverMemory) + "g";
 			optionsTable.put("spark.driver.memory", driverMemory);
 			commandLineParamsTable.put("--driver-memory", driverMemory);
-			
 		}
 	
 		private static void setExecutorMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){

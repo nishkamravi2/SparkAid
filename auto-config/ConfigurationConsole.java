@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Arrays;
+import java.util.Iterator;
 
 import security.src.main.Security;
 import sparkR.src.main.SparkR;
@@ -54,8 +55,6 @@ public class ConfigurationConsole {
 		Hashtable<String, String> optionsTable = new Hashtable<String, String>();
 		Hashtable<String, String> recommendationsTable = new Hashtable<String, String>();
 		Hashtable<String, String> commandLineParamsTable = new Hashtable<String, String>();
-		
-		String cmdLineParams = "";
 		
 		// get input parameters
 		if (args.length != 17) {
@@ -121,78 +120,74 @@ public class ConfigurationConsole {
 		
 		//configure necessary SparkR settings
 		if (sparkRFlag.equals("y")){ SparkR.configureSparkRSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);}
-
-		try {
-			//Creating the .conf file
-			File conf_file = new File("spark.conf");
-			if (!conf_file.exists()) {
-				conf_file.createNewFile();
-			}
-			//Creating the recommendations file
-			BufferedWriter b1 = new BufferedWriter(
-					new FileWriter(conf_file));
-
-			File advise_file = new File("spark.conf.advise");
-			if (!advise_file.exists()) {
-				advise_file.createNewFile();
-			}
-			
-			//Creating the command line options file
-			BufferedWriter b2 = new BufferedWriter(new FileWriter(
-					advise_file));
-
-			File cmd_options_file = new File("spark.cmdline.options");
-			if (!cmd_options_file.exists()) {
-				cmd_options_file.createNewFile();
-			}
-			BufferedWriter b3 = new BufferedWriter(new FileWriter(
-					cmd_options_file));
-
-			//Populating Options
-			Enumeration<String> it = optionsTable.keys();
-			while (it.hasMoreElements()) {
-				String key = it.nextElement();
-				String value = optionsTable.get(key);
-				// if nothing was set, do not add it to .conf file
-				if (value.equals("")) {
-					continue;
-				}
-				b1.write(key + " 			" + value + "\n");
-			}
-			b1.close();
-
-			//Populating Recommendations
-			it = recommendationsTable.keys();
-			while (it.hasMoreElements()) {
-				String key = it.nextElement();
-				String value = recommendationsTable.get(key);
-				// if nothing was set, do not add it to .conf file
-				if (value.equals("")) {
-					continue;
-				}
-				b2.write(key + " 			" + value + "\n");
-			}
-			b2.close();
-
-			//Populating Command Line Params
-			it = commandLineParamsTable.keys();
-			while (it.hasMoreElements()) {
-				String key = it.nextElement();
-				String value = commandLineParamsTable.get(key);
-				// if nothing was set, do not add it to command line params
-				if (value.equals("")) {
-					continue;
-				}
-				b3.write(key + " 			" + value + "\n");
-				cmdLineParams += " " + key + " " + value;
-			}
-			b3.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
+		
+		createOutputFile("spark.conf", optionsTable);
+		createOutputFile("spark.conf.advise", recommendationsTable);
+		createOutputFile("spark.cmdline.options", commandLineParamsTable);
+		String cmdLineParams = generateParamsString(commandLineParamsTable);
 		constructCmdLine(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable, cmdLineParams);
 	}
+	
+	private static String generateParamsString(Hashtable<String,String> t) {
+		
+		String cmdLineParams = "";
+		ArrayList <String> tableKeySet = new ArrayList<String>(t.keySet());
+		Collections.sort(tableKeySet);
+		Iterator <String> it = tableKeySet.iterator();
+
+		while (it.hasNext()) {
+			String key = it.next();
+			String value = t.get(key);
+			// if nothing was set, do not add it to output
+			if (value.equals("")) {
+				continue;
+			}
+			cmdLineParams += " " + key + " " + value;
+		}
+		return cmdLineParams;
+	}
+	
+	private static String spaceBuffer (int n){
+		StringBuffer outputBuffer = new StringBuffer(n);
+		for (int i = 0; i < n; i++){
+		   outputBuffer.append(" ");
+		}
+		return outputBuffer.toString();
+	}
+
+	private static void createOutputFile(String fileName, Hashtable<String,String> t){
+		try{
+			int startParamIndex = 45;
+			File outFile = new File(fileName);
+			if (!outFile.exists()) {
+				outFile.createNewFile();
+			}
+			
+			BufferedWriter b1 = new BufferedWriter(
+					new FileWriter(outFile));		
+			
+			ArrayList <String> tableKeySet = new ArrayList<String>(t.keySet());
+			Collections.sort(tableKeySet);
+			Iterator <String> it = tableKeySet.iterator();
+
+			while (it.hasNext()) {
+				String key = it.next();
+				String value = t.get(key);
+				int spaceBufferLength = Math.max(5, startParamIndex - key.length());
+				// if nothing was set, do not add it to outfile
+				if (value.equals("")) {
+					continue;
+				}
+				b1.write(key + spaceBuffer(spaceBufferLength) + value + "\n");
+			}
+			b1.close();
+		
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
 	public static void printUsage() {
 		System.out.println("Usage: \n"
 				+ "./run.sh \n"

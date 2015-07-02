@@ -42,25 +42,39 @@ public class Yarn {
 	static String yarnSchedulerMaximumAllocationMb = "40960"; //currently in CM the default is 64GB, but for c1906 config it is 40GB
 	//yarn.nodemanager.resource.cpu-vcores controls the maximum sum of cores used by the containers on each node.
 	static String yarnNodeManagerResourceCpuVcores = "16"; //currently in CM the default is 16
-	
-	
+
 	//created own variable for default Overhead Memory Setting, this is an inferred setting
-	static double executorMemoryOverheadFraction = 0.10;
+	static double executorMemoryOverheadFraction = 0.10; //recommended by config guide
+	static double driverMemoryOverheadFraction = 0.07; //recommended by config guide
+	static double AMMemoryOverheadFraction = 0.07; //recommended by config guide
 	
-	
-	public static void configureYarnSettings(
-			Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable,
-			Hashtable<String, String> recommendationsTable,
-			Hashtable<String, String> commandLineParamsTable) {
+	public static void configureYarnSettings( Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 		
 		setYarnDefaults(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setExecMemCoresInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		
+		//Client only settings
+		if (inputsTable.get("deployMode").equals("client")){
+			setYarnAMMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			setYarnAMMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			setYarnAMCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			
+			setYarnAMExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			setYarnAMExtraLibraryPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		}else if (inputsTable.get("deployMode").equals("cluster")){
+			setYarnDriverMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			
+		}else{
+			//wrong deployMode input
+		}
+			
 	}
 	
 	public static void setYarnDefaults(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
-		setYarnAMMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnAMCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		
+		//setDriverCores This is set in Standalone.java for now
+//		setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		
 		setYarnAMWaitTime(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnSubmitFileReplication(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnPreserveStagingFiles(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -71,16 +85,13 @@ public class Yarn {
 		setYarnDistFiles(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setExecutorInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 //		setYarnExecutorMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnDriverMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnAMMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAMPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnQueue(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnJar(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAccessNameNodes(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAppMasterEnvironmentVariableName(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnContainerLauncherMaxThreads(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnAMExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnAMExtraLibraryPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		
 		setYarnMaxAppAttempts(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnSubmitWaitAppCompletion(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
@@ -104,11 +115,8 @@ public class Yarn {
 		//for now we decide to assign 4 cores per executor.
 		int desiredCoresPerExecutor = 4; //for now 16, 8 and 4 executors are recommended. They run on average at the same time for pagerank
 		int targetExecutorNumPerNode = effectiveCoresPerNode / desiredCoresPerExecutor;
-		
-		System.out.println(targetExecutorNumPerNode);
-		
 		double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode;
-		System.out.println(totalMemoryPerExecutor);
+		
 		//assuming a default of 0.10 overhead per executor, calculate and set executor memory. this will override standalone setting
 		double executorPerMemory = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction) * 1;
 		setExecutorMemory(Integer.toString((int)executorPerMemory) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
@@ -125,7 +133,6 @@ public class Yarn {
 		int totalExecutorInstances =  targetExecutorNumPerNode * numWorkerNodes;
 		setExecutorInstances (Integer.toString(totalExecutorInstances), "",  optionsTable, recommendationsTable, commandLineParamsTable);
 		
-		
 	}
 	
 	private static void setExecutorInstances (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -133,7 +140,6 @@ public class Yarn {
 		optionsTable.put("spark.executor.instances", value);
 		if (recommendation.length() > 0)
 			recommendationsTable.put("spark.executor.instances", recommendation);
-		
 	}
 
 	private static void setExecutorCores (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -141,7 +147,6 @@ public class Yarn {
 		optionsTable.put("spark.executor.cores", value);
 		if (recommendation.length() > 0)
 			recommendationsTable.put("spark.executor.cores", recommendation);
-		
 	}
 	
 	private static void setExecutorMemory (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -154,14 +159,21 @@ public class Yarn {
 	
 	//Only modify this for Client mode, in cluster mode, use spark.driver.memory instead.
 	public static void setYarnAMMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){	
-		//If Deploy Mode == Client
-		if (inputsTable.get("deployMode").equals("client")){
+
+			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
+			//Set driver memory 0.8 of current node's memory 
+			double targetAMemory = memoryPerNode * 0.8 * resourceFraction;
+			yarnAMMemory = Integer.toString((int)targetAMemory) + "g";
 			optionsTable.put("spark.yarn.am.memory", yarnAMMemory);
-		}
+			//remove command line params
+			commandLineParamsTable.remove("--driver-memory"); 
+			//remove redundant settings for client mode
+			optionsTable.remove("spark.driver.memory");
 	}
 	
 	//YARN AM Cluster mode
-	//This will override the Standalone Driver Core settings if need be.
+	//This will override the Standalone Driver Core settings if need be. not used for now.
 	public static void setDriverCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		//If Deploy Mode == Cluster
 		if (inputsTable.get("deployMode").equals("cluster")){
@@ -171,10 +183,17 @@ public class Yarn {
 	
 	//YARN AM Client mode
 	public static void setYarnAMCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		//If Deploy Mode == Client
-		if (inputsTable.get("deployMode").equals("client")){
-			optionsTable.put("spark.yarn.am.cores", yarnAMCores);
-		}
+			
+		optionsTable.put("spark.yarn.am.cores", yarnAMCores);
+		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+		String numCoresPerNode = inputsTable.get("numCoresPerNode");
+		double effectiveDriverCores = resourceFraction * Double.parseDouble(numCoresPerNode);
+		yarnAMCores = Integer.toString((int)effectiveDriverCores);
+		optionsTable.put("spark.yarn.am.cores", yarnAMCores);
+		//remove command line param
+		commandLineParamsTable.remove("--driver-cores"); 
+		//remove redundant settings for client mode
+		optionsTable.remove("spark.driver.cores");
 	}
 
 	public static void setYarnAMWaitTime(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -222,22 +241,33 @@ public class Yarn {
 	}
 
 	public static void setYarnDriverMemoryOverhead(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		
+		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+		double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
+		//Set driver memory 0.8 of current node's memory 
+		double targetDriverMemory = memoryPerNode * 0.8 * resourceFraction;
+		double calculatedYarnDriverMemOverhead = targetDriverMemory * driverMemoryOverheadFraction;
+		yarnDriverMemoryOverhead = Integer.toString((int)calculatedYarnDriverMemOverhead * 1024);
 		optionsTable.put("spark.yarn.driver.memoryOverhead", yarnDriverMemoryOverhead);
 	}
 
 	//Same as spark.yarn.driver.memoryOverhead, but for the Application Master in client mode.
 	public static void setYarnAMMemoryOverhead(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		//If Deploy Mode == Client
-		if (inputsTable.get("deployMode").equals("client")){
-			optionsTable.put("spark.yarn.am.memoryOverhead", yarnAMMemoryOverhead);
-		}
+		
+		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+		double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
+		//Set driver memory 0.8 of current node's memory 
+		double targetDriverMemory = memoryPerNode * 0.8 * resourceFraction;
+		double calculatedYarnAMMemOverhead = targetDriverMemory * AMMemoryOverheadFraction;
+		yarnAMMemoryOverhead = Integer.toString((int)calculatedYarnAMMemOverhead * 1024);
+		optionsTable.put("spark.yarn.am.memoryOverhead", yarnAMMemoryOverhead);
 	}
 
 	// In YARN client mode, this is used to communicate between the Spark driver running on a gateway and the Application Master running on YARN. In YARN cluster mode, this is used for the dynamic executor feature, where it handles the kill from the scheduler backend.
 	public static void setYarnAMPort(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.am.port", yarnAMPort);
 	}
-
+	
 	public static void setYarnQueue(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.queue", yarnQueue);
 	}
@@ -262,19 +292,14 @@ public class Yarn {
 		optionsTable.put("spark.yarn.containerLauncherMaxThreads", yarnContainerLauncherMaxThreads);
 	}
 
+	//Client Mode only
 	public static void setYarnAMExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		//In cluster mode, use spark.driver.extraJavaOptions instead.
-		//If Deploy Mode == Client
-		if (inputsTable.get("deployMode").equals("client")){
-			optionsTable.put("spark.yarn.am.extraJavaOptions", yarnAMExtraJavaOptions);
-		}
+		optionsTable.put("spark.yarn.am.extraJavaOptions", yarnAMExtraJavaOptions);
 	}
-
-	public static void setYarnAMExtraLibraryPath(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		//If Deploy Mode == Client
-		if (inputsTable.get("deployMode").equals("client")){		
-			optionsTable.put("spark.yarn.am.extraLibraryPath", yarnAMExtraLibraryPath);
-		}
+	//Client Mode only
+	public static void setYarnAMExtraLibraryPath(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){	
+		optionsTable.put("spark.yarn.am.extraLibraryPath", yarnAMExtraLibraryPath);
 	}
 
 	public static void setYarnMaxAppAttempts(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
