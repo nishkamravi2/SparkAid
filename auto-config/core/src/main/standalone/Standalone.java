@@ -6,32 +6,45 @@ import utils.UtilsConversion;
 public class Standalone {
 	
 		//must haves and needs to be configured
-		static String driverMemory = "";  
+		static String driverMemory = ""; 
+		//
 		static String executorMemory = ""; 
 		static String driverCores = "";
+		//
 		static String executorCores = ""; 
 		static String schedulerMode = "";
 		static String coresMax = ""; 
-		static String shuffleConsolidateFiles = ""; //false
-		static String defaultParallelism = ""; //local mode: number of cores on local machine, mesos fine grained mode: 8, others: total number of cores on all executor nodes or 2, whichever is larger
+		static String shuffleConsolidateFiles = "";
+		static String defaultParallelism = "";
+		static String rddCompress = "";
 		
 		//must have defaults
 		static String maxResultSize = "0";
-		static String shuffleManager = "sort"; //sort
+		static String shuffleManager = "sort";
 		static String serializer = "org.apache.spark.serializer.KryoSerializer"; //org.apache.spark.serializer.JavaSerializer, else org.apache.spark.serializer.KryoSerializer when using Spark SQL Thrift Server
-		static String shuffleCompress = "true"; //true
+		static String shuffleCompress = "true";
+		static String shuffleSpill = "true";
+		static String shuffleSpillCompress = "true";
+		static String storageMemoryFraction = "0.6"; // storageMemoryFraction + storageUnrollFraction + shuffleMemoryFraction = 1
+		static String storageUnrollFraction = "0.6"; // storageMemoryFraction + storageUnrollFraction + shuffleMemoryFraction = 1
+		static String shuffleMemoryFraction = "0.2"; // storageMemoryFraction + storageUnrollFraction + shuffleMemoryFraction = 1
+		static String storageSafetyFraction = "0.9";
+		static String shuffleSafetyFraction = "0.8";
 		
-		static String shuffleSpill = "true"; //true
-		static String shuffleSpillCompress = "true"; //true
+		//add in "-Dsun.io.serialization.extended DebugInfo=true" for information if a class that does not implement serializer is used. 
+		//Kyro serializer
 		
 		//nice to have settings
-		static String storageMemoryFraction = ""; //0.6
 		static String storageMemoryMapThreshold = ""; //2m
-		static String storageUnrollFraction = ""; //0.2
-		static String shuffleMemoryFraction = ""; //0.2
 		static String sortBypassMergeThreshold = ""; //200
-
 	
+		
+		//array to set all the different executor environment variables e.g: JAVA_HOME, PYSPARK_PYTHON
+		static ArrayList<String> executorEnvVariablesArray = new ArrayList<String>();
+		//array to set all the default values of executor environment variable values
+		static ArrayList<String> executorEnvValuesArray = new ArrayList<String>();
+		
+		
 		//meh.. for now.
 		
 		//Application Properties
@@ -54,10 +67,7 @@ public class Standalone {
 		static String executorLogsRollingStrategy = "";
 		static String executorLogsRollingTimeInterval = "";
 		static String executorUserClassPathFirst = ""; //false
-		//array to set all the different executor environment variables e.g: JAVA_HOME, PYSPARK_PYTHON
-		static ArrayList<String> executorEnvVariablesArray = new ArrayList<String>();
-		//array to set all the default values of executor environment variable values
-		static ArrayList<String> executorEnvValuesArray = new ArrayList<String>();
+
 		static String pythonProfile = ""; //false
 		static String pythonProfileDump = "";
 		static String pythonWorkerMemory = ""; //512m
@@ -66,15 +76,12 @@ public class Standalone {
 		//Shuffle Behavior
 		static String reducerMaxSizeInFlight = ""; //48m
 		static String shuffleBlockTransferService = ""; //netty
-
 		static String shuffleFileBuffer = ""; //32k
 		static String shuffleIOMaxRetries = ""; //3
 		static String shuffleIONumConnectionsPerPeer = ""; //1
 		static String shuffleIOPreferDirectBufs = ""; //true
 		static String shuffleIORetryWait = ""; //5s
 
-
-		
 		//Spark UI
 		static String eventLogCompress = ""; //false
 		static String eventLogDir = ""; // "file:///tmp/spark-events"
@@ -96,7 +103,6 @@ public class Standalone {
 		static String kryoRegistrator = "";
 		static String kyroserializerBufferMax = ""; //64m
 		static String kryoserializerBuffer = ""; //64k
-		static String rddCompress = ""; //false
 		static String serializerObjectStreamReset = ""; //100
 		
 		//Execution Behavior
@@ -344,6 +350,15 @@ public class Standalone {
 			optionsTable.put("spark.shuffle.spill.compress", shuffleSpillCompress);
 		}
 		
+		private static void setShuffleSafetyFraction(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			optionsTable.put("spark.shuffle.safetyFraction", shuffleSafetyFraction);
+		}
+		
+		private static void setStorageSafetyFraction(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			optionsTable.put("spark.storage.safetyFraction", storageSafetyFraction);
+		}
+		
+		
 		//Spark UI
 		private static void setEventLogCompress(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.eventLog.compress", eventLogCompress);
@@ -421,8 +436,29 @@ public class Standalone {
 		//check ifit needs compression
 		//This will only work for MEMORY_ONLY_SER 
 		private static void setRddCompress(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			
+			
+			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+			double numNodes = Double.parseDouble(inputsTable.get("numNodes"));
+			double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode"));
+			double inputDataSize = Double.parseDouble(inputsTable.get("inputDataSize"));
+			double storageSafetyFractionValue = Double.parseDouble((storageSafetyFraction));
+			double storageMemoryFractionValue = Double.parseDouble((storageMemoryFraction));
+			
+			double availableMemory = resourceFraction * numNodes * memoryPerNode * storageSafetyFractionValue * storageMemoryFractionValue;
+			double expectedMemory = inputDataSize * 2;
+			
+			double ratio = availableMemory / expectedMemory;
+			if (ratio <= 1){
+				rddCompress = "true";
+			}
+			else{
+				rddCompress = "false";
+			}
+			
 			optionsTable.put("spark.rdd.compress", rddCompress);
 			recommendationsTable.put("spark.rdd.compress", "Ensure persist() level is MEMORY_ONLY_SER.");
+			
 		}
 	
 		private static void setSerializer(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -457,9 +493,7 @@ public class Standalone {
 			double numNodes = Double.parseDouble(inputsTable.get("numNodes"));
 			double coresPerNode = Double.parseDouble(inputsTable.get("numCoresPerNode")); //in mb
 			double numWorkerNodes = numNodes - 1;
-			//Set driver memory 0.8 of current node's memory 
 			defaultParallelism = String.valueOf((int)(coresPerNode * numWorkerNodes * resourceFraction * 2));
-			
 			optionsTable.put("spark.default.parallelism", defaultParallelism);
 		}
 	
@@ -764,6 +798,9 @@ public class Standalone {
 		    setSortBypassMergeThreshold(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setShuffleSpill(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setShuffleSpillCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setShuffleSafetyFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setStorageSafetyFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    
 		}
 
 		public static void setRunTimeEnvironment(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
