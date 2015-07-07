@@ -58,12 +58,12 @@ public class Yarn {
 			setYarnAMMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			setYarnAMMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			setYarnAMCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			
 			setYarnAMExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			setYarnAMExtraLibraryPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		}else if (inputsTable.get("deployMode").equals("cluster")){
 			setYarnDriverMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			
+			setDriverMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable); //same as in standalone for now, will override standalone if different.
+			setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable); //same as in standalone for now, will override standalone if different.
 		}else{
 			//wrong deployMode input
 		}
@@ -71,9 +71,6 @@ public class Yarn {
 	}
 	
 	public static void setYarnDefaults(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
-		
-		//setDriverCores This is set in Standalone.java for now
-//		setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		
 		setYarnAMWaitTime(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnSubmitFileReplication(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -160,25 +157,40 @@ public class Yarn {
 	//Only modify this for Client mode, in cluster mode, use spark.driver.memory instead.
 	public static void setYarnAMMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){	
 
-			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
-			//Set driver memory 0.8 of current node's memory 
-			double targetAMemory = memoryPerNode * 0.8 * resourceFraction;
-			yarnAMMemory = Integer.toString((int)targetAMemory) + "g";
-			optionsTable.put("spark.yarn.am.memory", yarnAMMemory);
-			//remove command line params
-			commandLineParamsTable.remove("--driver-memory"); 
-			//remove redundant settings for client mode
-			optionsTable.remove("spark.driver.memory");
+		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+		double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
+		//Set driver memory 0.8 of current node's memory 
+		double targetAMemory = memoryPerNode * 0.8 * resourceFraction;
+		yarnAMMemory = Integer.toString((int)targetAMemory) + "g";
+		optionsTable.put("spark.yarn.am.memory", yarnAMMemory);
+		//remove command line params
+		commandLineParamsTable.remove("--driver-memory"); 
+		//remove redundant settings for client mode
+		optionsTable.remove("spark.driver.memory");
 	}
 	
 	//YARN AM Cluster mode
 	//This will override the Standalone Driver Core settings if need be. not used for now.
 	public static void setDriverCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		//If Deploy Mode == Cluster
-		if (inputsTable.get("deployMode").equals("cluster")){
-			optionsTable.put("spark.driver.cores", driverCores);
-		}
+		
+		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+		String numCoresPerNode = inputsTable.get("numCoresPerNode");
+		double effectiveDriverCores = resourceFraction * Double.parseDouble(numCoresPerNode);
+		driverCores = Integer.toString((int)effectiveDriverCores);
+		optionsTable.put("spark.driver.cores", driverCores);
+		commandLineParamsTable.put("--driver-cores", driverCores);
+	}
+	
+	//YARN AM Cluster mode
+	//This will override the Standalone Driver Memory settings
+	public static void setDriverMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+		double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
+		//Set driver memory 0.8 of current node's memory 
+		double targetDriverMemory = memoryPerNode * 0.8 * resourceFraction;
+		String driverMemory = Integer.toString((int)targetDriverMemory) + "g";
+		optionsTable.put("spark.driver.memory", driverMemory);
+		commandLineParamsTable.put("--driver-memory", driverMemory);
 	}
 	
 	//YARN AM Client mode

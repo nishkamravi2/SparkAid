@@ -34,7 +34,7 @@ public class ConfigurationConsole {
 		String numNodes = "";
 		String numCoresPerNode = "";
 		String memoryPerNode = ""; // in GB
-		String resourceFraction = "";
+		String resourceFraction = ""; //0 - 1.0 for now
 		String fileSystem = ""; // ext4, ext3, etc
 		String master = ""; // standalone, yarn
 		String deployMode = ""; // client, cluster
@@ -56,7 +56,7 @@ public class ConfigurationConsole {
 		Hashtable<String, String> recommendationsTable = new Hashtable<String, String>();
 		Hashtable<String, String> commandLineParamsTable = new Hashtable<String, String>();
 		
-		// get input parameters
+		//get input parameters
 		if (args.length != 17) {
 			System.out.println("Invalid Input\n");
 			printUsage();
@@ -125,6 +125,7 @@ public class ConfigurationConsole {
 		createOutputFile("spark.conf.advise", recommendationsTable);
 		createOutputFile("spark.cmdline.options", commandLineParamsTable);
 		String cmdLineParams = generateParamsString(commandLineParamsTable);
+		
 		constructCmdLine(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable, cmdLineParams);
 	}
 	
@@ -192,9 +193,9 @@ public class ConfigurationConsole {
 		System.out.println("Usage: \n"
 				+ "./run.sh \n"
 				+ "<input data size in GB> \n"
-				+ "<number of nodes in cluster> \n"
+				+ "<number of nodes in cluster including master> \n"
 				+ "<number of cores per node> \n"
-				+ "<memory per node in GB> \n"
+				+ "<memory per node in GB - for Standalone its the node, for yarn its the container size> \n"
 				+ "<fraction of resources used 0-1.0> \n"
 				+ "<filesystem type> \n"
 				+ "<master: standalone URL/yarn> \n"

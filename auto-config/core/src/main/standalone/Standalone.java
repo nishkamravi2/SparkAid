@@ -5,18 +5,42 @@ import utils.UtilsConversion;
 
 public class Standalone {
 	
+		//must haves and needs to be configured
+		static String driverMemory = "";  
+		static String executorMemory = ""; 
+		static String driverCores = "";
+		static String executorCores = ""; 
+		static String schedulerMode = "";
+		static String coresMax = ""; 
+		static String shuffleConsolidateFiles = ""; //false
+		static String defaultParallelism = ""; //local mode: number of cores on local machine, mesos fine grained mode: 8, others: total number of cores on all executor nodes or 2, whichever is larger
+		
+		//must have defaults
+		static String maxResultSize = "0";
+		static String shuffleManager = "sort"; //sort
+		static String serializer = "org.apache.spark.serializer.KryoSerializer"; //org.apache.spark.serializer.JavaSerializer, else org.apache.spark.serializer.KryoSerializer when using Spark SQL Thrift Server
+		static String shuffleCompress = "true"; //true
+		
+		static String shuffleSpill = "true"; //true
+		static String shuffleSpillCompress = "true"; //true
+		
+		//nice to have settings
+		static String storageMemoryFraction = ""; //0.6
+		static String storageMemoryMapThreshold = ""; //2m
+		static String storageUnrollFraction = ""; //0.2
+		static String shuffleMemoryFraction = ""; //0.2
+		static String sortBypassMergeThreshold = ""; //200
+
+	
+		//meh.. for now.
+		
 		//Application Properties
 		static String appName = "";
-		static String driverCores = "";
-		static String maxResultSize = "0"; 
-		static String driverMemory = "512m";  
-		static String executorMemory = "512m"; 
 		static String extraListeners = "";
 		static String localDir = ""; //tmp
 		static String logConf = "";	//false
 		static String master = "";
 		
-			
 		//Runtime Environment
 		static String driverExtraClassPath = "";
 		static String driverExtraJavaOptions = "";
@@ -42,18 +66,14 @@ public class Standalone {
 		//Shuffle Behavior
 		static String reducerMaxSizeInFlight = ""; //48m
 		static String shuffleBlockTransferService = ""; //netty
-		static String shuffleCompress = ""; //true
-		static String consolidateFiles = ""; //false
+
 		static String shuffleFileBuffer = ""; //32k
 		static String shuffleIOMaxRetries = ""; //3
 		static String shuffleIONumConnectionsPerPeer = ""; //1
 		static String shuffleIOPreferDirectBufs = ""; //true
 		static String shuffleIORetryWait = ""; //5s
-		static String shuffleManager = "sort"; //sort
-		static String shuffleMemoryFraction = ""; //0.2
-		static String sortBypassMergeThreshold = ""; //200
-		static String shuffleSpill = "true"; //true
-		static String shuffleSpillCompress = "true"; //true
+
+
 		
 		//Spark UI
 		static String eventLogCompress = ""; //false
@@ -77,24 +97,19 @@ public class Standalone {
 		static String kyroserializerBufferMax = ""; //64m
 		static String kryoserializerBuffer = ""; //64k
 		static String rddCompress = ""; //false
-		static String serializer = "org.apache.spark.serializer.KryoSerializer"; //org.apache.spark.serializer.JavaSerializer, else org.apache.spark.serializer.KryoSerializer when using Spark SQL Thrift Server
 		static String serializerObjectStreamReset = ""; //100
 		
 		//Execution Behavior
 		static String broadCastBlockSize = ""; //4m
 		static String broadCastFactory = ""; //org.apache.spark.broadcast.TorrentBroadcastFactory
 		static String cleanerTtl = ""; // (infinite)
-		static String executorCores = ""; //1 in YARN mode, all the available cores on the worker in standalone mode
-		static String defaultParallelism = ""; //local mode: number of cores on local machine, mesos fine grained mode: 8, others: total number of cores on all executor nodes or 2, whichever is larger
 		static String executorHeartBeatInterval = ""; //10s
 		static String filesFetchTimeout = ""; //60s
 		static String filesUseFetchCache = ""; //true
 		static String filesOverwrite = ""; //false
 		static String hadoopCloneClonf = ""; //false
 		static String hadoopValidateOutputSpecs = ""; //true
-		static String storageMemoryFraction = ""; //0.6
-		static String storageMemoryMapThreshold = ""; //2m
-		static String storageUnrollFraction = ""; //0.2
+
 		static String externalBlockStoreBlockManager = ""; //org.apache.spark.storage.TachyonBlockManager
 		static String externalBlockStoreBaseDir = ""; //System.getProperty(\"java.io.tmpdir\")
 		static String externalBlockStoreURL = ""; //tachyon://localhost:19998 for tachyon
@@ -121,7 +136,7 @@ public class Standalone {
 		static String rpcLookupTimeout = ""; //120s
 		
 		//Scheduling
-		static String coresMax = ""; //not set
+
 		static String localExecutionEnabled = ""; //false
 		static String localityWait = ""; //3s
 		static String localityWaitNode = ""; //Customize the locality wait for node locality
@@ -129,7 +144,7 @@ public class Standalone {
 		static String localityWaitRack = "";
 		static String schedulerMaxRegisteredResourcesWaitingTime = ""; //30s
 		static String schedulerMinRegisteredResourcesRatio = ""; //0.8 for YARN, 0.0 otherwise
-		static String schedulerMode = ""; //FIFO
+
 		static String schedulerReviveInterval = ""; //1s
 		static String speculation = ""; //false
 		static String speculationInterval = ""; //100ms
@@ -152,7 +167,7 @@ public class Standalone {
 			optionsTable.put("spark.driver.cores", driverCores);
 			commandLineParamsTable.put("--driver-cores", driverCores);
 		}
-	
+		
 		private static void setMaxResultSize(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.maxResultSize", maxResultSize);
 		}
@@ -280,7 +295,13 @@ public class Standalone {
 		}
 	
 		private static void setConsolidateFiles(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			optionsTable.put("spark.shuffle.consolidateFiles", consolidateFiles);
+			if (inputsTable.get("fileSystem").equals("hdfs")){
+				shuffleConsolidateFiles = "false";
+			}
+			else if (inputsTable.get("fileSystem").equals("ext4") || inputsTable.get("fileSystem").equals("xfs")){
+				shuffleConsolidateFiles = "true";
+			}
+			optionsTable.put("spark.shuffle.consolidateFiles", shuffleConsolidateFiles);
 		}
 	
 		private static void setShuffleFileBuffer(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -397,12 +418,16 @@ public class Standalone {
 			optionsTable.put("spark.kryoserializer.buffer", kryoserializerBuffer);
 		}
 	
+		//check ifit needs compression
+		//This will only work for MEMORY_ONLY_SER 
 		private static void setRddCompress(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.rdd.compress", rddCompress);
+			recommendationsTable.put("spark.rdd.compress", "Ensure persist() level is MEMORY_ONLY_SER.");
 		}
 	
 		private static void setSerializer(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.serializer", serializer);
+			recommendationsTable.put("spark.serializer", "If custom classes are used, MUST register the custom classes to Kyro Serializer.");
 		}
 	
 		private static void setSerializerObjectStreamReset(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -427,6 +452,14 @@ public class Standalone {
 		}
 	
 		private static void setDefaultParallelism(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			//for the the default parallelism is set to 2 * the number of cores
+			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+			double numNodes = Double.parseDouble(inputsTable.get("numNodes"));
+			double coresPerNode = Double.parseDouble(inputsTable.get("numCoresPerNode")); //in mb
+			double numWorkerNodes = numNodes - 1;
+			//Set driver memory 0.8 of current node's memory 
+			defaultParallelism = String.valueOf((int)(coresPerNode * numWorkerNodes * resourceFraction * 2));
+			
 			optionsTable.put("spark.default.parallelism", defaultParallelism);
 		}
 	
@@ -557,6 +590,11 @@ public class Standalone {
 		
 		//Scheduling
 		private static void setCoresMax(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+			String numCoresPerNode = inputsTable.get("numCoresPerNode");
+			double effectiveCoresPerNode = resourceFraction * Double.parseDouble(numCoresPerNode);
+			double numNodes = Double.parseDouble(inputsTable.get("numNodes"));
+			coresMax = String.valueOf((int)(numNodes * effectiveCoresPerNode));
 			optionsTable.put("spark.cores.max", coresMax);
 		}
 	
@@ -589,6 +627,12 @@ public class Standalone {
 		}
 	
 		private static void setSchedulerMode(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			if (Double.parseDouble(inputsTable.get("resourceFraction")) < 1.0){
+				schedulerMode = "FAIR";
+			}
+			else{
+				schedulerMode = "FIFO";
+			}
 			optionsTable.put("spark.scheduler.mode", schedulerMode);
 		}
 	
