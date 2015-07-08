@@ -81,14 +81,12 @@ public class Yarn {
 		setYarnDistArchives(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnDistFiles(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setExecutorInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-//		setYarnExecutorMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAMPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnQueue(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnJar(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAccessNameNodes(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAppMasterEnvironmentVariableName(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnContainerLauncherMaxThreads(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		
 		setYarnMaxAppAttempts(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnSubmitWaitAppCompletion(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}

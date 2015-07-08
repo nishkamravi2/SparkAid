@@ -10,13 +10,13 @@ public class Standalone {
 		//
 		static String executorMemory = ""; 
 		static String driverCores = "";
-		//
 		static String executorCores = ""; 
 		static String schedulerMode = "";
 		static String coresMax = ""; 
 		static String shuffleConsolidateFiles = "";
 		static String defaultParallelism = "";
 		static String rddCompress = "";
+		static String storageLevel = "";
 		
 		//must have defaults
 		static String maxResultSize = "0";
@@ -30,22 +30,14 @@ public class Standalone {
 		static String shuffleMemoryFraction = "0.2"; // storageMemoryFraction + storageUnrollFraction + shuffleMemoryFraction = 1
 		static String storageSafetyFraction = "0.9";
 		static String shuffleSafetyFraction = "0.8";
-		
-		//add in "-Dsun.io.serialization.extended DebugInfo=true" for information if a class that does not implement serializer is used. 
-		//Kyro serializer
-		
+		static String driverExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps";
+		static String executorExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps";
+			
 		//nice to have settings
-		static String storageMemoryMapThreshold = ""; //2m
+		static String storageMemoryMapThreshold = "2m"; //2m
 		static String sortBypassMergeThreshold = ""; //200
 	
-		
-		//array to set all the different executor environment variables e.g: JAVA_HOME, PYSPARK_PYTHON
-		static ArrayList<String> executorEnvVariablesArray = new ArrayList<String>();
-		//array to set all the default values of executor environment variable values
-		static ArrayList<String> executorEnvValuesArray = new ArrayList<String>();
-		
-		
-		//meh.. for now.
+		//KIV for now. 
 		
 		//Application Properties
 		static String appName = "";
@@ -56,18 +48,21 @@ public class Standalone {
 		
 		//Runtime Environment
 		static String driverExtraClassPath = "";
-		static String driverExtraJavaOptions = "";
+		
 		static String driverExtraLibraryPath = "";
 		static String driverUserClassPathFirst = ""; //false
 		static String executorExtraClassPath = "";
-		static String executorExtraJavaOptions = "";
+		
 		static String executorExtraLibraryPath = "";
 		static String executorLogsRollingMaxRetainedFiles = "";
 		static String executorLogsRollingMaxSize = "";
 		static String executorLogsRollingStrategy = "";
 		static String executorLogsRollingTimeInterval = "";
 		static String executorUserClassPathFirst = ""; //false
-
+		//array to set all the different executor environment variables e.g: JAVA_HOME, PYSPARK_PYTHON
+		static ArrayList<String> executorEnvVariablesArray = new ArrayList<String>();
+		//array to set all the default values of executor environment variable values
+		static ArrayList<String> executorEnvValuesArray = new ArrayList<String>();
 		static String pythonProfile = ""; //false
 		static String pythonProfileDump = "";
 		static String pythonWorkerMemory = ""; //512m
@@ -189,6 +184,21 @@ public class Standalone {
 		}
 	
 		private static void setExecutorMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			//assumption is that there is only one executor per node in standalone 1.3.0
+			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode"));
+			double availableMemoryPerNode = resourceFraction * memoryPerNode;
+			//general heuristic, want a min 512 mb, and a max of 64 gb of JVM
+			double targetMemoryPerNode = 0.0;
+			if (availableMemoryPerNode > 0.6){
+				targetMemoryPerNode =  0.9 *availableMemoryPerNode;
+				System.out.println(targetMemoryPerNode);
+			}
+			if (targetMemoryPerNode > 64){
+				targetMemoryPerNode = 64;
+			}
+			
+			executorMemory = String.valueOf((int)targetMemoryPerNode) + "g";
 			optionsTable.put("spark.executor.memory", executorMemory);
 		}
 	
@@ -210,20 +220,14 @@ public class Standalone {
 	
 		private static void setDriverExtraClassPath(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.extraClassPath", driverExtraClassPath);
-			//always set it in terminal
-			commandLineParamsTable.put("--driver-class-path", driverExtraClassPath);
 		}
 	
 		private static void setDriverExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.extraJavaOptions", driverExtraJavaOptions);
-			//always set it in terminal
-			commandLineParamsTable.put("--driver-java-options", driverExtraJavaOptions);
 		}
 	
 		private static void setDriverExtraLibraryPath(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.extraLibraryPath", driverExtraLibraryPath);
-			//always set it in terminal
-			commandLineParamsTable.put("--driver-library-path", driverExtraLibraryPath);
 		}
 	
 		private static void setDriverUserClassPathFirst(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -437,7 +441,6 @@ public class Standalone {
 		//This will only work for MEMORY_ONLY_SER 
 		private static void setRddCompress(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			
-			
 			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
 			double numNodes = Double.parseDouble(inputsTable.get("numNodes"));
 			double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode"));
@@ -445,7 +448,8 @@ public class Standalone {
 			double storageSafetyFractionValue = Double.parseDouble((storageSafetyFraction));
 			double storageMemoryFractionValue = Double.parseDouble((storageMemoryFraction));
 			
-			double availableMemory = resourceFraction * numNodes * memoryPerNode * storageSafetyFractionValue * storageMemoryFractionValue;
+			double availableMemory = resourceFraction * (numNodes - 1)* memoryPerNode * storageSafetyFractionValue * storageMemoryFractionValue;
+			//Based on experiments, serialized data is 1.5x the size of hdfs raw data
 			double expectedMemory = inputDataSize * 2;
 			
 			double ratio = availableMemory / expectedMemory;
@@ -463,11 +467,40 @@ public class Standalone {
 	
 		private static void setSerializer(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.serializer", serializer);
-			recommendationsTable.put("spark.serializer", "If custom classes are used, MUST register the custom classes to Kyro Serializer.");
+			recommendationsTable.put("spark.serializer", "If custom classes are used, MUST register the custom classes to Kyro Serializer. "
+					+ "Serialization Debug Info is turned on in Extra Java Options to reflect if class is not registered.");
 		}
 	
 		private static void setSerializerObjectStreamReset(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.serializer.objectStreamReset", serializerObjectStreamReset);
+		}
+		
+		private static void setStorageLevel(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			
+			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+			double numNodes = Double.parseDouble(inputsTable.get("numNodes"));
+			double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode"));
+			double inputDataSize = Double.parseDouble(inputsTable.get("inputDataSize"));
+			double storageSafetyFractionValue = Double.parseDouble((storageSafetyFraction));
+			double storageMemoryFractionValue = Double.parseDouble((storageMemoryFraction));
+			
+			double availableMemory = resourceFraction * (numNodes - 1) * memoryPerNode * storageSafetyFractionValue * storageMemoryFractionValue;
+			//Based on experiments, serialized data is 1.5x the size of hdfs raw data
+			double expectedMemory = inputDataSize * 2;
+			
+			double ratio = availableMemory / expectedMemory;
+			
+			//Based from SparkAutoConfig 1.0, might need to revisit.
+			if (ratio > 3){
+				storageLevel = "MEMORY_ONLY";
+			}else if(ratio > 2){
+				storageLevel = "MEMORY_AND_DISK";
+			}else{
+				storageLevel = "MEMORY_AND_DISK_SER";
+			}
+			
+			optionsTable.put("spark.storage.level", storageLevel);
+			
 		}
 		
 		//Execution Behavior
@@ -484,6 +517,11 @@ public class Standalone {
 		}
 	
 		private static void setExecutorCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			//assumption is that there is only one executor per node in standalone 1.3.0
+			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+			double numCoresPerNode = Integer.parseInt(inputsTable.get("numCoresPerNode"));
+			int targetExecutorCores = (int)(resourceFraction * numCoresPerNode);
+			executorCores = String.valueOf(targetExecutorCores);
 			optionsTable.put("spark.executor.cores", executorCores);
 		}
 	
@@ -771,6 +809,7 @@ public class Standalone {
 		    setRddCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setSerializer(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setSerializerObjectStreamReset(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setStorageLevel(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		}
 
 		public static void setSparkUI(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
