@@ -44,6 +44,7 @@ public class Streaming {
 
 	private static void setStreamingUnpersist(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.streaming.unpersist", streamingUnpersist);
+		recommendationsTable.put("spark.streaming.unpersist", "Set to true if running streaming app and running into OOM issues");
 	}
 
 	private static void setStreamingKafkaMaxRatePerPartition(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){

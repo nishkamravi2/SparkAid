@@ -89,9 +89,15 @@ public class Yarn {
 		setYarnContainerLauncherMaxThreads(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnMaxAppAttempts(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnSubmitWaitAppCompletion(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		
+		
+		setSchedulerMinRegisteredResourcesRatio(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
 	
 	
+
+
+
 	private static void setExecMemCoresInstances(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 
 		//for now assume container memory = nodeMemory for YARN
@@ -318,5 +324,10 @@ public class Yarn {
 
 	public static void setYarnSubmitWaitAppCompletion(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.submit.waitAppCompletion", yarnSubmitWaitAppCompletion);
+	}
+	
+	//overrides standalone setting
+	private static void setSchedulerMinRegisteredResourcesRatio(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		optionsTable.put("spark.scheduler.minRegisteredResourcesRatio", "0.8");
 	}
 }

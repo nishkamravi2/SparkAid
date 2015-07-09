@@ -5,9 +5,8 @@ import utils.UtilsConversion;
 
 public class Standalone {
 	
-		//must haves and needs to be configured
+		//must have settings through heuristics
 		static String driverMemory = ""; 
-		//
 		static String executorMemory = ""; 
 		static String driverCores = "";
 		static String executorCores = ""; 
@@ -18,141 +17,132 @@ public class Standalone {
 		static String rddCompress = "";
 		static String storageLevel = "";
 		
-		//must have defaults
-		static String maxResultSize = "0";
-		static String shuffleManager = "sort";
-		static String serializer = "org.apache.spark.serializer.KryoSerializer"; //org.apache.spark.serializer.JavaSerializer, else org.apache.spark.serializer.KryoSerializer when using Spark SQL Thrift Server
-		static String shuffleCompress = "true";
-		static String shuffleSpill = "true";
-		static String shuffleSpillCompress = "true";
-		static String storageMemoryFraction = "0.6"; // storageMemoryFraction + storageUnrollFraction + shuffleMemoryFraction = 1
-		static String storageUnrollFraction = "0.6"; // storageMemoryFraction + storageUnrollFraction + shuffleMemoryFraction = 1
-		static String shuffleMemoryFraction = "0.2"; // storageMemoryFraction + storageUnrollFraction + shuffleMemoryFraction = 1
-		static String storageSafetyFraction = "0.9";
-		static String shuffleSafetyFraction = "0.8";
-		static String driverExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps";
-		static String executorExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps";
-			
-		//nice to have settings
-		static String storageMemoryMapThreshold = "2m"; //2m
-		static String sortBypassMergeThreshold = ""; //200
-	
-		//KIV for now. 
+		//Default Values
 		
 		//Application Properties
-		static String appName = "";
+		static String appName = ""; //given at command line
+		static String driverMaxResultSize = "0";
 		static String extraListeners = "";
-		static String localDir = ""; //tmp
-		static String logConf = "";	//false
-		static String master = "";
+		static String localDir = "/tmp";
+		static String logConf = "false";
+		static String master = ""; //given at command line
 		
-		//Runtime Environment
-		static String driverExtraClassPath = "";
-		
-		static String driverExtraLibraryPath = "";
-		static String driverUserClassPathFirst = ""; //false
-		static String executorExtraClassPath = "";
-		
-		static String executorExtraLibraryPath = "";
-		static String executorLogsRollingMaxRetainedFiles = "";
-		static String executorLogsRollingMaxSize = "";
-		static String executorLogsRollingStrategy = "";
-		static String executorLogsRollingTimeInterval = "";
-		static String executorUserClassPathFirst = ""; //false
-		//array to set all the different executor environment variables e.g: JAVA_HOME, PYSPARK_PYTHON
-		static ArrayList<String> executorEnvVariablesArray = new ArrayList<String>();
-		//array to set all the default values of executor environment variable values
+		//RunTime
+		static String driverExtraClassPath = ""; //none
+		static String driverExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps";
+		static String driverExtraLibraryPath = ""; //none
+		static String driverUserClassPathFirst = "false"; 
+		static String executorExtraClassPath = ""; //none
+		static String executorExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps";
+		static String executorExtraLibraryPath = ""; //none
+		static String executorLogsRollingMaxRetainedFiles = ""; //none
+		static String executorLogsRollingMaxSize = ""; //none
+		static String executorLogsRollingStrategy = ""; //none
+		static String executorLogsRollingTimeInterval = "daily";
+		static String executorUserClassPathFirst = "false"; 
 		static ArrayList<String> executorEnvValuesArray = new ArrayList<String>();
-		static String pythonProfile = ""; //false
-		static String pythonProfileDump = "";
-		static String pythonWorkerMemory = ""; //512m
-		static String pythonWorkerReuse = ""; //true
+		static ArrayList<String> executorEnvVariablesArray = new ArrayList<String>();
+		static String pythonProfile = "false";
+		static String pythonProfileDump = ""; //none
+		static String pythonWorkerMemory = "512m"; //Uses same heuristic as Executor Memory
+		static String pythonWorkerReuse = "true";
 		
-		//Shuffle Behavior
-		static String reducerMaxSizeInFlight = ""; //48m
-		static String shuffleBlockTransferService = ""; //netty
-		static String shuffleFileBuffer = ""; //32k
-		static String shuffleIOMaxRetries = ""; //3
-		static String shuffleIONumConnectionsPerPeer = ""; //1
-		static String shuffleIOPreferDirectBufs = ""; //true
-		static String shuffleIORetryWait = ""; //5s
-
+		//Shuffle
+		static String reducerMaxSizeInFlight = "48m";
+		static String shuffleBlockTransferService = "netty";
+		static String shuffleCompress = "true";
+		static String shuffleFileBuffer = "32k"; 
+		static String shuffleIOMaxRetries = "3"; 
+		static String shuffleIONumConnectionsPerPeer = "1"; 
+		static String shuffleIOPreferDirectBufs = "true"; 
+		static String shuffleIORetryWait = "5"; //s
+		static String shuffleManager = "sort";
+		static String shuffleMemoryFraction = "0.2"; // storageMemoryFraction + storageUnrollFraction + shuffleMemoryFraction = 1
+		static String shuffleSafetyFraction = "0.8"; //Not in documentation
+		static String sortBypassMergeThreshold = "200"; // partitions
+		static String shuffleSpill = "true";
+		static String shuffleSpillCompress = "true";
+		
 		//Spark UI
-		static String eventLogCompress = ""; //false
-		static String eventLogDir = ""; // "file:///tmp/spark-events"
-		static String eventLogEnabled = ""; //false
-		static String uiKillEnabled = ""; //true
-		static String uiPort = ""; //4040
-		static String retainedJobs = ""; //4040
-		static String retainedStages = ""; //1000
+		static String eventLogCompress = "false"; 
+		static String eventLogDir = ""; // "file:///tmp/spark-events" //set a directory here
+		static String eventLogEnabled = "false"; 
+		static String uiKillEnabled = "true"; 
+		static String uiPort = "4040";
+		static String uiRetainedJobs = "1000";
+		static String uiRetainedStages = "1000"; 
 		
 		//Compression and Serialization
-		static String broadcastCompress = ""; //true
-		static String closureSerializer = ""; //org.apache.spark.serializer.JavaSerializer
-		static String compressionCodec = ""; //snappy
-		static String IOCompressionLz4BlockSize = ""; //32k
-		static String IOCompressionSnappyBlockSize = ""; //32k
-		static String kryoClassesToRegister = "";
-		static String kryoReferenceTracking = ""; //true normally else false when using spark SQL thrift server
-		static String registrationRequried = ""; //false
+		static String broadcastCompress = "true"; 
+		static String closureSerializer = "org.apache.spark.serializer.JavaSerializer";
+		static String compressionCodec = "snappy"; 
+		static String IOCompressionLz4BlockSize = "32k";
+		static String IOCompressionSnappyBlockSize = "32k"; 
+		static String kryoClassesToRegister = ""; //insert kryo classes to register here
+		static String kryoReferenceTracking = "true"; //true normally else false when using spark SQL thrift server
+		static String kryoRegistrationRequried = "false";
 		static String kryoRegistrator = "";
-		static String kyroserializerBufferMax = ""; //64m
-		static String kryoserializerBuffer = ""; //64k
-		static String serializerObjectStreamReset = ""; //100
+		static String kryoserializerBuffer = "64k"; 
+		static String kyroserializerBufferMax = "64m";
+		static String serializer = "org.apache.spark.serializer.KryoSerializer"; //org.apache.spark.serializer.JavaSerializer, else org.apache.spark.serializer.KryoSerializer when using Spark SQL Thrift Server
+		static String serializerObjectStreamReset = "100"; 
 		
-		//Execution Behavior
-		static String broadCastBlockSize = ""; //4m
-		static String broadCastFactory = ""; //org.apache.spark.broadcast.TorrentBroadcastFactory
+		//Execution Behaviour
+		static String broadCastBlockSize = "4000"; //kb  
+		static String broadCastFactory = "org.apache.spark.broadcast.TorrentBroadcastFactory";
 		static String cleanerTtl = ""; // (infinite)
-		static String executorHeartBeatInterval = ""; //10s
-		static String filesFetchTimeout = ""; //60s
-		static String filesUseFetchCache = ""; //true
-		static String filesOverwrite = ""; //false
-		static String hadoopCloneClonf = ""; //false
-		static String hadoopValidateOutputSpecs = ""; //true
-
-		static String externalBlockStoreBlockManager = ""; //org.apache.spark.storage.TachyonBlockManager
+		static String executorHeartBeatInterval = "10000"; //ms
+		static String filesFetchTimeout = "60"; //s
+		static String filesOverwrite = "false"; 
+		static String filesUseFetchCache = "true";
+		static String hadoopCloneClonf = "false"; 
+		static String hadoopValidateOutputSpecs = "true";
+		static String storageMemoryFraction = "0.6"; // storageMemoryFraction + storageUnrollFraction + shuffleMemoryFraction = 1
+		static String storageMemoryMapThreshold = "2097152"; //2 * 1024 * 1024 bytes
+		static String storageSafetyFraction = "0.9"; //not in Spark documentation
+		static String storageUnrollFraction = "0.2"; // storageMemoryFraction + storageUnrollFraction + shuffleMemoryFraction = 1
+		static String externalBlockStoreBlockManager = "org.apache.spark.storage.TachyonBlockManager";
 		static String externalBlockStoreBaseDir = ""; //System.getProperty(\"java.io.tmpdir\")
 		static String externalBlockStoreURL = ""; //tachyon://localhost:19998 for tachyon
 		
 		//Networking
-		static String akkaFailureDetectorThreshold = ""; //300.0
-		static String akkaFrameSize = ""; //10
-		static String akkaHeartbeatInterval = ""; //1000s
-		static String akkaHeartbeatPauses = ""; //6000s
-		static String akkaThreads = ""; //4
-		static String akkaTimeout = ""; //100s
+		static String akkaFailureDetectorThreshold = "300.0"; //300.0
+		static String akkaFrameSize = "10"; //MB
+		static String akkaHeartbeatInterval = "1000"; //s
+		static String akkaHeartbeatPauses = "6000"; //s
+		static String akkaThreads = "4"; //
+		static String akkaTimeout = "100"; //s
 		static String blockManagerPort = ""; //random
 		static String broadcastPort = ""; //random
 		static String driverHost = ""; //local hostname
 		static String driverPort = ""; //random
 		static String executorPort = ""; //random
 		static String fileserverPort = ""; //random
-		static String networkTimeout = ""; //120s
+		static String networkTimeout = "120"; //120s
 		static String portMaxRetries = ""; //16
 		static String replClassServerPort = ""; //random
-		static String rpcNumRetries = ""; //3
-		static String rpcRetryWait = ""; //3s
-		static String rpcAskTimeout = ""; //120s
-		static String rpcLookupTimeout = ""; //120s
+		static String rpcNumRetries = "3"; //3
+		static String rpcRetryWait = "3000"; //ms
+		static String rpcAskTimeout = "120"; //120s
+		static String rpcLookupTimeout = "120"; //120s
 		
 		//Scheduling
-
-		static String localExecutionEnabled = ""; //false
-		static String localityWait = ""; //3s
-		static String localityWaitNode = ""; //Customize the locality wait for node locality
-		static String localityWaitProcess = "";
-		static String localityWaitRack = "";
-		static String schedulerMaxRegisteredResourcesWaitingTime = ""; //30s
-		static String schedulerMinRegisteredResourcesRatio = ""; //0.8 for YARN, 0.0 otherwise
-
-		static String schedulerReviveInterval = ""; //1s
-		static String speculation = ""; //false
-		static String speculationInterval = ""; //100ms
-		static String speculationMultiplier = ""; //1.5
-		static String speculationQuantile = ""; //0.75
-		static String taskCpus = ""; //1
-		static String taskMaxFailures = ""; //4
+		static String localExecutionEnabled = "false"; 
+		static String localityWait = "3000"; //ms
+		static String localityWaitNode = ""; //follows spark.locality.wait
+		static String localityWaitProcess = ""; //follows spark.locality.wait
+		static String localityWaitRack = ""; //follows spark.locality.wait
+		static String schedulerMaxRegisteredResourcesWaitingTime = "30000"; //ms
+		static String schedulerMinRegisteredResourcesRatio = "0.0"; //0.8 for YARN, 0.0 otherwise
+		static String schedulerReviveInterval = "1000"; //ms
+		static String speculation = "false"; //false
+		static String speculationInterval = "100"; //ms
+		static String speculationMultiplier = "1.5"; //1.5
+		static String speculationQuantile = "0.75"; //0.75
+		static String taskCpus = "1";
+		static String taskMaxFailures = "4";
+		
+		
 		
 		//Application Settings Methods
 		private static void setAppName(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -170,7 +160,7 @@ public class Standalone {
 		}
 		
 		private static void setMaxResultSize(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			optionsTable.put("spark.driver.maxResultSize", maxResultSize);
+			optionsTable.put("spark.driver.maxResultSize", driverMaxResultSize);
 		}
 	
 		private static void setDriverMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -200,6 +190,7 @@ public class Standalone {
 			
 			executorMemory = String.valueOf((int)targetMemoryPerNode) + "g";
 			optionsTable.put("spark.executor.memory", executorMemory);
+			recommendationsTable.put("spark.executor.memory", "Assumption: Only one executor per node in standalone 1.3.0");
 		}
 	
 		private static void setExtraListeners(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -208,6 +199,7 @@ public class Standalone {
 	
 		private static void setLocalDir(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.local.dir", localDir);
+			recommendationsTable.put("spark.local.dir", "Ensure this location has TB's of space");
 		}
 	
 		private static void setLogConf(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -224,6 +216,7 @@ public class Standalone {
 	
 		private static void setDriverExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.driver.extraJavaOptions", driverExtraJavaOptions);
+			recommendationsTable.put("spark.driver.extraJavaOptions", "In case of long gc pauses, try adding the following: -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled");
 		}
 	
 		private static void setDriverExtraLibraryPath(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -240,6 +233,7 @@ public class Standalone {
 	
 		private static void setExecutorExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.extraJavaOptions", executorExtraJavaOptions);
+			recommendationsTable.put("spark.executor.extraJavaOptions", "In case of long gc pauses, try adding the following: -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled");
 		}
 	
 		private static void setExecutorExtraLibraryPath(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -281,10 +275,27 @@ public class Standalone {
 	
 		private static void setPythonProfileDump(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.python.profile.dump", pythonProfileDump);
+			recommendationsTable.put("spark.python.profile.dump","Set directory to dump profile result before driver exiting if desired");
 		}
 	
 		private static void setPythonWorkerMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			//assumption is that there is only one executor per node in standalone 1.3.0
+			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode"));
+			double availableMemoryPerNode = resourceFraction * memoryPerNode;
+			//general heuristic, want a min 512 mb, and a max of 64 gb of JVM
+			double targetMemoryPerNode = 0.0;
+			if (availableMemoryPerNode > 0.6){
+				targetMemoryPerNode =  0.9 *availableMemoryPerNode;
+				System.out.println(targetMemoryPerNode);
+			}
+			if (targetMemoryPerNode > 64){
+				targetMemoryPerNode = 64;
+			}
+			
+			pythonWorkerMemory = String.valueOf((int)targetMemoryPerNode) + "g";
 			optionsTable.put("spark.python.worker.memory", pythonWorkerMemory);
+			recommendationsTable.put("spark.python.worker.memory", "Assumption: Only one executor per node in standalone 1.3.0");
 		}
 	
 		private static void setPythonWorkerReuse(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -316,6 +327,7 @@ public class Standalone {
 	
 		private static void setShuffleFileBuffer(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.file.buffer", shuffleFileBuffer);
+			recommendationsTable.put("spark.shuffle.file.buffer", "Increase this value to improve shuffle performance when a lot of memory is available");
 		}
 	
 		private static void setShuffleIOMaxRetries(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -340,6 +352,7 @@ public class Standalone {
 	
 		private static void setShuffleMemoryFraction(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.memoryFraction", shuffleMemoryFraction);
+			recommendationsTable.put("spark.shuffle.memoryFraction", "Increase this to 0.8 if there is no RDD caching/persistence in the app");
 		}
 	
 		private static void setSortBypassMergeThreshold(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -385,11 +398,11 @@ public class Standalone {
 		}
 	
 		private static void setRetainedJobs(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			optionsTable.put("spark.ui.retainedJobs", retainedJobs);
+			optionsTable.put("spark.ui.retainedJobs", uiRetainedJobs);
 		}
 	
 		private static void setRetainedStages(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			optionsTable.put("spark.ui.retainedStages", retainedStages);
+			optionsTable.put("spark.ui.retainedStages", uiRetainedStages);
 		}
 	
 		//Compression and Serialization
@@ -422,7 +435,7 @@ public class Standalone {
 		}
 	
 		private static void setKryoRegistrationRequired(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			optionsTable.put("spark.kryo.registrationRequired", registrationRequried);
+			optionsTable.put("spark.kryo.registrationRequired", kryoRegistrationRequried);
 		}
 	
 		private static void setKryoRegistrator(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -431,6 +444,7 @@ public class Standalone {
 	
 		private static void setKyroserializerBufferMax(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.kryoserializer.buffer.max", kyroserializerBufferMax);
+			recommendationsTable.put("spark.kryoserializer.buffer.max", "Increase this if you get a \"buffer limit exceeded\" exception");
 		}
 	
 		private static void setKryoserializerBuffer(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -561,6 +575,7 @@ public class Standalone {
 	
 		private static void setStorageMemoryFraction(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.storage.memoryFraction", storageMemoryFraction);
+			recommendationsTable.put("spark.storage.memoryFraction", "Reduce this to 0.1 if there is no RDD caching/persistence in the app");
 		}
 	
 		private static void setStorageMemoryMapThreshold(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -569,6 +584,7 @@ public class Standalone {
 	
 		private static void setStorageUnrollFraction(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.storage.unrollFraction", storageUnrollFraction);
+			recommendationsTable.put("spark.storage.unrollFraction", "Reduce this to 0.1 if there is no RDD caching/persistence in the app");
 		}
 	
 		private static void setExternalBlockStoreBlockManager(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -606,6 +622,7 @@ public class Standalone {
 	
 		private static void setAkkaTimeout(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.akka.timeout", akkaTimeout);
+			recommendationsTable.put("spark.akka.timeout","Increase if GC pauses cause problem");
 		}
 	
 		private static void setBlockManagerPort(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -676,6 +693,7 @@ public class Standalone {
 	
 		private static void setLocalityWait(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.locality.wait", localityWait);
+			recommendationsTable.put("spark.locality.wait", "Increase this value if long GC pauses");
 		}
 	
 		private static void setLocalityWaitNode(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -714,6 +732,7 @@ public class Standalone {
 	
 		private static void setSpeculation(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.speculation", speculation);
+			recommendationsTable.put("spark.speculation", "Set to true if stragglers are found");
 		}
 	
 		private static void setSpeculationInterval(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
