@@ -6,47 +6,40 @@ import utils.UtilsConversion;
 
 public class Yarn {
 	
-	static String yarnAMMemory = ""; //512m
-	//YARN AM in Cluster Mode	
-	static String driverCores = ""; //1  
-	//YARN AM in Client Mode	
-	static String yarnAMCores = ""; //1
-	static String yarnAMWaitTime = ""; //100s
-	static String yarnSubmitFileReplication = ""; //3
-	static String yarnPreserveStagingFiles = ""; //false
-	static String yarnSchedulerHeartbeatIntervalms = ""; //5000
+	//Heuristic Configured Parameters
+	static String yarnAMMemory = ""; 
+	static String yarnAMCores = ""; 
+	static String executorInstances = ""; 
+	static String yarnExecutorMemoryOverhead = ""; 
+	static String yarnDriverMemoryOverhead = "";
+	static String yarnAMMemoryOverhead = ""; 
+	static String driverCores = ""; 
+	
+	//Variables for default Overhead Memory Setting, this is an inferred setting
+	static double executorMemoryOverheadFraction = 0.10; //recommended by config guide
+	static double driverMemoryOverheadFraction = 0.07; //recommended by config guide
+	static double AMMemoryOverheadFraction = 0.07; //recommended by config guide
+	
+	//YARN AM Defaults
+	static String yarnAMWaitTime = "100000"; //ms
+	static String yarnSubmitFileReplication = "3"; 
+	static String yarnPreserveStagingFiles = "false"; 
+	static String yarnSchedulerHeartbeatIntervalms = "5000"; //ms
 	static String yarnMaxExecutorFailures = ""; //numExecutors * 2, with min of 3
 	static String yarnHistoryServerAddress = ""; //none
 	static String yarnDistArchives = ""; //none
 	static String yarnDistFiles = ""; //none
-	static String executorInstances = ""; //2
-	static String yarnExecutorMemoryOverhead = ""; //executorMemory * 0.10, with min of 384
-	static String yarnDriverMemoryOverhead = ""; //driverMemory * 0.07, with min of 384
-	static String yarnAMMemoryOverhead = ""; //AMMemory * 0.07, with min of 384
 	static String yarnAMPort = ""; //random
 	static String yarnQueue = ""; //default
 	static String yarnJar = ""; //none
 	static String yarnAccessNameNodes = ""; //none
-	//array to set all the different AM Env variables
-	static ArrayList<String> yarnAppMasterEnvVariablesArray = new ArrayList<String>();
-	//array to set all the different AM Env values for corresponding variables
-	static ArrayList<String> yarnAppMasterEnvValuesArray = new ArrayList<String>();
-	static String yarnContainerLauncherMaxThreads = ""; //25
+	static ArrayList<String> yarnAppMasterEnvVariablesArray = new ArrayList<String>(); //array to set all the different AM Env variables
+	static ArrayList<String> yarnAppMasterEnvValuesArray = new ArrayList<String>(); //array to set all the different AM Env values for corresponding variables
+	static String yarnContainerLauncherMaxThreads = "25";
 	static String yarnAMExtraJavaOptions = ""; //none
 	static String yarnAMExtraLibraryPath = ""; //none
 	static String yarnMaxAppAttempts = ""; //yarn.resourcemanager.am.max-attempts in YARN
-	static String yarnSubmitWaitAppCompletion = ""; //true
-	
-	//these variables are in tuning guide 2014, but not yarn configs
-	//yarn.nodemanager.resource.memory-mb controls the maximum sum of memory used by the containers on each node.
-	static String yarnSchedulerMaximumAllocationMb = "40960"; //currently in CM the default is 64GB, but for c1906 config it is 40GB
-	//yarn.nodemanager.resource.cpu-vcores controls the maximum sum of cores used by the containers on each node.
-	static String yarnNodeManagerResourceCpuVcores = "16"; //currently in CM the default is 16
-
-	//created own variable for default Overhead Memory Setting, this is an inferred setting
-	static double executorMemoryOverheadFraction = 0.10; //recommended by config guide
-	static double driverMemoryOverheadFraction = 0.07; //recommended by config guide
-	static double AMMemoryOverheadFraction = 0.07; //recommended by config guide
+	static String yarnSubmitWaitAppCompletion = "true";
 	
 	public static void configureYarnSettings( Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 		
@@ -94,10 +87,6 @@ public class Yarn {
 		setSchedulerMinRegisteredResourcesRatio(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
 	
-	
-
-
-
 	private static void setExecMemCoresInstances(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 
 		//for now assume container memory = nodeMemory for YARN

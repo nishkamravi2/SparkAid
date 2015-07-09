@@ -158,7 +158,7 @@ public class ConfigurationConsole {
 
 	private static void createOutputFile(String fileName, Hashtable<String,String> t){
 		try{
-			int startParamIndex = 45;
+			int startParamIndex = 54;
 			File outFile = new File(fileName);
 			if (!outFile.exists()) {
 				outFile.createNewFile();

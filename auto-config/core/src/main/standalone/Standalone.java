@@ -5,7 +5,7 @@ import utils.UtilsConversion;
 
 public class Standalone {
 	
-		//must have settings through heuristics
+		//Heuristic Configured Parameters
 		static String driverMemory = ""; 
 		static String executorMemory = ""; 
 		static String driverCores = "";
@@ -182,7 +182,6 @@ public class Standalone {
 			double targetMemoryPerNode = 0.0;
 			if (availableMemoryPerNode > 0.6){
 				targetMemoryPerNode =  0.9 *availableMemoryPerNode;
-				System.out.println(targetMemoryPerNode);
 			}
 			if (targetMemoryPerNode > 64){
 				targetMemoryPerNode = 64;
@@ -287,7 +286,6 @@ public class Standalone {
 			double targetMemoryPerNode = 0.0;
 			if (availableMemoryPerNode > 0.6){
 				targetMemoryPerNode =  0.9 *availableMemoryPerNode;
-				System.out.println(targetMemoryPerNode);
 			}
 			if (targetMemoryPerNode > 64){
 				targetMemoryPerNode = 64;
