@@ -21,10 +21,10 @@ public class Yarn {
 	static double AMMemoryOverheadFraction = 0.07; //recommended by config guide
 	
 	//YARN AM Defaults
-	static String yarnAMWaitTime = "100000"; //ms
-	static String yarnSubmitFileReplication = "3"; 
+	static String yarnAMWaitTime = "100000"; //100000ms
+	static String yarnSubmitFileReplication = "3"; //3
 	static String yarnPreserveStagingFiles = "false"; 
-	static String yarnSchedulerHeartbeatIntervalms = "5000"; //ms
+	static String yarnSchedulerHeartbeatIntervalms = "5000"; //5000ms
 	static String yarnMaxExecutorFailures = ""; //numExecutors * 2, with min of 3
 	static String yarnHistoryServerAddress = ""; //none
 	static String yarnDistArchives = ""; //none
@@ -35,11 +35,11 @@ public class Yarn {
 	static String yarnAccessNameNodes = ""; //none
 	static ArrayList<String> yarnAppMasterEnvVariablesArray = new ArrayList<String>(); //array to set all the different AM Env variables
 	static ArrayList<String> yarnAppMasterEnvValuesArray = new ArrayList<String>(); //array to set all the different AM Env values for corresponding variables
-	static String yarnContainerLauncherMaxThreads = "25";
+	static String yarnContainerLauncherMaxThreads = "25";//25
 	static String yarnAMExtraJavaOptions = ""; //none
 	static String yarnAMExtraLibraryPath = ""; //none
 	static String yarnMaxAppAttempts = ""; //yarn.resourcemanager.am.max-attempts in YARN
-	static String yarnSubmitWaitAppCompletion = "true";
+	static String yarnSubmitWaitAppCompletion = "true";//true
 	
 	public static void configureYarnSettings( Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 		
@@ -105,14 +105,14 @@ public class Yarn {
 		//for now we decide to assign 4 cores per executor.
 		int desiredCoresPerExecutor = 4; //for now 16, 8 and 4 executors are recommended. They run on average at the same time for pagerank
 		int targetExecutorNumPerNode = effectiveCoresPerNode / desiredCoresPerExecutor;
-		double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode;
+		double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode * 0.98; //0.98 as a safety buffer for rounding/conversions
 		
 		//assuming a default of 0.10 overhead per executor, calculate and set executor memory. this will override standalone setting
-		double executorPerMemory = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction) * 1;
+		double executorPerMemory = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction);
 		setExecutorMemory(Integer.toString((int)executorPerMemory) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
 		
 		//calculate and set executor overhead
-		double yarnExecutorOverhead = executorPerMemory * executorMemoryOverheadFraction *1024; //convert back to mb
+		double yarnExecutorOverhead = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction) * executorMemoryOverheadFraction *1000; //convert back to mb
 		yarnExecutorMemoryOverhead = String.valueOf((int)(yarnExecutorOverhead));
 		setYarnExecutorMemoryOverhead (yarnExecutorMemoryOverhead, "",  optionsTable, recommendationsTable, commandLineParamsTable);
 		
