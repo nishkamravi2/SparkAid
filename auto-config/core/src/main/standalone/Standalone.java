@@ -17,6 +17,9 @@ public class Standalone {
 		static String rddCompress = "";
 		static String storageLevel = "";
 		
+		//not in configuration file, does not work for 1.3.0
+		static String executorInstances = ""; 
+		
 		//Default Values
 		
 		//Application Properties
@@ -142,6 +145,9 @@ public class Standalone {
 		static String taskCpus = "1";
 		static String taskMaxFailures = "4";
 		
+		//own safety fraction
+		static Double driverMemorySafetyFraction = 0.8;
+		
 		
 		
 		//Application Settings Methods
@@ -166,8 +172,8 @@ public class Standalone {
 		private static void setDriverMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
 			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
-			//Set driver memory 0.8 of current node's memory 
-			double targetDriverMemory = memoryPerNode * 0.8 * resourceFraction;
+			//Set driver memory 0.8 of current node's memory - driverMemorySafetyFraction
+			double targetDriverMemory = memoryPerNode * driverMemorySafetyFraction * resourceFraction;
 			driverMemory = Integer.toString((int)targetDriverMemory) + "g";
 			optionsTable.put("spark.driver.memory", driverMemory);
 			commandLineParamsTable.put("--driver-memory", driverMemory);
@@ -533,6 +539,9 @@ public class Standalone {
 			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
 			double numCoresPerNode = Integer.parseInt(inputsTable.get("numCoresPerNode"));
 			int targetExecutorCores = (int)(resourceFraction * numCoresPerNode);
+			
+			//decide to hard code 4 cores / executor for future mode
+			
 			executorCores = String.valueOf(targetExecutorCores);
 			optionsTable.put("spark.executor.cores", executorCores);
 		}

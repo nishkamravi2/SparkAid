@@ -15,10 +15,17 @@ public class Yarn {
 	static String yarnAMMemoryOverhead = ""; 
 	static String driverCores = ""; 
 	
+	//
+	static String executorCores = "4";
+	
 	//Variables for default Overhead Memory Setting, this is an inferred setting
 	static double executorMemoryOverheadFraction = 0.10; //recommended by config guide
 	static double driverMemoryOverheadFraction = 0.07; //recommended by config guide
 	static double AMMemoryOverheadFraction = 0.07; //recommended by config guide
+	
+	//External variables not in Spark but used for configurations
+	static double executorRoundingBuffer = 0.98;
+	static double driverMemorySafetyFraction = 0.8;
 	
 	//YARN AM Defaults
 	static String yarnAMWaitTime = "100000"; //100000ms
@@ -41,8 +48,11 @@ public class Yarn {
 	static String yarnMaxAppAttempts = ""; //yarn.resourcemanager.am.max-attempts in YARN
 	static String yarnSubmitWaitAppCompletion = "true";//true
 	
+	
+	
 	public static void configureYarnSettings( Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 		
+		setExecutorCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnDefaults(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setExecMemCoresInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		
@@ -103,9 +113,9 @@ public class Yarn {
 		int effectiveCoresPerNode = (int) (resourceFraction * numCoresPerNode);
 		
 		//for now we decide to assign 4 cores per executor.
-		int desiredCoresPerExecutor = 4; //for now 16, 8 and 4 executors are recommended. They run on average at the same time for pagerank
+		int desiredCoresPerExecutor = Integer.parseInt(executorCores); //for now 16, 8 and 4 executors are recommended. They run on average at the same time for pagerank
 		int targetExecutorNumPerNode = effectiveCoresPerNode / desiredCoresPerExecutor;
-		double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode * 0.98; //0.98 as a safety buffer for rounding/conversions
+		double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode * executorRoundingBuffer; //0.98 as a safety buffer for rounding/conversions
 		
 		//assuming a default of 0.10 overhead per executor, calculate and set executor memory. this will override standalone setting
 		double executorPerMemory = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction);
@@ -117,7 +127,7 @@ public class Yarn {
 		setYarnExecutorMemoryOverhead (yarnExecutorMemoryOverhead, "",  optionsTable, recommendationsTable, commandLineParamsTable);
 		
 		//set executor.cores
-		setExecutorCores (Integer.toString(desiredCoresPerExecutor), "",  optionsTable, recommendationsTable, commandLineParamsTable);
+//		setExecutorCores (Integer.toString(desiredCoresPerExecutor), "",  optionsTable, recommendationsTable, commandLineParamsTable);
 		
 		//set executor.instances
 		int totalExecutorInstances =  targetExecutorNumPerNode * numWorkerNodes;
@@ -131,13 +141,17 @@ public class Yarn {
 		if (recommendation.length() > 0)
 			recommendationsTable.put("spark.executor.instances", recommendation);
 	}
-
-	private static void setExecutorCores (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		
-		optionsTable.put("spark.executor.cores", value);
-		if (recommendation.length() > 0)
-			recommendationsTable.put("spark.executor.cores", recommendation);
+	
+	public static void setExecutorCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		optionsTable.put("spark.executor.cores", executorCores);
 	}
+
+//	private static void setExecutorCores (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+//		
+//		optionsTable.put("spark.executor.cores", value);
+//		if (recommendation.length() > 0)
+//			recommendationsTable.put("spark.executor.cores", recommendation);
+//	}
 	
 	private static void setExecutorMemory (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		
@@ -152,9 +166,10 @@ public class Yarn {
 
 		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
 		double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
-		//Set driver memory 0.8 of current node's memory 
-		double targetAMemory = memoryPerNode * 0.8 * resourceFraction;
-		yarnAMMemory = Integer.toString((int)targetAMemory) + "g";
+		//Set driver memory 0.8 of current node's memory - driverMemorySafetyFraction
+		double targetAMMemory = memoryPerNode * driverMemorySafetyFraction * resourceFraction;
+		double allocatedAMMemory = targetAMMemory / (1 + AMMemoryOverheadFraction);
+		yarnAMMemory = Integer.toString((int)allocatedAMMemory) + "g";
 		optionsTable.put("spark.yarn.am.memory", yarnAMMemory);
 		//remove command line params
 		commandLineParamsTable.remove("--driver-memory"); 
@@ -179,9 +194,12 @@ public class Yarn {
 	public static void setDriverMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
 		double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
-		//Set driver memory 0.8 of current node's memory 
-		double targetDriverMemory = memoryPerNode * 0.8 * resourceFraction;
-		String driverMemory = Integer.toString((int)targetDriverMemory) + "g";
+		//Set driver memory 0.8 of current node's memory - driverMemorySafetyFraction 
+		double targetDriverMemory = memoryPerNode * driverMemorySafetyFraction * resourceFraction;
+		
+		double allocatedDriverMemory = targetDriverMemory / (1.0 + driverMemoryOverheadFraction);
+		
+		String driverMemory = Integer.toString((int)allocatedDriverMemory) + "g";
 		optionsTable.put("spark.driver.memory", driverMemory);
 		commandLineParamsTable.put("--driver-memory", driverMemory);
 	}
@@ -249,8 +267,8 @@ public class Yarn {
 		
 		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
 		double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
-		//Set driver memory 0.8 of current node's memory 
-		double targetDriverMemory = memoryPerNode * 0.8 * resourceFraction;
+		//Set driver memory 0.8 of current node's memory - driverMemorySafetyFraction
+		double targetDriverMemory = memoryPerNode * driverMemorySafetyFraction * resourceFraction / (1 + driverMemoryOverheadFraction);
 		double calculatedYarnDriverMemOverhead = targetDriverMemory * driverMemoryOverheadFraction;
 		yarnDriverMemoryOverhead = Integer.toString((int)calculatedYarnDriverMemOverhead * 1024);
 		optionsTable.put("spark.yarn.driver.memoryOverhead", yarnDriverMemoryOverhead);
@@ -261,8 +279,8 @@ public class Yarn {
 		
 		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
 		double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
-		//Set driver memory 0.8 of current node's memory 
-		double targetDriverMemory = memoryPerNode * 0.8 * resourceFraction;
+		//Set driver memory 0.8 of current node's memory - driverMemorySafetyFraction
+		double targetDriverMemory = memoryPerNode * driverMemorySafetyFraction * resourceFraction / (1 + AMMemoryOverheadFraction);
 		double calculatedYarnAMMemOverhead = targetDriverMemory * AMMemoryOverheadFraction;
 		yarnAMMemoryOverhead = Integer.toString((int)calculatedYarnAMMemOverhead * 1024);
 		optionsTable.put("spark.yarn.am.memoryOverhead", yarnAMMemoryOverhead);
