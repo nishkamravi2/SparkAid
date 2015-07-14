@@ -125,7 +125,6 @@ public class ConfigurationConsole {
 		createOutputFile("spark.conf.advise", recommendationsTable);
 		createOutputFile("spark.cmdline.options", commandLineParamsTable);
 		String cmdLineParams = generateParamsString(commandLineParamsTable);
-		
 		constructCmdLine(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable, cmdLineParams);
 	}
 	

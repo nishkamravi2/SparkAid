@@ -9,13 +9,14 @@ public class Standalone {
 		static String driverMemory = ""; 
 		static String executorMemory = ""; 
 		static String driverCores = "";
-		static String executorCores = ""; 
 		static String schedulerMode = "";
 		static String coresMax = ""; 
 		static String shuffleConsolidateFiles = "";
 		static String defaultParallelism = "";
 		static String rddCompress = "";
 		static String storageLevel = "";
+		
+		static String executorCores = "4"; 
 		
 		//not in configuration file, does not work for 1.3.0
 		static String executorInstances = ""; 
@@ -87,7 +88,8 @@ public class Standalone {
 		static String kryoRegistrator = "";
 		static String kryoserializerBuffer = "64k"; 
 		static String kyroserializerBufferMax = "64m";
-		static String serializer = "org.apache.spark.serializer.KryoSerializer"; //org.apache.spark.serializer.JavaSerializer, else org.apache.spark.serializer.KryoSerializer when using Spark SQL Thrift Server
+		//change this with a function.
+		static String serializer = "org.apache.spark.serializer.JavaSerializer";
 		static String serializerObjectStreamReset = "100"; 
 		
 		//Execution Behaviour
@@ -145,10 +147,199 @@ public class Standalone {
 		static String taskCpus = "1";
 		static String taskMaxFailures = "4";
 		
-		//own safety fraction
-		static Double driverMemorySafetyFraction = 0.8;
+		//External variables not in Spark but used for configurations
+		static double executorRoundingBuffer = 0.98;
+		static double driverMemorySafetyFraction = 0.8;
 		
+		public static void configureStandardSettings(
+				Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable,
+				Hashtable<String, String> recommendationsTable,
+				Hashtable<String, String> commandLineParamsTable) {
+
+			// Set Application Properties
+			setApplicationProperties(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			// Set RunTime Environment
+			setRunTimeEnvironment(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			// Set Shuffle Behavior
+			setShuffleBehavior(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			// Set Spark UI
+			setSparkUI(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			// Set Compression and Serialization
+			setCompressionSerialization(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			// Set Execution Behavior
+			setExecutionBehavior(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			// Set Networking
+			setNetworking(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+
+		}
 		
+		public static void setApplicationProperties(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
+			setAppName(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			setExecMemCoresInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setCoresMax(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setMaxResultSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setDriverMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExtraListeners(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setLocalDir(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setLogConf(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setMaster(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		}
+		
+		public static void setRunTimeEnvironment(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
+			setDriverExtraClassPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setDriverExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setDriverExtraLibraryPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setDriverUserClassPathFirst(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExecutorExtraClassPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExecutorExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExecutorExtraLibraryPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExecutorLogsRollingMaxRetainedFiles(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExecutorLogsRollingMaxSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExecutorLogsRollingStrategy(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExecutorLogsRollingTimeInterval(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExecutorUserClassPathFirst(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExecutorEnvEnvironmentVariableName(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setPythonProfile(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setPythonProfileDump(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setPythonWorkerMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setPythonWorkerReuse(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		}
+		
+		public static void setShuffleBehavior(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
+			setReducerMaxSizeInFlight(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setShuffleBlockTransferService(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setShuffleCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setConsolidateFiles(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setShuffleFileBuffer(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setShuffleIOMaxRetries(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setShuffleIONumConnectionsPerPeer(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setShuffleIOPreferDirectBufs(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setShuffleIORetryWait(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setShuffleManager(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setShuffleMemoryFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setSortBypassMergeThreshold(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setShuffleSpill(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setShuffleSpillCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setShuffleSafetyFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setStorageSafetyFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		}
+		
+		public static void setSparkUI(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
+			setEventLogCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setEventLogDir(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setEventLogEnabled(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setUiKillEnabled(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setUiPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setRetainedJobs(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setRetainedStages(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		}
+
+		public static void setCompressionSerialization(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
+			setBroadcastCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setClosureSerializer(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setCompressionCodec(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setIOCompressionLz4BlockSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setIOCompressionSnappyBlockSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setKryoClassesToRegister(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setKryoReferenceTracking(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setKryoRegistrationRequired(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setKryoRegistrator(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setKyroserializerBufferMax(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setKryoserializerBuffer(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setRddCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setSerializer(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setSerializerObjectStreamReset(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setStorageLevel(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		}
+		
+		public static void setExecutionBehavior(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
+			setBroadCastBlockSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setBroadCastFactory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setCleanerTtl(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExecutorCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setDefaultParallelism(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExecutorHeartBeatInterval(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setFilesFetchTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setFilesUseFetchCache(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setFilesOverwrite(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setHadoopCloneClonf(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setHadoopValidateOutputSpecs(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setStorageMemoryFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setStorageMemoryMapThreshold(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setStorageUnrollFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExternalBlockStoreBlockManager(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExternalBlockStoreBaseDir(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExternalBlockStoreURL(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		}
+		
+		public static void setNetworking(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
+			setAkkaFailureDetectorThreshold(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setAkkaFrameSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setAkkaHeartbeatInterval(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setAkkaHeartbeatPauses(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setAkkaThreads(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setAkkaTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setBlockManagerPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setBroadcastPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setDriverHost(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setDriverPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setExecutorPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setFileserverPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setNetworkTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setPortMaxRetries(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setReplClassServerPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setRpcNumRetries(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setRpcRetryWait(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setRpcAskTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setRpcLookupTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setLocalExecutionEnabled(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setLocalityWait(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setLocalityWaitNode(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setLocalityWaitProcess(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setLocalityWaitRack(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setSchedulerMaxRegisteredResourcesWaitingTime(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setSchedulerMinRegisteredResourcesRatio(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setSchedulerMode(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setSchedulerReviveInterval(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setSpeculation(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setSpeculationInterval(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setSpeculationMultiplier(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setSpeculationQuantile(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setTaskCpus(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		    setTaskMaxFailures(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		}
+
+		private static void setExecMemCoresInstances(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+
+			//for now assume container memory = nodeMemory for YARN
+			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
+			int numNodes = Integer.parseInt(inputsTable.get("numNodes"));
+			int numWorkerNodes = numNodes - 1;
+			int numCoresPerNode = Integer.parseInt(inputsTable.get("numCoresPerNode"));
+			
+			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+			double effectiveMemoryPerNode = resourceFraction * memoryPerNode;
+			int effectiveCoresPerNode = (int) (resourceFraction * numCoresPerNode);
+			
+			int desiredCoresPerExecutor = Integer.parseInt(executorCores);
+			int targetExecutorNumPerNode = effectiveCoresPerNode / desiredCoresPerExecutor;
+			double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode * executorRoundingBuffer;
+			totalMemoryPerExecutor = Math.min(64, totalMemoryPerExecutor);
+			setExecutorMemory(Integer.toString((int)totalMemoryPerExecutor) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
+						
+			//set executor.instances
+			int totalExecutorInstances =  targetExecutorNumPerNode * numWorkerNodes;
+			setExecutorInstances (Integer.toString(totalExecutorInstances), "",  optionsTable, recommendationsTable, commandLineParamsTable);
+			
+		}
+		
+		private static void setExecutorInstances (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			executorInstances = value;
+			optionsTable.put("spark.executor.instances", executorInstances);
+			if (recommendation.length() > 0)
+				recommendationsTable.put("spark.executor.instances", recommendation);
+		}
 		
 		//Application Settings Methods
 		private static void setAppName(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -179,24 +370,32 @@ public class Standalone {
 			commandLineParamsTable.put("--driver-memory", driverMemory);
 		}
 	
-		private static void setExecutorMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			//assumption is that there is only one executor per node in standalone 1.3.0
-			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode"));
-			double availableMemoryPerNode = resourceFraction * memoryPerNode;
-			//general heuristic, want a min 512 mb, and a max of 64 gb of JVM
-			double targetMemoryPerNode = 0.0;
-			if (availableMemoryPerNode > 0.6){
-				targetMemoryPerNode =  0.9 *availableMemoryPerNode;
-			}
-			if (targetMemoryPerNode > 64){
-				targetMemoryPerNode = 64;
-			}
+		private static void setExecutorMemory (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			
-			executorMemory = String.valueOf((int)targetMemoryPerNode) + "g";
-			optionsTable.put("spark.executor.memory", executorMemory);
-			recommendationsTable.put("spark.executor.memory", "Assumption: Only one executor per node in standalone 1.3.0");
+			optionsTable.put("spark.executor.memory", value);
+			if (recommendation.length() > 0)
+				recommendationsTable.put("spark.executor.memory", recommendation);
+			
 		}
+		
+//		private static void setExecutorMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+//			//assumption is that there is only one executor per node in standalone 1.3.0
+//			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+//			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode"));
+//			double availableMemoryPerNode = resourceFraction * memoryPerNode;
+//			//general heuristic, want a min 512 mb, and a max of 64 gb of JVM
+//			double targetMemoryPerNode = 0.0;
+//			if (availableMemoryPerNode > 0.6){
+//				targetMemoryPerNode =  0.9 *availableMemoryPerNode;
+//			}
+//			if (targetMemoryPerNode > 64){
+//				targetMemoryPerNode = 64;
+//			}
+//			
+//			executorMemory = String.valueOf((int)targetMemoryPerNode) + "g";
+//			optionsTable.put("spark.executor.memory", executorMemory);
+//			recommendationsTable.put("spark.executor.memory", "Assumption: Only one executor per node in standalone 1.3.0");
+//		}
 	
 		private static void setExtraListeners(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.extraListeners", extraListeners);
@@ -484,6 +683,7 @@ public class Standalone {
 		}
 	
 		private static void setSerializer(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			serializer = "org.apache.spark.serializer.KryoSerializer";
 			optionsTable.put("spark.serializer", serializer);
 			recommendationsTable.put("spark.serializer", "If custom classes are used, MUST register the custom classes to Kyro Serializer. "
 					+ "Serialization Debug Info is turned on in Extra Java Options to reflect if class is not registered.");
@@ -534,15 +734,7 @@ public class Standalone {
 			optionsTable.put("spark.cleaner.ttl", cleanerTtl);
 		}
 	
-		private static void setExecutorCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			//assumption is that there is only one executor per node in standalone 1.3.0
-			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-			double numCoresPerNode = Integer.parseInt(inputsTable.get("numCoresPerNode"));
-			int targetExecutorCores = (int)(resourceFraction * numCoresPerNode);
-			
-			//decide to hard code 4 cores / executor for future mode
-			
-			executorCores = String.valueOf(targetExecutorCores);
+		public static void setExecutorCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.executor.cores", executorCores);
 		}
 	
@@ -684,13 +876,9 @@ public class Standalone {
 			optionsTable.put("spark.rpc.lookupTimeout", rpcLookupTimeout);
 		}
 		
-		//Scheduling
-		private static void setCoresMax(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-			String numCoresPerNode = inputsTable.get("numCoresPerNode");
-			double effectiveCoresPerNode = resourceFraction * Double.parseDouble(numCoresPerNode);
-			double numNodes = Double.parseDouble(inputsTable.get("numNodes"));
-			coresMax = String.valueOf((int)(numNodes * effectiveCoresPerNode));
+		private static void setCoresMax(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
+			int allocateCoresMax = Integer.parseInt(executorCores) * Integer.parseInt(executorInstances);
+			coresMax = Integer.toString(allocateCoresMax);
 			optionsTable.put("spark.cores.max", coresMax);
 		}
 	
@@ -762,163 +950,5 @@ public class Standalone {
 			optionsTable.put("spark.task.maxFailures", taskMaxFailures);
 		}
 
-		public static void setNetworking(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
-			setAkkaFailureDetectorThreshold(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setAkkaFrameSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setAkkaHeartbeatInterval(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setAkkaHeartbeatPauses(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setAkkaThreads(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setAkkaTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setBlockManagerPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setBroadcastPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setDriverHost(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setDriverPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setFileserverPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setNetworkTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setPortMaxRetries(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setReplClassServerPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setRpcNumRetries(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setRpcRetryWait(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setRpcAskTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setRpcLookupTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setCoresMax(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setLocalExecutionEnabled(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setLocalityWait(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setLocalityWaitNode(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setLocalityWaitProcess(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setLocalityWaitRack(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setSchedulerMaxRegisteredResourcesWaitingTime(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setSchedulerMinRegisteredResourcesRatio(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setSchedulerMode(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setSchedulerReviveInterval(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setSpeculation(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setSpeculationInterval(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setSpeculationMultiplier(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setSpeculationQuantile(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setTaskCpus(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setTaskMaxFailures(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		}
 
-		public static void setExecutionBehavior(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
-			setBroadCastBlockSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setBroadCastFactory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setCleanerTtl(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setDefaultParallelism(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorHeartBeatInterval(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setFilesFetchTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setFilesUseFetchCache(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setFilesOverwrite(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setHadoopCloneClonf(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setHadoopValidateOutputSpecs(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setStorageMemoryFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setStorageMemoryMapThreshold(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setStorageUnrollFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExternalBlockStoreBlockManager(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExternalBlockStoreBaseDir(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExternalBlockStoreURL(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		}
-
-		public static void setCompressionSerialization(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
-			setBroadcastCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setClosureSerializer(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setCompressionCodec(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setIOCompressionLz4BlockSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setIOCompressionSnappyBlockSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setKryoClassesToRegister(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setKryoReferenceTracking(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setKryoRegistrationRequired(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setKryoRegistrator(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setKyroserializerBufferMax(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setKryoserializerBuffer(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setRddCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setSerializer(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setSerializerObjectStreamReset(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setStorageLevel(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		}
-
-		public static void setSparkUI(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
-			setEventLogCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setEventLogDir(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setEventLogEnabled(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setUiKillEnabled(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setUiPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setRetainedJobs(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setRetainedStages(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		}
-
-		public static void setShuffleBehavior(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
-			setReducerMaxSizeInFlight(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setShuffleBlockTransferService(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setShuffleCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setConsolidateFiles(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setShuffleFileBuffer(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setShuffleIOMaxRetries(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setShuffleIONumConnectionsPerPeer(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setShuffleIOPreferDirectBufs(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setShuffleIORetryWait(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setShuffleManager(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setShuffleMemoryFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setSortBypassMergeThreshold(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setShuffleSpill(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setShuffleSpillCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setShuffleSafetyFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setStorageSafetyFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    
-		}
-
-		public static void setRunTimeEnvironment(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
-			setDriverExtraClassPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setDriverExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setDriverExtraLibraryPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setDriverUserClassPathFirst(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorExtraClassPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorExtraLibraryPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorLogsRollingMaxRetainedFiles(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorLogsRollingMaxSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorLogsRollingStrategy(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorLogsRollingTimeInterval(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorUserClassPathFirst(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorEnvEnvironmentVariableName(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setPythonProfile(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setPythonProfileDump(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setPythonWorkerMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setPythonWorkerReuse(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		}
-
-		public static void setApplicationProperties(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
-			setAppName(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setMaxResultSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setDriverMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExtraListeners(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setLocalDir(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setLogConf(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setMaster(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		}
-
-		public static void configureStandardSettings(
-				Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable,
-				Hashtable<String, String> recommendationsTable,
-				Hashtable<String, String> commandLineParamsTable) {
-
-			// Set Application Properties
-			setApplicationProperties(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			// Set RunTime Environment
-			setRunTimeEnvironment(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			// Set Shuffle Behavior
-			setShuffleBehavior(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			// Set Spark UI
-			setSparkUI(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			// Set Compression and Serialization
-			setCompressionSerialization(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			// Set Execution Behavior
-			setExecutionBehavior(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			// Set Networking
-			setNetworking(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-
-		}
 	}
