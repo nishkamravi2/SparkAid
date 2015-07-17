@@ -26,6 +26,7 @@ public class Yarn {
 	//External variables not in Spark but used for configurations
 	static double executorRoundingBuffer = 0.98;
 	static double driverMemorySafetyFraction = 0.8;
+	static double executorUpperBoundLimitG = 64;
 	
 	//YARN AM Defaults
 	static String yarnAMWaitTime = "100000"; //100000ms
@@ -43,10 +44,13 @@ public class Yarn {
 	static ArrayList<String> yarnAppMasterEnvVariablesArray = new ArrayList<String>(); //array to set all the different AM Env variables
 	static ArrayList<String> yarnAppMasterEnvValuesArray = new ArrayList<String>(); //array to set all the different AM Env values for corresponding variables
 	static String yarnContainerLauncherMaxThreads = "25";//25
-	static String yarnAMExtraJavaOptions = ""; //none
+	static String yarnAMExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps"; //none
 	static String yarnAMExtraLibraryPath = ""; //none
 	static String yarnMaxAppAttempts = ""; //yarn.resourcemanager.am.max-attempts in YARN
 	static String yarnSubmitWaitAppCompletion = "true";//true
+	
+	static String executorExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps";
+	static String driverExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps";
 	
 	public static void configureYarnSettings( Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 		
@@ -54,7 +58,7 @@ public class Yarn {
 		setYarnDefaults(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setExecMemCoresInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setCoresMax(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		
+		setExecutorExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		//Client only settings
 		if (inputsTable.get("deployMode").equals("client")){
 			setYarnAMMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -66,9 +70,11 @@ public class Yarn {
 			setYarnDriverMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			setDriverMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable); //same as in standalone for now, will override standalone if different.
 			setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable); //same as in standalone for now, will override standalone if different.
+			setDriverExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		}else{
 			//wrong deployMode input
-		}		
+		}
+		
 	}
 	
 	private static void setCoresMax(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
@@ -116,8 +122,8 @@ public class Yarn {
 		double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode * executorRoundingBuffer;
 		
 		double executorPerMemory = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction);
-		//Maximum of 64gb per executor for now, hardcoded limit
-		executorPerMemory = Math.min(64, executorPerMemory);
+		
+		executorPerMemory = Math.min(executorUpperBoundLimitG, executorPerMemory);
 		setExecutorMemory(Integer.toString((int)executorPerMemory) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
 		
 		//calculate and set executor overhead
@@ -131,6 +137,24 @@ public class Yarn {
 		
 	}
 	
+	private static void setDriverExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		double driverMemory = UtilsConversion.parseMemory(optionsTable.get("spark.driver.memory")) / 1024;
+		if (driverMemory < 32){
+			driverExtraJavaOptions += " -XX:+UseCompressedOops";
+		}
+		optionsTable.put("spark.driver.extraJavaOptions", driverExtraJavaOptions);
+		recommendationsTable.put("spark.driver.extraJavaOptions", "In case of long gc pauses, try adding the following: -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled");
+	}
+	
+	private static void setExecutorExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		double executorMemory = UtilsConversion.parseMemory(optionsTable.get("spark.executor.memory")) / 1024;
+		if (executorMemory < 32){
+			executorExtraJavaOptions += " -XX:+UseCompressedOops";
+		}
+		optionsTable.put("spark.executor.extraJavaOptions", executorExtraJavaOptions);
+		recommendationsTable.put("spark.executor.extraJavaOptions", "In case of long gc pauses, try adding the following: -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled");
+	}
+
 	private static void setExecutorInstances (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		executorInstances = value;
 		optionsTable.put("spark.executor.instances", executorInstances);
@@ -301,9 +325,15 @@ public class Yarn {
 
 	//Client Mode only
 	public static void setYarnAMExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		//In cluster mode, use spark.driver.extraJavaOptions instead.
+		double yarnAMMemory = UtilsConversion.parseMemory(optionsTable.get("spark.yarn.am.memory")) / 1024;
+		if (yarnAMMemory < 32){
+			yarnAMExtraJavaOptions += " -XX:+UseCompressedOops";
+		}
 		optionsTable.put("spark.yarn.am.extraJavaOptions", yarnAMExtraJavaOptions);
+		recommendationsTable.put("spark.yarn.am.extraJavaOptions", "In case of long gc pauses, try adding the following: -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled");
+		optionsTable.remove("spark.driver.extraJavaOptions");
 	}
+	
 	//Client Mode only
 	public static void setYarnAMExtraLibraryPath(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){	
 		optionsTable.put("spark.yarn.am.extraLibraryPath", yarnAMExtraLibraryPath);

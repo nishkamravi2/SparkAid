@@ -30,5 +30,6 @@ public class UtilsConversion {
 			return Double.parseDouble(s);
 		}
 	}
+	
 
 }

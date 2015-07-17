@@ -61,7 +61,7 @@ public class Standalone {
 		static String shuffleIOPreferDirectBufs = "true"; 
 		static String shuffleIORetryWait = "5"; //s
 		static String shuffleManager = "sort";
-		static String shuffleMemoryFraction = "0.2"; // storageMemoryFraction + storageUnrollFraction + shuffleMemoryFraction = 1
+		static String shuffleMemoryFraction = "0.2"; 
 		static String shuffleSafetyFraction = "0.8"; //Not in documentation
 		static String sortBypassMergeThreshold = "200"; // partitions
 		static String shuffleSpill = "true";
@@ -105,7 +105,7 @@ public class Standalone {
 		static String storageMemoryFraction = "0.6"; // storageMemoryFraction + storageUnrollFraction + shuffleMemoryFraction = 1
 		static String storageMemoryMapThreshold = "2097152"; //2 * 1024 * 1024 bytes
 		static String storageSafetyFraction = "0.9"; //not in Spark documentation
-		static String storageUnrollFraction = "0.2"; // storageMemoryFraction + storageUnrollFraction + shuffleMemoryFraction = 1
+		static String storageUnrollFraction = "0.2"; // Fraction of storageMemoryFraction
 		static String externalBlockStoreBlockManager = "org.apache.spark.storage.TachyonBlockManager";
 		static String externalBlockStoreBaseDir = ""; //System.getProperty(\"java.io.tmpdir\")
 		static String externalBlockStoreURL = ""; //tachyon://localhost:19998 for tachyon
@@ -148,8 +148,9 @@ public class Standalone {
 		static String taskMaxFailures = "4";
 		
 		//External variables not in Spark but used for configurations
-		static double executorRoundingBuffer = 0.98;
+		static double executorSafetyBuffer = 0.80;
 		static double driverMemorySafetyFraction = 0.8;
+		static double executorUpperBoundLimitG = 64;
 		
 		public static void configureStandardSettings(
 				Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable,
@@ -170,16 +171,21 @@ public class Standalone {
 			setExecutionBehavior(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			// Set Networking
 			setNetworking(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			
+			//set executor and driver pointer flags to 32bit if JVM is < 32GB, this will reduce GC time
+			setExecutorExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			setDriverExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			
 
 		}
 		
 		public static void setApplicationProperties(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 			setAppName(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			setDriverMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			setExecMemCoresInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setCoresMax(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setMaxResultSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setDriverMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setExtraListeners(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setLocalDir(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setLogConf(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -188,11 +194,9 @@ public class Standalone {
 		
 		public static void setRunTimeEnvironment(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 			setDriverExtraClassPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setDriverExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setDriverExtraLibraryPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setDriverUserClassPathFirst(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setExecutorExtraClassPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setExecutorExtraLibraryPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setExecutorLogsRollingMaxRetainedFiles(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setExecutorLogsRollingMaxSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -202,7 +206,6 @@ public class Standalone {
 		    setExecutorEnvEnvironmentVariableName(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setPythonProfile(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setPythonProfileDump(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setPythonWorkerMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setPythonWorkerReuse(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		}
 		
@@ -324,10 +327,10 @@ public class Standalone {
 			
 			int desiredCoresPerExecutor = Integer.parseInt(executorCores);
 			int targetExecutorNumPerNode = effectiveCoresPerNode / desiredCoresPerExecutor;
-			double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode * executorRoundingBuffer;
-			totalMemoryPerExecutor = Math.min(64, totalMemoryPerExecutor);
+			double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode * executorSafetyBuffer;
+			totalMemoryPerExecutor = Math.min(executorUpperBoundLimitG, totalMemoryPerExecutor);
 			setExecutorMemory(Integer.toString((int)totalMemoryPerExecutor) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
-						
+			setPythonWorkerMemory(Integer.toString((int)totalMemoryPerExecutor) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
 			//set executor.instances
 			int totalExecutorInstances =  targetExecutorNumPerNode * numWorkerNodes;
 			setExecutorInstances (Integer.toString(totalExecutorInstances), "",  optionsTable, recommendationsTable, commandLineParamsTable);
@@ -363,7 +366,6 @@ public class Standalone {
 		private static void setDriverMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
 			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
-			//Set driver memory 0.8 of current node's memory - driverMemorySafetyFraction
 			double targetDriverMemory = memoryPerNode * driverMemorySafetyFraction * resourceFraction;
 			driverMemory = Integer.toString((int)targetDriverMemory) + "g";
 			optionsTable.put("spark.driver.memory", driverMemory);
@@ -371,31 +373,10 @@ public class Standalone {
 		}
 	
 		private static void setExecutorMemory (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			
 			optionsTable.put("spark.executor.memory", value);
 			if (recommendation.length() > 0)
 				recommendationsTable.put("spark.executor.memory", recommendation);
-			
 		}
-		
-//		private static void setExecutorMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-//			//assumption is that there is only one executor per node in standalone 1.3.0
-//			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-//			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode"));
-//			double availableMemoryPerNode = resourceFraction * memoryPerNode;
-//			//general heuristic, want a min 512 mb, and a max of 64 gb of JVM
-//			double targetMemoryPerNode = 0.0;
-//			if (availableMemoryPerNode > 0.6){
-//				targetMemoryPerNode =  0.9 *availableMemoryPerNode;
-//			}
-//			if (targetMemoryPerNode > 64){
-//				targetMemoryPerNode = 64;
-//			}
-//			
-//			executorMemory = String.valueOf((int)targetMemoryPerNode) + "g";
-//			optionsTable.put("spark.executor.memory", executorMemory);
-//			recommendationsTable.put("spark.executor.memory", "Assumption: Only one executor per node in standalone 1.3.0");
-//		}
 	
 		private static void setExtraListeners(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.extraListeners", extraListeners);
@@ -419,6 +400,10 @@ public class Standalone {
 		}
 	
 		private static void setDriverExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			double driverMemory = UtilsConversion.parseMemory(optionsTable.get("spark.driver.memory")) / 1024;
+			if (driverMemory < 32){
+				driverExtraJavaOptions += " -XX:+UseCompressedOops";
+			}
 			optionsTable.put("spark.driver.extraJavaOptions", driverExtraJavaOptions);
 			recommendationsTable.put("spark.driver.extraJavaOptions", "In case of long gc pauses, try adding the following: -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled");
 		}
@@ -436,6 +421,10 @@ public class Standalone {
 		}
 	
 		private static void setExecutorExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			double executorMemory = UtilsConversion.parseMemory(optionsTable.get("spark.executor.memory")) / 1024;
+			if (executorMemory < 32){
+				executorExtraJavaOptions += " -XX:+UseCompressedOops";
+			}
 			optionsTable.put("spark.executor.extraJavaOptions", executorExtraJavaOptions);
 			recommendationsTable.put("spark.executor.extraJavaOptions", "In case of long gc pauses, try adding the following: -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled");
 		}
@@ -481,24 +470,13 @@ public class Standalone {
 			optionsTable.put("spark.python.profile.dump", pythonProfileDump);
 			recommendationsTable.put("spark.python.profile.dump","Set directory to dump profile result before driver exiting if desired");
 		}
-	
-		private static void setPythonWorkerMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			//assumption is that there is only one executor per node in standalone 1.3.0
-			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode"));
-			double availableMemoryPerNode = resourceFraction * memoryPerNode;
-			//general heuristic, want a min 512 mb, and a max of 64 gb of JVM
-			double targetMemoryPerNode = 0.0;
-			if (availableMemoryPerNode > 0.6){
-				targetMemoryPerNode =  0.9 *availableMemoryPerNode;
-			}
-			if (targetMemoryPerNode > 64){
-				targetMemoryPerNode = 64;
-			}
+		
+		private static void setPythonWorkerMemory (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			
-			pythonWorkerMemory = String.valueOf((int)targetMemoryPerNode) + "g";
-			optionsTable.put("spark.python.worker.memory", pythonWorkerMemory);
-			recommendationsTable.put("spark.python.worker.memory", "Assumption: Only one executor per node in standalone 1.3.0");
+			optionsTable.put("spark.python.worker.memory", value);
+			if (recommendation.length() > 0)
+				recommendationsTable.put("spark.python.worker.memory", recommendation);
+			
 		}
 	
 		private static void setPythonWorkerReuse(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -530,7 +508,7 @@ public class Standalone {
 	
 		private static void setShuffleFileBuffer(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.file.buffer", shuffleFileBuffer);
-			recommendationsTable.put("spark.shuffle.file.buffer", "Increase this value to improve shuffle performance when a lot of memory is available");
+//			recommendationsTable.put("spark.shuffle.file.buffer", "Increase this value to improve shuffle performance when a lot of memory is available");
 		}
 	
 		private static void setShuffleIOMaxRetries(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -631,6 +609,7 @@ public class Standalone {
 	
 		private static void setKryoClassesToRegister(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.kryo.classesToRegister", kryoClassesToRegister);
+			recommendationsTable.put("spark.kryo.classesToRegister", "Register classes with Kryo serializer for better performance");
 		}
 	
 		private static void setKryoReferenceTracking(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
