@@ -151,6 +151,9 @@ public class Standalone {
 		static double executorSafetyBuffer = 0.80;
 		static double driverMemorySafetyFraction = 0.8;
 		static double executorUpperBoundLimitG = 64;
+		static double unserializedFactor = 4; //experimentally determined at ~3
+		static double serializedUncompressedFactor = 0.8; //experimentally determined at ~0.5
+		static double serializedCompressedFactor = serializedUncompressedFactor * 0.8;
 		
 		public static void configureStandardSettings(
 				Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable,
@@ -250,7 +253,6 @@ public class Standalone {
 		    setKryoRegistrator(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setKyroserializerBufferMax(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setKryoserializerBuffer(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setRddCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setSerializer(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setSerializerObjectStreamReset(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setStorageLevel(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -633,32 +635,8 @@ public class Standalone {
 			optionsTable.put("spark.kryoserializer.buffer", kryoserializerBuffer);
 		}
 	
-		//check ifit needs compression
-		//This will only work for MEMORY_ONLY_SER 
 		private static void setRddCompress(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			
-			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-			double numNodes = Double.parseDouble(inputsTable.get("numNodes"));
-			double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode"));
-			double inputDataSize = Double.parseDouble(inputsTable.get("inputDataSize"));
-			double storageSafetyFractionValue = Double.parseDouble((storageSafetyFraction));
-			double storageMemoryFractionValue = Double.parseDouble((storageMemoryFraction));
-			
-			double availableMemory = resourceFraction * (numNodes - 1)* memoryPerNode * storageSafetyFractionValue * storageMemoryFractionValue;
-			//Based on experiments, serialized data is 1.5x the size of hdfs raw data
-			double expectedMemory = inputDataSize * 2;
-			
-			double ratio = availableMemory / expectedMemory;
-			if (ratio <= 1){
-				rddCompress = "true";
-			}
-			else{
-				rddCompress = "false";
-			}
-			
 			optionsTable.put("spark.rdd.compress", rddCompress);
-			recommendationsTable.put("spark.rdd.compress", "Ensure persist() level is MEMORY_ONLY_SER.");
-			
 		}
 	
 		private static void setSerializer(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -680,18 +658,22 @@ public class Standalone {
 			double inputDataSize = Double.parseDouble(inputsTable.get("inputDataSize"));
 			double storageSafetyFractionValue = Double.parseDouble((storageSafetyFraction));
 			double storageMemoryFractionValue = Double.parseDouble((storageMemoryFraction));
+			double storageMemoryAvailableFraction = 1 - Double.parseDouble(storageUnrollFraction);
 			
-			double availableMemory = resourceFraction * (numNodes - 1) * memoryPerNode * storageSafetyFractionValue * storageMemoryFractionValue;
-			//Based on experiments, serialized data is 1.5x the size of hdfs raw data
-			double expectedMemory = inputDataSize * 2;
+			double availableMemory = resourceFraction * (numNodes - 1) * memoryPerNode * storageSafetyFractionValue * storageMemoryFractionValue * storageMemoryAvailableFraction;
 			
-			double ratio = availableMemory / expectedMemory;
+			double inputUnserialized = inputDataSize * unserializedFactor;
+			double inputUncompressedSerialized = inputDataSize * serializedUncompressedFactor;
+			double inputCompressedSerialized = inputDataSize * serializedCompressedFactor;
 			
-			//Based from SparkAutoConfig 1.0, might need to revisit.
-			if (ratio > 3){
+			if (inputUnserialized < availableMemory){
 				storageLevel = "MEMORY_ONLY";
-			}else if(ratio > 2){
-				storageLevel = "MEMORY_AND_DISK";
+			}else if (inputUncompressedSerialized < availableMemory){
+				storageLevel = "MEMORY_ONLY_SER";
+			}else if (inputCompressedSerialized < availableMemory){
+				storageLevel = "MEMORY_ONLY_SER";
+				rddCompress = "true";
+				setRddCompress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			}else{
 				storageLevel = "MEMORY_AND_DISK_SER";
 			}
