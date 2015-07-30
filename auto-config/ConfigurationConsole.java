@@ -3,10 +3,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Scanner;
 
 import security.src.main.Security;
 import sparkR.src.main.SparkR;
@@ -57,7 +57,61 @@ public class ConfigurationConsole {
 		Hashtable<String, String> commandLineParamsTable = new Hashtable<String, String>();
 		
 		//get input parameters
-		if (args.length != 17) {
+		if (args.length == 0){
+			Scanner scanner = new Scanner(System.in);
+			
+			System.out.print("Enter input data size in GB:");
+			inputDataSize = scanner.nextLine();
+			
+			System.out.println("Enter number of nodes in cluster (including master):");
+			numNodes = scanner.nextLine();
+			
+			System.out.println("Enter number of cores per node: ");
+			numCoresPerNode = scanner.nextLine();
+			
+			System.out.println("Enter memory per node in GB: ");
+			memoryPerNode = scanner.nextLine();
+			
+			System.out.println("Enter fraction of resources of cluster to be used (from 0.0 - 1.00): ");
+			resourceFraction = scanner.nextLine();
+			
+			System.out.println("Enter file system of input raw data: hdfs/ext4/xfs");
+			fileSystem = scanner.nextLine();
+			
+			System.out.println("Enter master URL");
+			master = scanner.nextLine();
+			
+			System.out.println("Enter deploy mode: cluster / client");
+			deployMode = scanner.nextLine();
+			
+			System.out.println("Enter Cluster Manager: standalone / yarn");
+			clusterManager = scanner.nextLine();
+			
+			System.out.println("Is this a SQL application? y/n");
+			sqlFlag = scanner.nextLine();
+			
+			System.out.println("Is this a Streaming application? y/n");
+			streamingFlag = scanner.nextLine();
+			
+			System.out.println("Is this a Dynamic Allocation application? y/n");
+			dynamicAllocationFlag = scanner.nextLine();
+			
+			System.out.println("Is this a Security application? y/n");
+			securityFlag = scanner.nextLine();
+			
+			System.out.println("Is this a sparkR application? y/n");
+			sparkRFlag = scanner.nextLine();
+			
+			System.out.println("Enter Class Name of application: ");
+			className = scanner.nextLine();
+			
+			System.out.println("Enter file path of application JAR ");
+			appJar = scanner.nextLine();
+			
+			System.out.println("Enter Application Arguments");
+			appArgs = scanner.nextLine();
+		}
+		else if(args.length != 17) {
 			System.out.println("Invalid Input\n");
 			printUsage();
 			System.exit(0);
@@ -80,25 +134,26 @@ public class ConfigurationConsole {
 			className = args[14];
 			appJar = args[15];
 			appArgs = args[16];
-			
-			inputsTable.put("inputDataSize", inputDataSize);
-			inputsTable.put("numNodes", numNodes);
-			inputsTable.put("numCoresPerNode", numCoresPerNode);
-			inputsTable.put("memoryPerNode", memoryPerNode);
-			inputsTable.put("resourceFraction", resourceFraction);			
-			inputsTable.put("fileSystem", fileSystem);
-			inputsTable.put("master", master);
-			inputsTable.put("deployMode", deployMode);
-			inputsTable.put("clusterManager", clusterManager);
-			inputsTable.put("sqlFlag", sqlFlag);
-			inputsTable.put("streamingFlag", streamingFlag);
-			inputsTable.put("dynamicAllocationFlag", dynamicAllocationFlag);
-			inputsTable.put("securityFlag", securityFlag);
-			inputsTable.put("sparkRFlag", sparkRFlag);
-			inputsTable.put("className", className);
-			inputsTable.put("appJar", appJar);
-			inputsTable.put("appArgs", appArgs);
+		
 		}
+		
+		inputsTable.put("inputDataSize", inputDataSize);
+		inputsTable.put("numNodes", numNodes);
+		inputsTable.put("numCoresPerNode", numCoresPerNode);
+		inputsTable.put("memoryPerNode", memoryPerNode);
+		inputsTable.put("resourceFraction", resourceFraction);			
+		inputsTable.put("fileSystem", fileSystem);
+		inputsTable.put("master", master);
+		inputsTable.put("deployMode", deployMode);
+		inputsTable.put("clusterManager", clusterManager);
+		inputsTable.put("sqlFlag", sqlFlag);
+		inputsTable.put("streamingFlag", streamingFlag);
+		inputsTable.put("dynamicAllocationFlag", dynamicAllocationFlag);
+		inputsTable.put("securityFlag", securityFlag);
+		inputsTable.put("sparkRFlag", sparkRFlag);
+		inputsTable.put("className", className);
+		inputsTable.put("appJar", appJar);
+		inputsTable.put("appArgs", appArgs);
 		
 		//first initialize standard/standalone parameters
 		Standalone.configureStandardSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -107,7 +162,16 @@ public class ConfigurationConsole {
 		if (clusterManager.equals("yarn")){ Yarn.configureYarnSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);}
 		
 		//configure necessary Dynamic Allocation settings
-		if (dynamicAllocationFlag.equals("y")){ DynamicAllocation.configureDynamicAllocationSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);}
+		if (dynamicAllocationFlag.equals("y")){ 
+			if (clusterManager.equals("yarn")){
+				DynamicAllocation.configureDynamicAllocationSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			}
+			else{
+				System.out.println("Dynamic Allocation currently only allowed in Yarn mode - Spark 1.5.0, re-enter parameters");
+				System.exit(0);
+			}
+			
+		}
 		
 		//configure necessary SQL settings
 		if (sqlFlag.equals("y")){ SQL.configureSQLSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable); }
@@ -190,6 +254,7 @@ public class ConfigurationConsole {
 	
 	public static void printUsage() {
 		System.out.println("Usage: \n"
+				+ "If no arguments are put, follow prompts.. \n\n"
 				+ "./run.sh \n"
 				+ "<input data size in GB> \n"
 				+ "<number of nodes in cluster including master> \n"

@@ -24,7 +24,11 @@ public class Yarn {
 	static double AMMemoryOverheadFraction = 0.07; //recommended by config guide
 	
 	//External variables not in Spark but used for configurations
-	static double executorRoundingBuffer = 0.98;
+	static double executorSafetyBuffer = 0.95;
+	static double executorSafetyBufferTier1 = 0.95;
+	static double executorSafetyBufferTier2 = 0.96;
+	static double executorSafetyBufferTier3 = 0.97;
+	
 	static double driverMemorySafetyFraction = 0.8;
 	static double executorUpperBoundLimitG = 64;
 	
@@ -119,12 +123,26 @@ public class Yarn {
 		
 		int desiredCoresPerExecutor = Integer.parseInt(executorCores);
 		int targetExecutorNumPerNode = effectiveCoresPerNode / desiredCoresPerExecutor;
-		double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode * executorRoundingBuffer;
+		double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode ;
 		
-		double executorPerMemory = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction);
+		double memoryPerExecutorWithoutOverhead = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction);
 		
-		executorPerMemory = Math.min(executorUpperBoundLimitG, executorPerMemory);
-		setExecutorMemory(Integer.toString((int)executorPerMemory) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
+		if (totalMemoryPerExecutor <= 20){
+			executorSafetyBuffer = executorSafetyBufferTier1;
+		}
+		else if (totalMemoryPerExecutor <= 40){
+			executorSafetyBuffer = executorSafetyBufferTier2;
+		}
+		else{
+			executorSafetyBuffer = executorSafetyBufferTier3;
+		}
+		
+		memoryPerExecutorWithoutOverhead = totalMemoryPerExecutor * executorSafetyBuffer;
+		
+		
+		
+		memoryPerExecutorWithoutOverhead = Math.min(executorUpperBoundLimitG, memoryPerExecutorWithoutOverhead);
+		setExecutorMemory(Integer.toString((int)memoryPerExecutorWithoutOverhead) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
 		
 		//calculate and set executor overhead
 		double yarnExecutorOverhead = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction) * executorMemoryOverheadFraction *1000; //convert back to mb
@@ -138,8 +156,8 @@ public class Yarn {
 	}
 	
 	private static void setDriverExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		double driverMemory = UtilsConversion.parseMemory(optionsTable.get("spark.driver.memory")) / 1024;
-		if (driverMemory < 32){
+		double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode"));
+		if (memoryPerNode < 32){
 			driverExtraJavaOptions += " -XX:+UseCompressedOops";
 		}
 		optionsTable.put("spark.driver.extraJavaOptions", driverExtraJavaOptions);
@@ -147,8 +165,8 @@ public class Yarn {
 	}
 	
 	private static void setExecutorExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		double executorMemory = UtilsConversion.parseMemory(optionsTable.get("spark.executor.memory")) / 1024;
-		if (executorMemory < 32){
+		double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode"));
+		if (memoryPerNode < 32){
 			executorExtraJavaOptions += " -XX:+UseCompressedOops";
 		}
 		optionsTable.put("spark.executor.extraJavaOptions", executorExtraJavaOptions);
@@ -167,7 +185,6 @@ public class Yarn {
 	}
 
 	private static void setExecutorMemory (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		
 		optionsTable.put("spark.executor.memory", value);
 		if (recommendation.length() > 0)
 			recommendationsTable.put("spark.executor.memory", recommendation);
@@ -325,8 +342,8 @@ public class Yarn {
 
 	//Client Mode only
 	public static void setYarnAMExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		double yarnAMMemory = UtilsConversion.parseMemory(optionsTable.get("spark.yarn.am.memory")) / 1024;
-		if (yarnAMMemory < 32){
+		double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode"));
+		if (memoryPerNode < 32){
 			yarnAMExtraJavaOptions += " -XX:+UseCompressedOops";
 		}
 		optionsTable.put("spark.yarn.am.extraJavaOptions", yarnAMExtraJavaOptions);

@@ -147,13 +147,33 @@ public class Standalone {
 		static String taskCpus = "1";
 		static String taskMaxFailures = "4";
 		
+		//Deploy spread mode
+		static String deploySpreadOut = "true"; 
+		
 		//External variables not in Spark but used for configurations
-		static double executorSafetyBuffer = 0.80;
-		static double driverMemorySafetyFraction = 0.8;
+		
+		//System Overhead, OS + Resource Manager (e.g. CM) + other processes running in background
+		static double systemOverheadBuffer = 1.00;
+		static double systemOverheadBufferTier1 = 0.90;
+		static double systemOverheadBufferTier2 = 0.925;
+		static double systemOverheadBufferTier3 = 0.95;
+
+		//Spark Overhead Buffer
+		static double sparkOverheadBuffer = 1.00;
+		static double sparkOverheadBufferTier1 = 0.900;
+		static double sparkOverheadBufferTier2 = 0.925;
+		static double sparkOverheadBufferTier3 = 0.950;
+		
+		static double driverMemorySafetyFraction = 0.90;
 		static double executorUpperBoundLimitG = 64;
 		static double unserializedFactor = 4; //experimentally determined at ~3
 		static double serializedUncompressedFactor = 0.8; //experimentally determined at ~0.5
 		static double serializedCompressedFactor = serializedUncompressedFactor * 0.8;
+		
+		
+		//
+		static double workerMaxHeapsize = 4;
+		static double maxMasterDaemonFraction = 0.75;
 		
 		public static void configureStandardSettings(
 				Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable,
@@ -174,18 +194,17 @@ public class Standalone {
 			setExecutionBehavior(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			// Set Networking
 			setNetworking(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			
+			// Set Spread Deploy Mode
+			setDeploySpreadOut(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			//set executor and driver pointer flags to 32bit if JVM is < 32GB, this will reduce GC time
 			setExecutorExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			setDriverExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			
 
 		}
 		
 		public static void setApplicationProperties(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 			setAppName(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			setDriverMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			setExecMemCoresInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			setExecMemCoresInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable); //this must come after setDriverMemory
 		    setCoresMax(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setMaxResultSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -262,7 +281,6 @@ public class Standalone {
 			setBroadCastBlockSize(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setBroadCastFactory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setCleanerTtl(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setExecutorCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setDefaultParallelism(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setExecutorHeartBeatInterval(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		    setFilesFetchTimeout(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -316,25 +334,85 @@ public class Standalone {
 		}
 
 		private static void setExecMemCoresInstances(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-
-			//for now assume container memory = nodeMemory for YARN
 			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
 			int numNodes = Integer.parseInt(inputsTable.get("numNodes"));
 			int numWorkerNodes = numNodes - 1;
 			int numCoresPerNode = Integer.parseInt(inputsTable.get("numCoresPerNode"));
 			
-			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-			double effectiveMemoryPerNode = resourceFraction * memoryPerNode;
-			int effectiveCoresPerNode = (int) (resourceFraction * numCoresPerNode);
+			double memoryPerWorkerNode = memoryPerNode;
+			//Calculate the memory available for raw Spark
+			if (memoryPerWorkerNode <= 50){
+				systemOverheadBuffer = systemOverheadBufferTier1; 
+			}
+			else if (memoryPerWorkerNode <= 100){
+				systemOverheadBuffer = systemOverheadBufferTier2;
+			}
+			else{
+				systemOverheadBuffer = systemOverheadBufferTier3;
+			}
 			
-			int desiredCoresPerExecutor = Integer.parseInt(executorCores);
-			int targetExecutorNumPerNode = effectiveCoresPerNode / desiredCoresPerExecutor;
-			double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode * executorSafetyBuffer;
-			totalMemoryPerExecutor = Math.min(executorUpperBoundLimitG, totalMemoryPerExecutor);
-			setExecutorMemory(Integer.toString((int)totalMemoryPerExecutor) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
-			setPythonWorkerMemory(Integer.toString((int)totalMemoryPerExecutor) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
-			//set executor.instances
-			int totalExecutorInstances =  targetExecutorNumPerNode * numWorkerNodes;
+			double rawSparkMemoryPerNode = memoryPerWorkerNode * systemOverheadBuffer;
+			double rawSparkMemory = rawSparkMemoryPerNode * numWorkerNodes;
+			
+			insertDaemonWorkerMaxHeapSizeRecommendation(Integer.toString((int)workerMaxHeapsize) + "g", inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			insertDaemonMasterMaxHeapSizeRecommendation(Integer.toString((int)(rawSparkMemoryPerNode * maxMasterDaemonFraction)) + "g", inputsTable, optionsTable, recommendationsTable, commandLineParamsTable); //this should be less, assumption that Master has more overhead processes
+			insertExecutorTotalMaxHeapsizeRecommendation(Integer.toString((int)rawSparkMemoryPerNode) + "g", inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			
+			//Calculate memory available for Spark job processes
+			if (rawSparkMemory <= 80){
+				sparkOverheadBuffer = sparkOverheadBufferTier1;
+			}
+			else if (rawSparkMemory <= 160){
+				sparkOverheadBuffer = sparkOverheadBufferTier2;
+			}
+			else{
+				sparkOverheadBuffer = sparkOverheadBufferTier3;
+			}
+			
+			double actualSparkMemory = rawSparkMemory * sparkOverheadBuffer;
+			
+			//User input of what fraction of resources of Spark cluster to be used
+			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+			double effectiveMemory = resourceFraction * actualSparkMemory;
+			double effectiveMemoryPerNode = effectiveMemory / numNodes;
+			
+			setDriverMemory( Integer.toString((int)(effectiveMemoryPerNode * driverMemorySafetyFraction)) , inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			
+			double idealExecutorMemory = 8; //gb, set this as a constant at the top
+			int numExecutorsPerNode = 0;
+			double calculatedNumExecutorsPerNode = effectiveMemoryPerNode / idealExecutorMemory;
+			int defaultExecutorsPerNode = 4; // set this as a constant at the top
+			
+			if (calculatedNumExecutorsPerNode > 4){
+				numExecutorsPerNode = 4;
+			}
+			else if (calculatedNumExecutorsPerNode < 2){
+				numExecutorsPerNode = 2;
+			}
+			
+			double currMemSizePerNode = idealExecutorMemory * numExecutorsPerNode;
+			double leftOverMemPerNode = effectiveMemoryPerNode - currMemSizePerNode;
+			
+			//Calculate Memory per Executor
+			double finalExecutorMemory = idealExecutorMemory;
+			if (leftOverMemPerNode > (idealExecutorMemory / 2)){
+				System.out.println("leftOverMemPerNode: " + Double.toString(leftOverMemPerNode));
+				System.out.println("idealExecutorMemory: " + Double.toString(idealExecutorMemory));
+				finalExecutorMemory = effectiveMemoryPerNode / defaultExecutorsPerNode;
+				numExecutorsPerNode = defaultExecutorsPerNode;
+				System.out.println("finalExecutorMemory: " + Double.toString(finalExecutorMemory));
+			}
+			
+			finalExecutorMemory = Math.min(executorUpperBoundLimitG, finalExecutorMemory);
+			
+			//Calculate Cores Per Executor
+			int effectiveCoresPerNode = (int) (resourceFraction * numCoresPerNode);
+			int coresPerExecutor =  (int) (effectiveCoresPerNode / defaultExecutorsPerNode);
+			executorCores = Integer.toString(coresPerExecutor);
+		    setExecutorCores(executorCores, inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);	
+			setExecutorMemory(Integer.toString((int)finalExecutorMemory) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
+			setPythonWorkerMemory(Integer.toString((int)finalExecutorMemory) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
+			int totalExecutorInstances =  numExecutorsPerNode * numWorkerNodes;
 			setExecutorInstances (Integer.toString(totalExecutorInstances), "",  optionsTable, recommendationsTable, commandLineParamsTable);
 			
 		}
@@ -365,11 +443,8 @@ public class Standalone {
 			optionsTable.put("spark.driver.maxResultSize", driverMaxResultSize);
 		}
 	
-		private static void setDriverMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
-			double targetDriverMemory = memoryPerNode * driverMemorySafetyFraction * resourceFraction;
-			driverMemory = Integer.toString((int)targetDriverMemory) + "g";
+		private static void setDriverMemory(String value, Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			driverMemory = value + "g";
 			optionsTable.put("spark.driver.memory", driverMemory);
 			commandLineParamsTable.put("--driver-memory", driverMemory);
 		}
@@ -402,8 +477,8 @@ public class Standalone {
 		}
 	
 		private static void setDriverExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			double driverMemory = UtilsConversion.parseMemory(optionsTable.get("spark.driver.memory")) / 1024;
-			if (driverMemory < 32){
+			double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode"));
+			if (memoryPerNode < 32){
 				driverExtraJavaOptions += " -XX:+UseCompressedOops";
 			}
 			optionsTable.put("spark.driver.extraJavaOptions", driverExtraJavaOptions);
@@ -423,8 +498,8 @@ public class Standalone {
 		}
 	
 		private static void setExecutorExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			double executorMemory = UtilsConversion.parseMemory(optionsTable.get("spark.executor.memory")) / 1024;
-			if (executorMemory < 32){
+			double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode"));
+			if (memoryPerNode < 32){
 				executorExtraJavaOptions += " -XX:+UseCompressedOops";
 			}
 			optionsTable.put("spark.executor.extraJavaOptions", executorExtraJavaOptions);
@@ -531,11 +606,12 @@ public class Standalone {
 	
 		private static void setShuffleManager(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.manager", shuffleManager);
+			recommendationsTable.put("spark.shuffle.manager", "Try Hash instead of default Sort based shuffle to try for better performance.");
 		}
 	
 		private static void setShuffleMemoryFraction(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.shuffle.memoryFraction", shuffleMemoryFraction);
-			recommendationsTable.put("spark.shuffle.memoryFraction", "Increase this to 0.8 if there is no RDD caching/persistence in the app");
+			recommendationsTable.put("spark.shuffle.memoryFraction", "Increase this to a max of 0.8 if there is no RDD caching/persistence in the app");
 		}
 	
 		private static void setSortBypassMergeThreshold(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -695,18 +771,20 @@ public class Standalone {
 			optionsTable.put("spark.cleaner.ttl", cleanerTtl);
 		}
 	
-		public static void setExecutorCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			optionsTable.put("spark.executor.cores", executorCores);
+		public static void setExecutorCores(String value, Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			optionsTable.put("spark.executor.cores", value);
 		}
-	
+		
+		//deprecate this for now
 		private static void setDefaultParallelism(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			//for the the default parallelism is set to 2 * the number of cores
-			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-			double numNodes = Double.parseDouble(inputsTable.get("numNodes"));
-			double coresPerNode = Double.parseDouble(inputsTable.get("numCoresPerNode")); //in mb
-			double numWorkerNodes = numNodes - 1;
-			defaultParallelism = String.valueOf((int)(coresPerNode * numWorkerNodes * resourceFraction * 2));
-			optionsTable.put("spark.default.parallelism", defaultParallelism);
+//			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+//			double numNodes = Double.parseDouble(inputsTable.get("numNodes"));
+//			double coresPerNode = Double.parseDouble(inputsTable.get("numCoresPerNode")); //in mb
+//			double numWorkerNodes = numNodes - 1;
+//			defaultParallelism = String.valueOf((int)(coresPerNode * numWorkerNodes * resourceFraction * 2));
+//			optionsTable.put("spark.default.parallelism", defaultParallelism);
+			recommendationsTable.put("spark.default.parallelism","Tune it to 10x the num-cores in the system");
 		}
 	
 		private static void setExecutorHeartBeatInterval(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -910,6 +988,20 @@ public class Standalone {
 		private static void setTaskMaxFailures(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			optionsTable.put("spark.task.maxFailures", taskMaxFailures);
 		}
-
-
+		
+		private static void setDeploySpreadOut(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			optionsTable.put("spark.deploy.spreadOut", deploySpreadOut);
+//			Whether the standalone cluster manager should spread applications out across nodes or try to consolidate them onto as few nodes as possible. Spreading out is usually better for data locality in HDFS, but consolidating is more efficient for compute-intensive workloads. 
+		}
+		
+		private static void insertExecutorTotalMaxHeapsizeRecommendation (String recommendation, Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			recommendationsTable.put("SPARK_WORKER_MEMORY","Total amount of memory to allow Spark applications to use on the machine: " + recommendation);
+		}
+		private static void insertDaemonMasterMaxHeapSizeRecommendation (String recommendation, Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			recommendationsTable.put("SPARK_DAEMON_MEMORY -- MASTER","Total amount of memory to allow Spark applications to use on the machine: " + recommendation);
+		}
+		private static void insertDaemonWorkerMaxHeapSizeRecommendation (String recommendation, Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			recommendationsTable.put("SPARK_DAEMON_MEMORY -- WORKER","Memory to allocate to the Spark master and worker daemons themselves: " + recommendation);
+		}
+		
 	}
