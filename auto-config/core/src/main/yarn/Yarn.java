@@ -1,5 +1,4 @@
 package core.src.main.yarn;
-import java.util.ArrayList;
 import java.util.Hashtable;
 
 import utils.UtilsConversion;
@@ -15,8 +14,10 @@ public class Yarn {
 	static String yarnAMMemoryOverhead = ""; 
 	static String driverCores = ""; 
 	static String coresMax = "";
+	
 	//
-	static String executorCores = "4";
+	static String driverMemory = "";
+	static String executorCores = "";
 	
 	//Variables for default Overhead Memory Setting, this is an inferred setting
 	static double executorMemoryOverheadFraction = 0.10; //recommended by config guide
@@ -24,41 +25,38 @@ public class Yarn {
 	static double AMMemoryOverheadFraction = 0.07; //recommended by config guide
 	
 	//External variables not in Spark but used for configurations
-	static double executorSafetyBuffer = 0.95;
-	static double executorSafetyBufferTier1 = 0.95;
-	static double executorSafetyBufferTier2 = 0.96;
-	static double executorSafetyBufferTier3 = 0.97;
 	
-	static double driverMemorySafetyFraction = 0.8;
+	//System Overhead, OS + Resource Manager (e.g. CM) + other processes running in background
+	static double systemOverheadBuffer = 1.00;
+	static double systemOverheadBufferTier1 = 0.85;
+	static double systemOverheadBufferTier2 = 0.90;
+	static double systemOverheadBufferTier3 = 0.95;
+
+	//Spark Overhead Buffer
+	static double sparkOverheadBuffer = 1.00;
+	static double sparkOverheadBufferTier1 = 0.900;
+	static double sparkOverheadBufferTier2 = 0.925;
+	static double sparkOverheadBufferTier3 = 0.950;
+	
+	static double driverMemorySafetyFraction = 0.9;
 	static double executorUpperBoundLimitG = 64;
 	
-	//YARN AM Defaults
-	static String yarnAMWaitTime = "100000"; //100000ms
-	static String yarnSubmitFileReplication = "3"; //3
-	static String yarnPreserveStagingFiles = "false"; 
-	static String yarnSchedulerHeartbeatIntervalms = "5000"; //5000ms
-	static String yarnMaxExecutorFailures = ""; //numExecutors * 2, with min of 3
-	static String yarnHistoryServerAddress = ""; //none
-	static String yarnDistArchives = ""; //none
-	static String yarnDistFiles = ""; //none
-	static String yarnAMPort = ""; //random
-	static String yarnQueue = ""; //default
-	static String yarnJar = ""; //none
-	static String yarnAccessNameNodes = ""; //none
-	static ArrayList<String> yarnAppMasterEnvVariablesArray = new ArrayList<String>(); //array to set all the different AM Env variables
-	static ArrayList<String> yarnAppMasterEnvValuesArray = new ArrayList<String>(); //array to set all the different AM Env values for corresponding variables
-	static String yarnContainerLauncherMaxThreads = "25";//25
-	static String yarnAMExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps"; //none
-	static String yarnAMExtraLibraryPath = ""; //none
-	static String yarnMaxAppAttempts = ""; //yarn.resourcemanager.am.max-attempts in YARN
-	static String yarnSubmitWaitAppCompletion = "true";//true
+	//Constants
+	static double idealExecutorMemory = 8; //gb, set this as a constant at the top
+	static int defaultExecutorsPerNode = 4; // set this as a constant at the top
 	
+	//YARN AM Defaults
+	static String yarnAMWaitTime = "100000"; //ms
+	static String yarnSubmitFileReplication = "3"; 
+	static String yarnPreserveStagingFiles = "false"; 
+	static String yarnSchedulerHeartbeatIntervalms = "5000"; //ms
+	static String yarnContainerLauncherMaxThreads = "25";
+	static String yarnAMExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps"; //none
 	static String executorExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps";
 	static String driverExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps";
+	static String schedulerMinRegisteredResourcesRatio = "0.8";
 	
 	public static void configureYarnSettings( Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
-		
-		setExecutorCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnDefaults(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setExecMemCoresInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setCoresMax(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -69,14 +67,13 @@ public class Yarn {
 			setYarnAMMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			setYarnAMCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			setYarnAMExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			setYarnAMExtraLibraryPath(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		}else if (inputsTable.get("deployMode").equals("cluster")){
 			setYarnDriverMemoryOverhead(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			setDriverMemory(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable); //same as in standalone for now, will override standalone if different.
 			setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable); //same as in standalone for now, will override standalone if different.
 			setDriverExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		}else{
-			//wrong deployMode input
+			//Wrong deployMode input
 		}
 		
 	}
@@ -93,68 +90,106 @@ public class Yarn {
 		setYarnSubmitFileReplication(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnPreserveStagingFiles(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnSchedulerHeartbeatIntervalms(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnMaxExecutorFailures(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnHistoryServerAddress(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnDistArchives(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnDistFiles(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setExecutorInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnAMPort(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnQueue(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnJar(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnAccessNameNodes(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnAppMasterEnvironmentVariableName(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnContainerLauncherMaxThreads(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnMaxAppAttempts(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnSubmitWaitAppCompletion(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setSchedulerMinRegisteredResourcesRatio(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
 	
+	private static void insertYarnContainerMemRecommendation (String recommendation, Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		recommendationsTable.put("yarn.scheduler.maximum-allocation-mb", "Recommended to set YARN Container: " + recommendation);
+	}
+	
 	private static void setExecMemCoresInstances(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-
-		//for now assume container memory = nodeMemory for YARN
 		double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
 		int numNodes = Integer.parseInt(inputsTable.get("numNodes"));
 		int numWorkerNodes = numNodes - 1;
 		int numCoresPerNode = Integer.parseInt(inputsTable.get("numCoresPerNode"));
 		
-		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-		double effectiveMemoryPerNode = resourceFraction * memoryPerNode;
-		int effectiveCoresPerNode = (int) (resourceFraction * numCoresPerNode);
-		
-		int desiredCoresPerExecutor = Integer.parseInt(executorCores);
-		int targetExecutorNumPerNode = effectiveCoresPerNode / desiredCoresPerExecutor;
-		double totalMemoryPerExecutor = effectiveMemoryPerNode / targetExecutorNumPerNode ;
-		
-		double memoryPerExecutorWithoutOverhead = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction);
-		
-		if (totalMemoryPerExecutor <= 20){
-			executorSafetyBuffer = executorSafetyBufferTier1;
+		double memoryPerWorkerNode = memoryPerNode;
+		//Calculate the memory available for raw Spark
+		if (memoryPerWorkerNode <= 50){
+			systemOverheadBuffer = systemOverheadBufferTier1; 
 		}
-		else if (totalMemoryPerExecutor <= 40){
-			executorSafetyBuffer = executorSafetyBufferTier2;
+		else if (memoryPerWorkerNode <= 100){
+			systemOverheadBuffer = systemOverheadBufferTier2;
 		}
 		else{
-			executorSafetyBuffer = executorSafetyBufferTier3;
+			systemOverheadBuffer = systemOverheadBufferTier3;
 		}
 		
-		memoryPerExecutorWithoutOverhead = totalMemoryPerExecutor * executorSafetyBuffer;
+		//YARN CONTAINER SIZE
+		double rawSparkMemoryPerNode = memoryPerWorkerNode * systemOverheadBuffer; 
+		double rawSparkMemory = rawSparkMemoryPerNode * numWorkerNodes;
 		
 		
+		insertYarnContainerMemRecommendation (Integer.toString((int)rawSparkMemoryPerNode) + "g", inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+
+		//Calculate memory available for Spark job processes
+		if (rawSparkMemory <= 80){
+			sparkOverheadBuffer = sparkOverheadBufferTier1;
+		}
+		else if (rawSparkMemory <= 160){
+			sparkOverheadBuffer = sparkOverheadBufferTier2;
+		}
+		else{
+			sparkOverheadBuffer = sparkOverheadBufferTier3;
+		}
 		
-		memoryPerExecutorWithoutOverhead = Math.min(executorUpperBoundLimitG, memoryPerExecutorWithoutOverhead);
-		setExecutorMemory(Integer.toString((int)memoryPerExecutorWithoutOverhead) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
+		double actualSparkMemory = rawSparkMemory * sparkOverheadBuffer;
 		
-		//calculate and set executor overhead
-		double yarnExecutorOverhead = totalMemoryPerExecutor / (1+executorMemoryOverheadFraction) * executorMemoryOverheadFraction *1000; //convert back to mb
-		yarnExecutorMemoryOverhead = String.valueOf((int)(yarnExecutorOverhead));
+		//User input of what fraction of resources of Spark cluster to be used
+		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
+		double effectiveMemory = resourceFraction * actualSparkMemory;
+		double effectiveMemoryPerNode = effectiveMemory / numNodes;
+		
+		double driverMemoryValue = effectiveMemoryPerNode * driverMemorySafetyFraction;
+		driverMemory = Integer.toString((int)driverMemoryValue) + "g";
+		yarnAMMemory = driverMemory;
+		yarnDriverMemoryOverhead = Integer.toString((int)(driverMemoryValue * driverMemorySafetyFraction * 1000)) + "g";
+		yarnAMMemoryOverhead = Integer.toString((int)(driverMemoryValue * AMMemoryOverheadFraction * 1000)) + "g";
+		
+		double idealExecutorMemory = 8; //gb, set this as a constant at the top
+		double idealExecutorMemoryYarnOverhead = idealExecutorMemory * executorMemoryOverheadFraction;
+		double idealExecutorMemoryWithOverhead = idealExecutorMemory + idealExecutorMemoryYarnOverhead;
+		
+		int numExecutorsPerNode = 0;
+		double calculatedNumExecutorsPerNode = effectiveMemoryPerNode / idealExecutorMemoryWithOverhead;
+		int defaultExecutorsPerNode = 4; // set this as a constant at the top
+		
+		if (calculatedNumExecutorsPerNode > 4){
+			numExecutorsPerNode = 4;
+		}
+		else if (calculatedNumExecutorsPerNode < 2){
+			numExecutorsPerNode = 2;
+		}
+		
+		double currMemSizePerNode = idealExecutorMemoryWithOverhead * numExecutorsPerNode;
+		double leftOverMemPerNode = effectiveMemoryPerNode - currMemSizePerNode;
+		
+		//Calculate Memory per Executor
+		double finalExecutorMemory = idealExecutorMemory;
+		//Rebalance if too much is wasted
+		if (leftOverMemPerNode > (idealExecutorMemory / 2)){
+			finalExecutorMemory = effectiveMemoryPerNode / defaultExecutorsPerNode;
+			numExecutorsPerNode = defaultExecutorsPerNode;
+		}
+		
+		finalExecutorMemory = Math.min(executorUpperBoundLimitG, finalExecutorMemory);
+		double finalExecutorMemoryOverhead = finalExecutorMemory * executorMemoryOverheadFraction;
+		
+		//Calculate Cores Per Executor
+		int effectiveCoresPerNode = (int) (resourceFraction * numCoresPerNode);
+		int coresPerExecutor =  (int) (effectiveCoresPerNode / defaultExecutorsPerNode);
+		executorCores = Integer.toString(coresPerExecutor);
+	    setExecutorCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);	
+		setExecutorMemory(Integer.toString((int)finalExecutorMemory) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
+		yarnExecutorMemoryOverhead = String.valueOf((int)(finalExecutorMemoryOverhead * 1000));
 		setYarnExecutorMemoryOverhead (yarnExecutorMemoryOverhead, "",  optionsTable, recommendationsTable, commandLineParamsTable);
 		
-		//set executor.instances
-		int totalExecutorInstances =  targetExecutorNumPerNode * numWorkerNodes;
+		int totalExecutorInstances =  numExecutorsPerNode * numWorkerNodes;
 		setExecutorInstances (Integer.toString(totalExecutorInstances), "",  optionsTable, recommendationsTable, commandLineParamsTable);
 		
 	}
-	
 	private static void setDriverExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode"));
 		if (memoryPerNode < 32){
@@ -193,12 +228,6 @@ public class Yarn {
 	
 	//Only modify this for Client mode, in cluster mode, use spark.driver.memory instead.
 	public static void setYarnAMMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){	
-
-		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-		double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
-		double targetAMMemory = memoryPerNode * driverMemorySafetyFraction * resourceFraction;
-		double allocatedAMMemory = targetAMMemory / (1 + AMMemoryOverheadFraction);
-		yarnAMMemory = Integer.toString((int)allocatedAMMemory) + "g";
 		optionsTable.put("spark.yarn.am.memory", yarnAMMemory);
 		//remove command line params
 		commandLineParamsTable.remove("--driver-memory"); 
@@ -221,13 +250,6 @@ public class Yarn {
 	//YARN AM Cluster mode
 	//This will override the Standalone Driver Memory settings
 	public static void setDriverMemory(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-		double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
-		double targetDriverMemory = memoryPerNode * driverMemorySafetyFraction * resourceFraction;
-		
-		double allocatedDriverMemory = targetDriverMemory / (1.0 + driverMemoryOverheadFraction);
-		
-		String driverMemory = Integer.toString((int)allocatedDriverMemory) + "g";
 		optionsTable.put("spark.driver.memory", driverMemory);
 		commandLineParamsTable.put("--driver-memory", driverMemory);
 	}
@@ -260,22 +282,6 @@ public class Yarn {
 
 	public static void setYarnSchedulerHeartbeatIntervalms(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.scheduler.heartbeat.interval-ms", yarnSchedulerHeartbeatIntervalms);
-	}
-
-	public static void setYarnMaxExecutorFailures(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.yarn.max.executor.failures", yarnMaxExecutorFailures);
-	}
-
-	public static void setYarnHistoryServerAddress(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.yarn.historyServer.address", yarnHistoryServerAddress);
-	}
-
-	public static void setYarnDistArchives(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.yarn.dist.archives", yarnDistArchives);
-	}
-
-	public static void setYarnDistFiles(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.yarn.dist.files", yarnDistFiles);
 	}
 
 	public static void setExecutorInstances(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -311,31 +317,6 @@ public class Yarn {
 		optionsTable.put("spark.yarn.am.memoryOverhead", yarnAMMemoryOverhead);
 	}
 
-	// In YARN client mode, this is used to communicate between the Spark driver running on a gateway and the Application Master running on YARN. In YARN cluster mode, this is used for the dynamic executor feature, where it handles the kill from the scheduler backend.
-	public static void setYarnAMPort(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.yarn.am.port", yarnAMPort);
-	}
-	
-	public static void setYarnQueue(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.yarn.queue", yarnQueue);
-	}
-
-	public static void setYarnJar(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.yarn.jar", yarnJar);
-	}
-
-	public static void setYarnAccessNameNodes(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.yarn.access.namenodes", yarnAccessNameNodes);
-	}
-
-	//In yarn-cluster mode this controls the environment of the SPARK driver and in yarn-client mode it only controls the environment of the executor launcher.
-	public static void setYarnAppMasterEnvironmentVariableName(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		for (int i = 0; i < yarnAppMasterEnvVariablesArray.size(); i++){
-			String optionVariable = "spark.yarn.appMasterEnv." + yarnAppMasterEnvVariablesArray.get(i);
-			optionsTable.put(yarnAppMasterEnvValuesArray.get(i), optionVariable);
-		}
-	}
-
 	public static void setYarnContainerLauncherMaxThreads(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.yarn.containerLauncherMaxThreads", yarnContainerLauncherMaxThreads);
 	}
@@ -351,21 +332,9 @@ public class Yarn {
 		optionsTable.remove("spark.driver.extraJavaOptions");
 	}
 	
-	//Client Mode only
-	public static void setYarnAMExtraLibraryPath(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){	
-		optionsTable.put("spark.yarn.am.extraLibraryPath", yarnAMExtraLibraryPath);
-	}
-
-	public static void setYarnMaxAppAttempts(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.yarn.maxAppAttempts", yarnMaxAppAttempts);
-	}
-
-	public static void setYarnSubmitWaitAppCompletion(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.yarn.submit.waitAppCompletion", yarnSubmitWaitAppCompletion);
-	}
 	
-	//overrides standalone setting
+	//Overrides Standalone Setting
 	private static void setSchedulerMinRegisteredResourcesRatio(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.scheduler.minRegisteredResourcesRatio", "0.8");
+		optionsTable.put("spark.scheduler.minRegisteredResourcesRatio", schedulerMinRegisteredResourcesRatio);
 	}
 }

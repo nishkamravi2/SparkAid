@@ -5,13 +5,13 @@ import java.util.Hashtable;
 public class Streaming {
 
 	//Spark Streaming
-	static String streamingBlockInterval = ""; //200ms
+	static String streamingBlockInterval = "200"; //200ms
 	static String streamingReceiverMaxRate = ""; //not set
 	static String streamingReceiverWriteAheadLogEnable = "";
-	static String streamingUnpersist = ""; //true
+	static String streamingUnpersist = "true"; //true
 	static String streamingKafkaMaxRatePerPartition = ""; //not set
-	static String streamingKafkaMaxRetries = ""; //1
-	static String streamingUIRetainedBatches = ""; //1000
+	static String streamingKafkaMaxRetries = "1"; //1
+	static String streamingUIRetainedBatches = "1000"; //1000
 	
 	public static void configureStreamingSettings(Hashtable<String, String> inputsTable,
 			Hashtable<String, String> optionsTable,

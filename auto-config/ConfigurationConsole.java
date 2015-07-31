@@ -1,6 +1,10 @@
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -55,7 +59,7 @@ public class ConfigurationConsole {
 		Hashtable<String, String> optionsTable = new Hashtable<String, String>();
 		Hashtable<String, String> recommendationsTable = new Hashtable<String, String>();
 		Hashtable<String, String> commandLineParamsTable = new Hashtable<String, String>();
-		
+
 		//get input parameters
 		if (args.length == 0){
 			Scanner scanner = new Scanner(System.in);
@@ -155,6 +159,28 @@ public class ConfigurationConsole {
 		inputsTable.put("appJar", appJar);
 		inputsTable.put("appArgs", appArgs);
 		
+		//First populates options from default configuration file
+        String fileName = "spark.master.default.conf";
+        String line = null;
+
+        try {
+            FileReader fileReader = new FileReader(fileName);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            while((line = bufferedReader.readLine()) != null) {
+                String [] lineArray = line.split("\\s+");
+                String optionKey = lineArray[0];
+                String optionValue = lineArray[1];
+                optionsTable.put(optionKey, optionValue);
+            }    
+            bufferedReader.close();            
+        }
+        catch(FileNotFoundException ex) {
+            System.out.println("Unable to open file '" + fileName + "'");                
+        }
+        catch(IOException ex) {
+            System.out.println("Error reading file '" + fileName + "'");                   
+        }
+        
 		//first initialize standard/standalone parameters
 		Standalone.configureStandardSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		
@@ -242,7 +268,11 @@ public class ConfigurationConsole {
 				if (value.equals("")) {
 					continue;
 				}
-				b1.write(key + spaceBuffer(spaceBufferLength) + value + "\n");
+				if (it.hasNext()){
+					b1.write(key + spaceBuffer(spaceBufferLength) + value + "\n");}
+				else{
+					b1.write(key + spaceBuffer(spaceBufferLength) + value);
+				}
 			}
 			b1.close();
 		

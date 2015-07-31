@@ -5,7 +5,7 @@ import java.util.Hashtable;
 public class SparkR {
 	
 	//SparkR
-	static String rNumRBackendThreads = ""; //2
+	static String rNumRBackendThreads = "2"; //2
 
 	public static void configureSparkRSettings(Hashtable<String, String> inputsTable,
 			Hashtable<String, String> optionsTable,
@@ -23,9 +23,7 @@ public class SparkR {
 		setRNumRBackendThreads(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		//add in more method/settings in the future
 	}
-	
-	
-	
+
 	public static void setRNumRBackendThreads(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.r.numRBackendThreads", rNumRBackendThreads);
 	}
