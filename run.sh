@@ -3,5 +3,5 @@ if [ ! -d "build" ]; then
 fi
 javac -d build @build.txt
 cd build
-jar cvf sparkaid.jar .
+jar cf sparkaid.jar .
 java -classpath sparkaid.jar ConfigurationConsole "$@"
