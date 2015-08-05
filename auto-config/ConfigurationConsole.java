@@ -64,7 +64,7 @@ public class ConfigurationConsole {
 		if (args.length == 0){
 			Scanner scanner = new Scanner(System.in);
 			
-			System.out.print("Enter input data size in GB:\n");
+			System.out.print("Enter input data size in GB:");
 			inputDataSize = scanner.nextLine();
 			
 			System.out.println("Enter number of nodes in cluster (including master):");
