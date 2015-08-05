@@ -1,0 +1,62 @@
+#CM/Envirnoment variables
+
+SPARK_DAEMON_MEMORY (master_max_heapsize)              Standalone Mode only: Total amount of memory to allow Spark applications to use on the machine: 4g
+ensure machine has enough memory, else 4g.
+set to 10% of memory on machine.
+
+set max(512m, 10% of memory)
+
+SPARK_DAEMON_MEMORY (worker_max_heapsize)             Standalone Mode only: Memory to allocate to the Spark master and worker daemons themselves: 4g
+ensure machine has enough memory, else 4g.
+set to 10% of memory on machine.
+
+set max(512m, 10% of memory)
+
+
+SPARK_WORKER_MEMORY (executor_total_max_heapsize)     Standalone Mode only: Total amount of memory to allow Spark applications to use on the machine: 37g
+
+yarn.nodemanager.resource.memory-mb
+yarn.nodemanager.resource.cpu-vcores
+
+yarn.scheduler.maximum-allocation-mb
+yarn.scheduler.maximum-allocation-vcores
+
+#Standalone Mode
+
+
+spark.akka.timeout                                    Increase if GC pauses cause problem
+spark.default.parallelism                             Tune it to 10x the num-cores in the system
+spark.driver.extraJavaOptions                         In case of long gc pauses, try adding the following: -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled
+spark.executor.extraJavaOptions                       In case of long gc pauses, try adding the following: -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled
+spark.kryo.classesToRegister                          Register classes with Kryo serializer for better performance
+spark.kryoserializer.buffer.max                       Increase this if you get a "buffer limit exceeded" exception
+spark.local.dir                                       Ensure this location has TB's of space
+spark.locality.wait                                   Increase this value if long GC pauses
+spark.python.profile.dump                             Set directory to dump profile result before driver exiting if desired
+spark.serializer                                      If custom classes are used, MUST register the custom classes to Kyro Serializer. Serialization Debug Info is turned on in Extra Java Options to reflect if class is not registered.
+spark.shuffle.manager                                 Try Hash instead of default Sort based shuffle to try for better performance.
+spark.shuffle.memoryFraction                          Increase this to a max of 0.8 if there is no RDD caching/persistence in the app
+spark.speculation                                     Set to true if stragglers are found
+spark.storage.memoryFraction                          Reduce this to 0.1 if there is no RDD caching/persistence in the app
+spark.storage.unrollFraction                          Reduce this to 0.1 if there is no RDD caching/persistence in the app
+
+
+#Yarn Mode
+
+yarn.nodemanager.resource.memory-mb			
+yarn.nodemanager.resource.cpu-vcores 				 cores available on a single machine
+
+yarn.scheduler.maximum-allocation-vcores			cores available on a single machine
+yarn.scheduler.maximum-allocation-mb                  Recommended to set YARN Container: 37g
+
+
+
+spark.yarn.am.extraJavaOptions                        In case of long gc pauses, try adding the following: -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled
+
+#Streaming Mode
+
+spark.streaming.unpersist                             Set to true if running streaming app and running into OOM issues
+
+#Dynamic Allocation Mode
+
+spark.dynamicAllocation.enabled                       Note that cached data from decommissioned executors will be lost and might need recomputation, adding time

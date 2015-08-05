@@ -15,14 +15,12 @@ public class Standalone {
 		static String defaultParallelism = "";
 		static String rddCompress = "false";
 		static String storageLevel = "";
-		
 		static String executorCores = ""; 
 		
 		//not in configuration file, does not work for 1.3.0
 		static String executorInstances = ""; 
 		
-		//Default Values
-		
+		//Default Configuration Values
 		//Application Properties
 		static String driverMaxResultSize = "0";
 		static String localDir = "/tmp";
@@ -61,30 +59,29 @@ public class Standalone {
 		
 		//External variables not in Spark but used for configurations
 		
-		static double idealExecutorMemory = 8; //gb, set this as a constant at the top
-		static int defaultExecutorsPerNode = 4; // set this as a constant at the top
+		static double idealExecutorMemory = 8; //gb
 		
 		//System Overhead, OS + Resource Manager (e.g. CM) + other processes running in background
 		static double systemOverheadBuffer = 1.00;
-		static double systemOverheadBufferTier1 = 0.85;
-		static double systemOverheadBufferTier2 = 0.90;
-		static double systemOverheadBufferTier3 = 0.95;
+		static double systemOverheadBufferTier1 = 0.850;
+		static double systemOverheadBufferTier2 = 0.900;
+		static double systemOverheadBufferTier3 = 0.950;
 
 		//Spark Overhead Buffer
 		static double sparkOverheadBuffer = 1.00;
-		static double sparkOverheadBufferTier1 = 0.900;
-		static double sparkOverheadBufferTier2 = 0.925;
-		static double sparkOverheadBufferTier3 = 0.950;
+		static double sparkOverheadBufferTier1 = 0.800;
+		static double sparkOverheadBufferTier2 = 0.850;
+		static double sparkOverheadBufferTier3 = 0.900;
 		
 		static double driverMemorySafetyFraction = 0.90;
-		static double executorUpperBoundLimitG = 64;
+		static double executorUpperBoundLimitG = 64; //gb
 		static double unserializedFactor = 4; //experimentally determined at ~3
 		static double serializedUncompressedFactor = 0.8; //experimentally determined at ~0.5
 		static double serializedCompressedFactor = serializedUncompressedFactor * 0.8;
 		
-		///
+		static double daemonMemoryFraction = 0.15;
+		static double daemonMemoryMin = 0.5; // gb
 		static double workerMaxHeapsize = 4;
-		static double maxMasterDaemonFraction = 0.75;
 		
 		public static void configureStandardSettings(
 				Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable,
@@ -162,84 +159,78 @@ public class Standalone {
 			//Calculate the memory available for raw Spark
 			if (memoryPerWorkerNode <= 50){
 				systemOverheadBuffer = systemOverheadBufferTier1; 
+				sparkOverheadBuffer = sparkOverheadBufferTier1;
 			}
 			else if (memoryPerWorkerNode <= 100){
 				systemOverheadBuffer = systemOverheadBufferTier2;
-			}
-			else{
-				systemOverheadBuffer = systemOverheadBufferTier3;
-			}
-			
-			double rawSparkMemoryPerNode = memoryPerWorkerNode * systemOverheadBuffer;
-			double rawSparkMemory = rawSparkMemoryPerNode * numWorkerNodes;
-			
-			insertDaemonWorkerMaxHeapSizeRecommendation(Integer.toString((int)workerMaxHeapsize) + "g", inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			insertDaemonMasterMaxHeapSizeRecommendation(Integer.toString((int)(rawSparkMemoryPerNode * maxMasterDaemonFraction)) + "g", inputsTable, optionsTable, recommendationsTable, commandLineParamsTable); //this should be less, assumption that Master has more overhead processes
-			insertExecutorTotalMaxHeapsizeRecommendation(Integer.toString((int)rawSparkMemoryPerNode) + "g", inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			
-			//Calculate memory available for Spark job processes
-			if (rawSparkMemory <= 80){
-				sparkOverheadBuffer = sparkOverheadBufferTier1;
-			}
-			else if (rawSparkMemory <= 160){
 				sparkOverheadBuffer = sparkOverheadBufferTier2;
 			}
 			else{
+				systemOverheadBuffer = systemOverheadBufferTier3;
 				sparkOverheadBuffer = sparkOverheadBufferTier3;
 			}
 			
-			double actualSparkMemory = rawSparkMemory * sparkOverheadBuffer;
-			
+			double rawSparkMemoryPerNode = memoryPerWorkerNode * systemOverheadBuffer * sparkOverheadBuffer;
+			double daemonMemoryPerNode = rawSparkMemoryPerNode * daemonMemoryFraction;
+			daemonMemoryPerNode = Math.max(daemonMemoryPerNode, daemonMemoryMin);
+			insertDaemonMasterMaxHeapSizeRecommendation(Integer.toString((int)(daemonMemoryPerNode)) + "g", inputsTable, optionsTable, recommendationsTable, commandLineParamsTable); //this should be less, assumption that Master has more overhead processes
+			insertExecutorTotalMaxHeapsizeRecommendation(Integer.toString((int)daemonMemoryPerNode) + "g", inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			insertDaemonWorkerMaxHeapSizeRecommendation(Integer.toString((int)rawSparkMemoryPerNode) + "g", inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		
 			//User input of what fraction of resources of Spark cluster to be used
 			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-			double effectiveMemory = resourceFraction * actualSparkMemory;
-			double effectiveMemoryPerNode = effectiveMemory / numNodes;
+			double effectiveMemoryPerNode = resourceFraction * rawSparkMemoryPerNode;
 			
-			setDriverMemory( Integer.toString((int)(effectiveMemoryPerNode * driverMemorySafetyFraction)) , inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			setDriverMemory(Integer.toString((int)(effectiveMemoryPerNode * driverMemorySafetyFraction)) , inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			
 			int numExecutorsPerNode = 0;
-			double calculatedNumExecutorsPerNode = effectiveMemoryPerNode / idealExecutorMemory;
-			
-			
+			int calculatedNumExecutorsPerNode = (int)(effectiveMemoryPerNode / idealExecutorMemory);
+
+			//Calculate Memory per Executor
+			double finalExecutorMemory = idealExecutorMemory;
+			boolean recalculateFlag = false;
 			if (calculatedNumExecutorsPerNode > 4){
 				numExecutorsPerNode = 4;
+				recalculateFlag = true;
 			}
 			else if (calculatedNumExecutorsPerNode < 2){
 				numExecutorsPerNode = 2;
+				recalculateFlag = true;
+			}
+			else{ //2 or 3 or 4
+				numExecutorsPerNode = calculatedNumExecutorsPerNode;
+				double currMemSizePerNode = idealExecutorMemory * numExecutorsPerNode;
+				double leftOverMemPerNode = effectiveMemoryPerNode - currMemSizePerNode;
+				if(leftOverMemPerNode > (idealExecutorMemory / 2)){
+					recalculateFlag = true;
+				}
 			}
 			
-			double currMemSizePerNode = idealExecutorMemory * numExecutorsPerNode;
-			double leftOverMemPerNode = effectiveMemoryPerNode - currMemSizePerNode;
-			
-			//Calculate Memory per Executor
-			double finalExecutorMemory = idealExecutorMemory;
-			if (leftOverMemPerNode > (idealExecutorMemory / 2)){
-				finalExecutorMemory = effectiveMemoryPerNode / defaultExecutorsPerNode;
-				numExecutorsPerNode = defaultExecutorsPerNode;
+			//Re-adjusting Executor Memory
+			if(recalculateFlag){
+				 finalExecutorMemory = effectiveMemoryPerNode/numExecutorsPerNode;
 			}
 			
 			finalExecutorMemory = Math.min(executorUpperBoundLimitG, finalExecutorMemory);
 			
 			//Calculate Cores Per Executor
 			int effectiveCoresPerNode = (int) (resourceFraction * numCoresPerNode);
-			int coresPerExecutor =  (int) (effectiveCoresPerNode / defaultExecutorsPerNode);
+			int coresPerExecutor =  (int) (effectiveCoresPerNode / numExecutorsPerNode);
 			executorCores = Integer.toString(coresPerExecutor);
 		    setExecutorCores(executorCores, inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);	
 			setExecutorMemory(Integer.toString((int)finalExecutorMemory) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
 			setPythonWorkerMemory(Integer.toString((int)finalExecutorMemory) + "g", "", optionsTable, recommendationsTable, commandLineParamsTable);
+			//Set instances
 			int totalExecutorInstances =  numExecutorsPerNode * numWorkerNodes;
-			setExecutorInstances (Integer.toString(totalExecutorInstances), "",  optionsTable, recommendationsTable, commandLineParamsTable);
+			setExecutorInstances (Integer.toString(totalExecutorInstances),  optionsTable, recommendationsTable, commandLineParamsTable);
 			
 		}
 		
-		private static void setExecutorInstances (String value, String recommendation, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		private static void setExecutorInstances (String value, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			executorInstances = value;
 			optionsTable.put("spark.executor.instances", executorInstances);
-			if (recommendation.length() > 0)
-				recommendationsTable.put("spark.executor.instances", recommendation);
 		}
 		
-		//heuristic is now that the driver uses one whole node to itself
 		private static void setDriverCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
 			String numCoresPerNode = inputsTable.get("numCoresPerNode");
@@ -376,9 +367,7 @@ public class Standalone {
 			}else{
 				storageLevel = "MEMORY_AND_DISK_SER";
 			}
-			
-			optionsTable.put("spark.storage.level", storageLevel);
-			
+			optionsTable.put("spark.storage.level", storageLevel);	
 		}
 		
 		//Execution Behavior
@@ -443,13 +432,13 @@ public class Standalone {
 		}
 		
 		private static void insertExecutorTotalMaxHeapsizeRecommendation (String recommendation, Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			recommendationsTable.put("SPARK_WORKER_MEMORY","Standalone Mode only: Total amount of memory to allow Spark applications to use on the machine: " + recommendation);
+			recommendationsTable.put("environment - SPARK_WORKER_MEMORY (executor_total_max_heapsize)","Standalone Mode only: Total amount of memory to allow Spark applications to use on the machine: " + recommendation);
 		}
 		private static void insertDaemonMasterMaxHeapSizeRecommendation (String recommendation, Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			recommendationsTable.put("SPARK_DAEMON_MEMORY -- MASTER","Standalone Mode only: Total amount of memory to allow Spark applications to use on the machine: " + recommendation);
+			recommendationsTable.put("environment - SPARK_DAEMON_MEMORY (master_max_heapsize)","Standalone Mode only: Total amount of memory to allow Spark applications to use on the machine: " + recommendation);
 		}
 		private static void insertDaemonWorkerMaxHeapSizeRecommendation (String recommendation, Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			recommendationsTable.put("SPARK_DAEMON_MEMORY -- WORKER","Standalone Mode only: Memory to allocate to the Spark master and worker daemons themselves: " + recommendation);
+			recommendationsTable.put("environment - SPARK_DAEMON_MEMORY (worker_max_heapsize) ","Standalone Mode only: Memory to allocate to the Spark master and worker daemons themselves: " + recommendation);
 		}
 		
 	}

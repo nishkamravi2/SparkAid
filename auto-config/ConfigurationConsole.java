@@ -167,6 +167,9 @@ public class ConfigurationConsole {
             FileReader fileReader = new FileReader(fileName);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             while((line = bufferedReader.readLine()) != null) {
+            	if (line.length() == 0 || !line.substring(0, 5).equals("spark")){
+            		continue;
+            	}
                 String [] lineArray = line.split("\\s+");
                 String optionKey = lineArray[0];
                 String optionValue = lineArray[1];
@@ -211,9 +214,9 @@ public class ConfigurationConsole {
 		//configure necessary SparkR settings
 		if (sparkRFlag.equals("y")){ SparkR.configureSparkRSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);}
 		
-		createOutputFile("spark.conf", optionsTable);
-		createOutputFile("spark.conf.advise", recommendationsTable);
-		createOutputFile("spark.cmdline.options", commandLineParamsTable);
+		createOutputFile("spark.conf", optionsTable, "options");
+		createOutputFile("spark.conf.advise", recommendationsTable, "recommendations");
+		createOutputFile("spark.cmdline.options", commandLineParamsTable, "commandline");
 		String cmdLineParams = generateParamsString(commandLineParamsTable);
 		constructCmdLine(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable, cmdLineParams);
 	}
@@ -245,37 +248,96 @@ public class ConfigurationConsole {
 		return outputBuffer.toString();
 	}
 
-	private static void createOutputFile(String fileName, Hashtable<String,String> t){
-		try{
-			int startParamIndex = 54;
-			File outFile = new File(fileName);
-			if (!outFile.exists()) {
-				outFile.createNewFile();
-			}
-			
-			BufferedWriter b1 = new BufferedWriter(
-					new FileWriter(outFile));		
-			
-			ArrayList <String> tableKeySet = new ArrayList<String>(t.keySet());
-			Collections.sort(tableKeySet);
-			Iterator <String> it = tableKeySet.iterator();
+	private static Hashtable <String, String> extractKeyCategory(String category, Hashtable<String, String> table, int startingIndex){
+		ArrayList <String> tableKeySet = new ArrayList<String>(table.keySet());
+		Iterator <String> it = tableKeySet.iterator();
+		
+		Hashtable<String,String> categoryTable = new Hashtable<String, String>();
 
+		while (it.hasNext()) {
+			String key = it.next();
+			String value = table.get(key);
+			if (key.length() >= startingIndex + category.length() && key.substring(startingIndex, startingIndex + category.length()).equals(category)){
+				categoryTable.put(key, value); //put it in the new list
+				table.remove(key); //removes it from the original table
+			}
+		}
+		return categoryTable;
+		
+	}
+	
+	private static void writeCategory(Hashtable <String, String> catTable , BufferedWriter b){
+		int startParamIndex = 70;
+		ArrayList <String> tableKeySet = new ArrayList<String>(catTable.keySet());
+		Collections.sort(tableKeySet);
+		Iterator <String> it = tableKeySet.iterator();
+		try{
 			while (it.hasNext()) {
 				String key = it.next();
-				String value = t.get(key);
+				String value = catTable.get(key);
 				int spaceBufferLength = Math.max(5, startParamIndex - key.length());
 				// if nothing was set, do not add it to outfile
 				if (value.equals("")) {
 					continue;
 				}
-				if (it.hasNext()){
-					b1.write(key + spaceBuffer(spaceBufferLength) + value + "\n");}
-				else{
-					b1.write(key + spaceBuffer(spaceBufferLength) + value);
-				}
+				b.write(key + spaceBuffer(spaceBufferLength) + value + "\n");
 			}
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	
+	private static void createOutputFile(String fileName, Hashtable<String,String> table, String fileType){
+		try{
+			File outFile = new File(fileName);
+			if (!outFile.exists()) {
+				outFile.createNewFile();
+			}
+			
+			BufferedWriter b1 = new BufferedWriter(new FileWriter(outFile));	
+			//Formatting Constants
+			int settingsStartingIndex = 6; // spark.[starting index]*
+			int recommendationsStartingIndex = 0; //Recommendation tag starts at index 0
+			Hashtable <String, String> environmentKeySet = extractKeyCategory("environment", table, recommendationsStartingIndex);
+			Hashtable <String, String> yarnKeySet = extractKeyCategory("yarn",table, settingsStartingIndex);
+			Hashtable <String, String> streamingKeySet = extractKeyCategory("streaming",table, settingsStartingIndex);
+			Hashtable <String, String> dynamicAllocationKeySet = extractKeyCategory("dynamicAllocation",table, settingsStartingIndex);
+
+			if (fileType.equals("recommendations")){
+				b1.write("#####################################################################################################################################################################"
+						+ "\n#Cloudera Manager/Environment Settings\n"
+						+ "#####################################################################################################################################################################"
+						+ "\n\n");
+				writeCategory(environmentKeySet, b1);
+				b1.write("\n");
+			}
+			
+			b1.write("#####################################################################################################################################################################"
+					+ "\n#Standalone Mode Default Settings\n"
+					+ "#####################################################################################################################################################################"
+					+ "\n\n");
+			writeCategory(table, b1);
+			b1.write("\n"
+					+ "#####################################################################################################################################################################"
+					+ "\n#YARN Mode Default Settings (ignore if not using YARN)\n"
+					+ "#####################################################################################################################################################################"
+					+ "\n\n");
+			writeCategory(yarnKeySet, b1);
+			b1.write("\n"
+					+ "#####################################################################################################################################################################"
+					+ "\n#Streaming Default Settings (ignore if not using Spark Streaming)\n"
+					+ "#####################################################################################################################################################################"
+					+ "\n\n");
+			writeCategory(streamingKeySet, b1);
+			b1.write("\n"
+					+ "#####################################################################################################################################################################"
+					+ "\n#Dynamic Allocation Default Settings (ignore if not using Dynamic Allocation)\n"
+					+ "#####################################################################################################################################################################"
+					+ "\n\n");
+			writeCategory(dynamicAllocationKeySet, b1);
 			b1.close();
-		
 		}
 		catch(Exception e){
 			e.printStackTrace();
