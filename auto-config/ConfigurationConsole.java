@@ -64,7 +64,7 @@ public class ConfigurationConsole {
 		if (args.length == 0){
 			Scanner scanner = new Scanner(System.in);
 			
-			System.out.print("Enter input data size in GB:");
+			System.out.print("Enter input data size in GB:\n");
 			inputDataSize = scanner.nextLine();
 			
 			System.out.println("Enter number of nodes in cluster (including master):");
@@ -346,9 +346,9 @@ public class ConfigurationConsole {
 	
 	public static void printUsage() {
 		System.out.println("Usage: \n"
-				+ "If no arguments are put, follow prompts.. \n\n"
+				+ "If no arguments are put, follow prompts.. \n"
 				+ "./run.sh \n"
-				+ "<input data size in GB> \n"
+				+ "<input data size in GB> \n\n"
 				+ "<number of nodes in cluster including master> \n"
 				+ "<number of cores per node> \n"
 				+ "<memory per node in GB - for Standalone its the node, for yarn its the container size> \n"
