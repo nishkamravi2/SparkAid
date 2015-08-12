@@ -1,6 +1,0 @@
-auto-config/ConfigurationConsole.java
-auto-config/core/src/main/common/Common.java
-auto-config/core/src/main/yarn/Yarn.java
-auto-config/dynamicallocation/src/main/DynamicAllocation.java
-auto-config/streaming/src/main/Streaming.java
-utils/UtilsConversion.java

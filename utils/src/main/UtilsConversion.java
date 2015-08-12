@@ -1,4 +1,4 @@
-package utils;
+package utils.src.main;
 
 public class UtilsConversion {
 	//rebuild better parser using regex

@@ -2,7 +2,7 @@ package core.src.main.yarn;
 import java.util.Hashtable;
 
 import core.src.main.common.Common;
-import utils.UtilsConversion;
+import utils.src.main.UtilsConversion;
 
 public class Yarn {
 	

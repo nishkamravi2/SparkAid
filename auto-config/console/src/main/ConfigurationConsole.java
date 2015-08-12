@@ -1,3 +1,5 @@
+package console.src.main;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -49,8 +51,8 @@ public class ConfigurationConsole {
 		
 		//file names
 		String sparkDefaultConf = "spark-default.conf";
-		String sparkFinalConf = "output/spark-final.conf";
-		String sparkConfAdvise = "output/spark.conf.advise";
+		String sparkFinalConf = "../output/spark-final.conf";
+		String sparkConfAdvise = "../output/spark.conf.advise";
 	
 		//get input parameters
 		if (args.length == 0){
