@@ -1,4 +1,4 @@
-package core.src.main.standalone;
+package core.src.main.common;
 import java.util.*;
 
 import utils.UtilsConversion;

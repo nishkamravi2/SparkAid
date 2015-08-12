@@ -12,7 +12,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Scanner;
 import streaming.src.main.Streaming;
-import core.src.main.standalone.Common;
+import core.src.main.common.Common;
 import core.src.main.yarn.Yarn;
 import dynamicallocation.src.main.DynamicAllocation;
 
