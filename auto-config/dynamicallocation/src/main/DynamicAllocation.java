@@ -4,14 +4,10 @@ import java.util.Hashtable;
 
 public class DynamicAllocation {
 	
-	//Dynamics Allocation
-	static String initialExecutors = ""; //spark.dynamicAllocation.minExecutors
+	//Dynamic Allocation
 	static String dynamicAllocationEnabled = "false"; //false
 	static String shuffleServiceEnabled = "false";
-	
 	static String dynamicAllocationMaxExecutors = ""; //Integer.MAX_VALUE
-	static String dynamicAllocationMinExecutors = "0"; //0
-	
 	
 	public static void configureDynamicAllocationSettings(Hashtable<String, String> inputsTable,
 			Hashtable<String, String> optionsTable,
@@ -23,9 +19,7 @@ public class DynamicAllocation {
 	
 	public static void setDynamicAllocation(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 		setDynamicAllocationEnabled(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-	    setInitialExecutors(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	    setDynamicAllocationMaxExecutors(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-	    setDynamicAllocationMinExecutors(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	    setShuffleServiceEnabled(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
 
@@ -36,12 +30,7 @@ public class DynamicAllocation {
 	private static void setDynamicAllocationEnabled(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		dynamicAllocationEnabled = "true";
 		optionsTable.put("spark.dynamicAllocation.enabled", dynamicAllocationEnabled);
-		recommendationsTable.put("spark.dynamicAllocation.enabled", "Note that cached data from decommissioned executors will be lost and might need recomputation, adding time");
-	}
-
-
-	private static void setInitialExecutors(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.dynamicAllocation.initialExecutors", initialExecutors);
+		recommendationsTable.put("spark.dynamicAllocation.enabled", "Note that cached data from decommissioned executors will be lost and might need recomputation, thereby affecting performance");
 	}
 
 	private static void setDynamicAllocationMaxExecutors(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -49,11 +38,6 @@ public class DynamicAllocation {
 		optionsTable.put("spark.dynamicAllocation.maxExecutors", dynamicAllocationMaxExecutors);
 		removeExecutorInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
-
-	private static void setDynamicAllocationMinExecutors(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.dynamicAllocation.minExecutors", dynamicAllocationMinExecutors);
-	}
-
 	
 	private static void setShuffleServiceEnabled(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		shuffleServiceEnabled = "true";

@@ -3,10 +3,6 @@ package streaming.src.main;
 import java.util.Hashtable;
 
 public class Streaming {
-
-	//Spark Streaming
-	static String streamingUnpersist = "true"; //true
-	
 	public static void configureStreamingSettings(Hashtable<String, String> inputsTable,
 			Hashtable<String, String> optionsTable,
 			Hashtable<String, String> recommendationsTable,
@@ -15,12 +11,11 @@ public class Streaming {
 	}
 	
 	public static void setSparkStreaming(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
-	    setStreamingUnpersist(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		setStreamingBlockInterval(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
 
-	private static void setStreamingUnpersist(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		optionsTable.put("spark.streaming.unpersist", streamingUnpersist);
-		recommendationsTable.put("spark.streaming.unpersist", "Set to true if running streaming app and running into OOM issues");
+	private static void setStreamingBlockInterval(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		recommendationsTable.put("spark.streaming.blockInterval", "Pick this value in such a way that (batch interval/block interval) = 2 * total-num-cores");
 	}
 
 }
