@@ -10,7 +10,8 @@ public class Yarn {
 	static String yarnExecutorMemoryOverhead = ""; 
 	static String yarnDriverMemoryOverhead = "";
 	
-	//YARN AM Defaults
+	//YARN Defaults
+	static String yarnAMExtraJavaOptions = "";	
 	static String schedulerMinRegisteredResourcesRatio = "0.8"; //Overrides Standalone's Default of 0.0
 	
 	//Variables for default Overhead Memory Setting, this is an inferred setting
@@ -23,6 +24,7 @@ public class Yarn {
 		insertYarnNodeManagerCoresRecommendation(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		insertYarnSchedulerCoresRecommendation(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setSchedulerMinRegisteredResourcesRatio(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		setYarnAMExtraJavaOptions(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
 
 	private static void setExecMemCoresInstances(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -91,5 +93,10 @@ public class Yarn {
 
 	private static void setSchedulerMinRegisteredResourcesRatio(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		optionsTable.put("spark.scheduler.minRegisteredResourcesRatio", schedulerMinRegisteredResourcesRatio);
+	}
+	
+	private static void setYarnAMExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		yarnAMExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Dsun.io.serialization.extendedDebugInfo=true";
+		optionsTable.put("spark.yarn.am.extraJavaOptions", yarnAMExtraJavaOptions);
 	}
 }
