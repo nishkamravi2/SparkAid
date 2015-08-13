@@ -1,4 +1,4 @@
-package utils;
+package utils.src.main;
 
 public class UtilsConversion {
 	//rebuild better parser using regex
@@ -30,5 +30,6 @@ public class UtilsConversion {
 			return Double.parseDouble(s);
 		}
 	}
+	
 
 }
