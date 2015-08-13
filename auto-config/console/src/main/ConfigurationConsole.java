@@ -263,19 +263,19 @@ public class ConfigurationConsole {
 			writeCategory(table, b1);
 			b1.write("\n"
 					+ "#################################################################################################################"
-					+ "\n#YARN Mode Default Settings (ignore if not using YARN)\n"
+					+ "\n#YARN Settings (ignore if not using YARN)\n"
 					+ "#################################################################################################################"
 					+ "\n\n");
 			writeCategory(yarnKeySet, b1);
 			b1.write("\n"
 					+ "#################################################################################################################"
-					+ "\n#Streaming Default Settings (ignore if not using Spark Streaming)\n"
+					+ "\n#Streaming Settings (ignore if not using Spark Streaming)\n"
 					+ "#################################################################################################################"
 					+ "\n\n");
 			writeCategory(streamingKeySet, b1);
 			b1.write("\n"
 					+ "#################################################################################################################"
-					+ "\n#Dynamic Allocation Default Settings (ignore if not using Dynamic Allocation)\n"
+					+ "\n#Dynamic Allocation Settings (ignore if not using Dynamic Allocation)\n"
 					+ "#################################################################################################################"
 					+ "\n\n");
 			writeCategory(dynamicAllocationKeySet, b1);
