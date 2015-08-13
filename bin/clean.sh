@@ -1,6 +1,6 @@
 rm -r build
 rm sparkaid.jar
-rm ../output/*
+rm -rf ../output
 
 rm -r ../auto-config/console/bin		
 rm -r ../auto-config/dynamicallocation/bin	
