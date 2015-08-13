@@ -23,8 +23,8 @@ public class Common {
 		static String driverMaxResultSize = "0";
 	
 		//RunTime
-		static String driverExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps";
-		static String executorExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps";
+		static String driverExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Dsun.io.serialization.extendedDebugInfo=true";
+		static String executorExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Dsun.io.serialization.extendedDebugInfo=true";
 		
 		//Compression and Serialization
 		static String serializer = "org.apache.spark.serializer.JavaSerializer";
