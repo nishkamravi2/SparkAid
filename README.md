@@ -1,5 +1,4 @@
 SparkAid
 ===============   
-cd bin 
-./run.sh
+cd bin; ./run.sh
 
