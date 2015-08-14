@@ -228,7 +228,7 @@ public class Common {
 	
 		public static void setExecutorMemory (String value, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			executorMemory = value + "g";
-			optionsTable.put("spark.executor.memory", value);
+			optionsTable.put("spark.executor.memory", executorMemory);
 		}
 	
 		private static void setLocalDirEnv(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
