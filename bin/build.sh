@@ -5,6 +5,7 @@ if [ ! -d "build" ]; then
 	jar cf sparkaid.jar .
 	mv sparkaid.jar ..
 	cd ..
+	mkdir output
 fi
 
 

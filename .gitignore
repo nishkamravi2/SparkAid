@@ -8,5 +8,5 @@ build
 bin/build
 bin/sparkaid.jar
 eclipse-bin
-output/spark.conf.advise
-output/spark-final.conf
+output
+spark-default.conf

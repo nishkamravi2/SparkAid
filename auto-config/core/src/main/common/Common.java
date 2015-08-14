@@ -1,8 +1,6 @@
 package core.src.main.common;
 import java.util.*;
 
-import utils.src.main.UtilsConversion;
-
 public class Common {
 	
 		//Heuristic Configured Parameters
@@ -130,7 +128,7 @@ public class Common {
 		
 		private static void setExecMemCoresInstances(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-			double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
+			double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode")); //in mb
 			int numNodes = Integer.parseInt(inputsTable.get("numNodes"));
 			int numJobs = (int)(1 / resourceFraction);
 			int numWorkerNodes = numNodes - numJobs;
@@ -230,7 +228,7 @@ public class Common {
 	
 		public static void setExecutorMemory (String value, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			executorMemory = value + "g";
-			optionsTable.put("spark.executor.memory", value);
+			optionsTable.put("spark.executor.memory", executorMemory);
 		}
 	
 		private static void setLocalDirEnv(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){

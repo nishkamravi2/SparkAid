@@ -51,9 +51,15 @@ public class ConfigurationConsole {
 		
 		//file names
 		String sparkDefaultConf = "spark-default.conf";
-		String sparkFinalConf = "../output/spark-final.conf";
-		String sparkConfAdvise = "../output/spark.conf.advise";
+		String sparkFinalConf = "output/spark-final.conf";
+		String sparkConfAdvise = "output/spark.conf.advise";
 	
+		//legal input arguments
+		String [] legalFileSystemInput = {"ext3","ext4","xfs"};
+		String [] legalDeployModeInput = {"client","cluster"};
+		String [] legalClusterManagerInput = {"standalone","yarn"};
+		String [] legalYesNoInput = {"y","n"};
+		
 		//get input parameters
 		if (args.length == 0){
 			printUsage();
@@ -68,13 +74,14 @@ public class ConfigurationConsole {
 					"Invalid input. Please re-enter valid integer.", scanner);
 			resourceFraction = errorResourceFractionCheck("Enter fraction of cluster resources for this job (from 0.0 to 1.0): ", 
 					"Invalid input. Please re-enter valid double from 0.0 to 1.0.", scanner);
-			fileSystem = fileSystemCheck("Enter file system of input raw data: ext3/ext4/xfs", 
+			fileSystem = checkValidHelper("Enter file system of input raw data: ext3/ext4/xfs", legalFileSystemInput,
 					"Invalid input. Enter ext3/ext4/xfs.", scanner);
 			master = scanNextWithPrompt("Enter master URL:", scanner);
-			deployMode = deployModeCheck("Enter deploy mode: cluster / client", 
+			deployMode = checkValidHelper("Enter deploy mode: cluster / client", legalDeployModeInput,
 					"Invalid input. Enter cluster / client.", scanner);
-			clusterManager = clusterManagerCheck("Enter Cluster Manager: standalone / yarn", "Invalid input. Enter standalone / yarn.", scanner);
-			dynamicAllocationFlag = yesNoCheck("Is this a Dynamic Allocation application? y/n", 
+			clusterManager = checkValidHelper("Enter Cluster Manager: standalone / yarn", legalClusterManagerInput, 
+					"Invalid input. Enter standalone / yarn.", scanner);
+			dynamicAllocationFlag = checkValidHelper("Is this a Dynamic Allocation application? y/n", legalYesNoInput,
 					"Invalid input. Enter y/n.", scanner);
 			className = scanNextWithPrompt("Enter Class Name of application: ", scanner);
 			appJar = scanNextWithPrompt("Enter file path of application JAR ", scanner);
@@ -86,19 +93,36 @@ public class ConfigurationConsole {
 			printUsage();
 			System.exit(0);
 		} else {
+			boolean invalidFlag = false;
+			//inputDataSize = check(args[0]);
 			inputDataSize = args[0];
+			if (checkIllegalInt(inputDataSize,"Invalid input data size arg.")){invalidFlag = true;}
 			numNodes = args[1];
+			if (checkIllegalInt(numNodes,"Invalid number of nodes.")){invalidFlag = true;}
 			numCoresPerNode = args[2];
+			if (checkIllegalInt(numCoresPerNode,"Invalid num cores per node.")){invalidFlag = true;}
 			memoryPerNode = args[3];
+			if (checkIllegalInt(memoryPerNode,"Invalid memory per node.")){invalidFlag = true;}
 			resourceFraction = args[4];
+			if (checkIllegalDouble(resourceFraction,"Invalid resource fraction.")){invalidFlag = true;}
 			fileSystem = args[5];
+			if (checkLegalInputs(fileSystem, legalFileSystemInput,"Invalid filesystem.")){invalidFlag = true;}
 			master = args[6];
 			deployMode = args[7];
+			if (checkLegalInputs(deployMode, legalDeployModeInput,"Invalid deploy mode.")){invalidFlag = true;}
 			clusterManager = args[8];
+			if (checkLegalInputs(clusterManager, legalClusterManagerInput,"Invalid cluster manager.")){invalidFlag = true;}
 			dynamicAllocationFlag = args[9];
+			if (checkLegalInputs(dynamicAllocationFlag, legalYesNoInput,"Invalid y/n flag.")){invalidFlag = true;}
 			className = args[10];
 			appJar = args[11];
 			appArgs = args[12];
+			
+			if (invalidFlag){
+				System.out.println("Please re-enter arguments properly. \n");
+				printUsage();
+				System.exit(0);
+			}
 		}
 		
 		inputsTable.put("inputDataSize", inputDataSize);
@@ -199,7 +223,6 @@ public class ConfigurationConsole {
 			}
 		}
 		return categoryTable;
-		
 	}
 	
 	private static void writeCategory(Hashtable <String, String> catTable , BufferedWriter b){
@@ -212,8 +235,7 @@ public class ConfigurationConsole {
 				String key = it.next();
 				String value = catTable.get(key);
 				int spaceBufferLength = Math.max(5, startParamIndex - key.length());
-				// if nothing was set, do not add it to outfile
-				if (value.equals("")) {
+				if (value.equals("")) { // if nothing was set, do not add it to outfile
 					continue;
 				}
 				b.write(key + spaceBuffer(spaceBufferLength) + value + "\n");
@@ -329,17 +351,11 @@ public class ConfigurationConsole {
 		while (true){
 			System.out.print(prompt + "\n");
 			input = scanner.nextLine();
-			try {
-				int inputInt = Integer.parseInt(input);
-				if (inputInt <= 0){
-					System.out.println(errorMsg+ "\n");
-					continue;
-				}
-			} catch (Exception e){
-				System.out.println(errorMsg+ "\n");
+			if (checkIllegalInt(input, errorMsg)){
 				continue;
+			}else{
+				break;
 			}
-			break;
 		}
 		return input;
 	}
@@ -349,85 +365,82 @@ public class ConfigurationConsole {
 		while (true){
 			System.out.print(prompt + "\n");
 			input = scanner.nextLine();
-			try {
-				double inputDouble = Double.parseDouble(input);
-				if (inputDouble <= 0 || inputDouble > 1.0){
-					System.out.println(errorMsg+ "\n");
-					continue;
-				}
-			} catch (Exception e){
-				System.out.println(errorMsg+ "\n");
+			if (checkIllegalDouble(input, errorMsg)){
 				continue;
-			}
-			break;
-		}
-		return input;
-	}
-	
-	public static String fileSystemCheck (String prompt, String errorMsg, Scanner scanner ){
-		String input = "";
-		while (true){
-			System.out.print(prompt + "\n");
-			input = scanner.nextLine();
-			if (input.equals("ext3") || input.equals("ext4") ||input.equals("xfs") ){
+			}else{
 				break;
 			}
-			else{
-				System.out.println(errorMsg+ "\n");
-			}
 		}
 		return input;
 	}
 	
-	public static String deployModeCheck (String prompt, String errorMsg, Scanner scanner ){
-		String input = "";
-		while (true){
-			System.out.print(prompt + "\n");
-			input = scanner.nextLine();
-			if (input.equals("client") || input.equals("cluster")){
-				break;
-			}
-			else{
-				System.out.println(errorMsg+ "\n");
-			}
-		}
-		return input;
-	}
-	
-	public static String clusterManagerCheck (String prompt, String errorMsg, Scanner scanner ){
-		String input = "";
-		while (true){
-			System.out.print(prompt + "\n");
-			input = scanner.nextLine();
-			if (input.equals("standalone") || input.equals("yarn")){
-				break;
-			}
-			else{
-				System.out.println(errorMsg+ "\n");
-			}
-		}
-		return input;
-	}
-	
-	public static String yesNoCheck (String prompt, String errorMsg, Scanner scanner ){
-		String input = "";
-		while (true){
-			System.out.print(prompt + "\n");
-			input = scanner.nextLine();
-			if (input.equals("y") || input.equals("n")){
-				break;
-			}
-			else{
-				System.out.println(errorMsg+ "\n");
-			}
-		}
-		return input;
-	}
-	
-	public static String scanNextWithPrompt (String prompt, Scanner scanner ){
+	public static String scanNextWithPrompt (String prompt, Scanner scanner){
 		System.out.print(prompt + "\n");
 		String input = scanner.nextLine();
 		return input;
 	}
 	
+	public static String checkValidHelper (String prompt, String[] options, String errorMsg, Scanner scanner){
+		String input = "";
+		while (true){
+			System.out.print(prompt + "\n");
+			input = scanner.nextLine();
+			boolean validFlag = false;
+			for (int i = 0; i < options.length; i++){
+				if (input.equals(options[i])){
+					validFlag = true;
+				}
+			}
+			if (validFlag){
+				break;
+			}
+			else{
+				System.out.println(errorMsg+ "\n");
+			}
+		}
+		return input;
+	}
+	
+	public static boolean checkIllegalInt(String arg, String errorMsg){
+		boolean flag = false;
+		try {
+			int inputInt = Integer.parseInt(arg);
+			if (inputInt <= 0){
+				System.out.println(errorMsg + " [" +arg + "]");
+				flag = true;
+			}
+		} catch (Exception e){
+			System.out.println(errorMsg + " [" +arg + "]");
+			flag = true;
+		}
+		return flag;
+	}
+	
+	public static boolean checkIllegalDouble(String arg, String errorMsg){
+		boolean flag = false;
+		try {
+			double inputDouble = Double.parseDouble(arg);
+			if (inputDouble <= 0 || inputDouble > 1){
+				System.out.println(errorMsg + " [" +arg + "]");
+				flag = true;
+			}
+		} catch (Exception e){
+			System.out.println(errorMsg + " [" +arg + "]");
+			flag = true;
+		}
+		return flag;
+	}
+	
+	public static boolean checkLegalInputs(String arg, String[] legalOptions, String errorMsg){
+		boolean flag = false;
+		for (int i = 0; i < legalOptions.length; i++){
+			if (arg.equals(legalOptions[i])){
+				flag = true;
+			}
+		}
+		if (!flag){
+			System.out.println(errorMsg + " [" +arg + "]");
+		}
+		return !flag;
+	}
 }

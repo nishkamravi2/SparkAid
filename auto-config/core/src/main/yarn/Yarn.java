@@ -1,8 +1,6 @@
 package core.src.main.yarn;
 import java.util.Hashtable;
-
 import core.src.main.common.Common;
-import utils.src.main.UtilsConversion;
 
 public class Yarn {
 	
@@ -29,7 +27,7 @@ public class Yarn {
 
 	private static void setExecMemCoresInstances(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-		double memoryPerNode = UtilsConversion.parseMemory(inputsTable.get("memoryPerNode")); //in mb
+		double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode")); //in mb
 		int numNodes = Integer.parseInt(inputsTable.get("numNodes"));
 		int numJobs = (int)(1 / resourceFraction);
 		int numWorkerNodes = numNodes - numJobs;
