@@ -9,12 +9,16 @@ public class Yarn {
 	static String yarnDriverMemoryOverhead = "";
 	
 	//YARN Defaults
+	static String yarnAMCores = "";
+	static String yarnAMMemory = "";
+	static String yarnAMMemoryOverhead = "";
 	static String yarnAMExtraJavaOptions = "";	
 	static String schedulerMinRegisteredResourcesRatio = "0.8"; //Overrides Standalone's Default of 0.0
 	
 	//Variables for default Overhead Memory Setting, this is an inferred setting
-	static double executorMemoryOverheadFraction = 0.10; //recommended by config guide
-	static double driverMemoryOverheadFraction = 0.07; //recommended by config guide
+	static double executorMemoryOverheadFraction = 0.10; 
+	static double driverMemoryOverheadFraction = 0.07; 
+	static double yarnAMMemoryOverheadFraction = 0.07;
 
 	public static void configureYarnSettings( Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 		setExecMemCoresInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -41,8 +45,11 @@ public class Yarn {
 		//Set driver memory + cores
 		int driverMemoryValue = (int) (effectiveMemoryPerNode * Common.driverMemorySafetyFraction);
 		Common.setDriverMemory(Integer.toString(driverMemoryValue) , inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		setYarnAMMemory(Integer.toString(driverMemoryValue) , inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnDriverMemoryOverhead(driverMemoryValue, inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		setYarnAMMemoryOverhead(driverMemoryValue, inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		Common.setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		setYarnAMCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		//Calculate and Set Executor Memory + Overhead + Instances
 		double idealExecutorMemoryWithOverhead = Common.idealExecutorMemory * (1 + executorMemoryOverheadFraction);
 		int calculatedNumExecutorsPerNode = (int)(effectiveMemoryPerNode / idealExecutorMemoryWithOverhead);
@@ -93,8 +100,26 @@ public class Yarn {
 		optionsTable.put("spark.scheduler.minRegisteredResourcesRatio", schedulerMinRegisteredResourcesRatio);
 	}
 	
+	private static void setYarnAMCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		yarnAMCores = inputsTable.get("numCoresPerNode");
+		optionsTable.put("spark.yarn.am.cores", yarnAMCores);
+	}
+	
+	private static void setYarnAMMemory(String value, Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		yarnAMMemory = value + "g";
+		optionsTable.put("spark.yarn.am.memory", yarnAMMemory);
+	}
+	
+	private static void setYarnAMMemoryOverhead(int value, Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		double calculatedYarnAMMemOverhead = value * yarnAMMemoryOverheadFraction;
+		yarnAMMemoryOverhead = Integer.toString((int)(calculatedYarnAMMemOverhead * 1000));
+		optionsTable.put("spark.yarn.am.memoryOverhead", yarnAMMemoryOverhead);
+	}
+	
 	private static void setYarnAMExtraJavaOptions(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 		yarnAMExtraJavaOptions = "-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Dsun.io.serialization.extendedDebugInfo=true";
 		optionsTable.put("spark.yarn.am.extraJavaOptions", yarnAMExtraJavaOptions);
 	}
+	
+	
 }
