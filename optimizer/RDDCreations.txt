@@ -1,0 +1,15 @@
+textFile
+objectFile
+wholeTextFiles
+binaryFiles
+emptyRDD
+makeRDD
+sequenceFile
+parallelize
+hadoopFile[optional 5th out of 5 args]
+hadoopRDD[optional 5th out of 5 args]
+union
+binaryRecords
+newAPIHadoopFile
+newAPIHadoopRDD
+range
