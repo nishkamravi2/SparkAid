@@ -6,20 +6,12 @@ spark_final_conf_path = "bin/spark-final.conf"
 rdd_actions_path = "RDDActions.txt"
 rdd_creations_path = "RDDCreations.txt"
 rdd_creations_partitions_path = "RDDCreationsPartitions.txt"
+
 #first find optimizations and insert rdd caching if needed
 cache_optimized_code, optimization_report = cacheOptimization.cacheOptimization(application_code_path, rdd_actions_path, rdd_creations_path)
-# print ""
-# print "=================================Set Parallelism Recommendation==============================================="
 cache_optimized_code, optimization_report = optimizations.setParallelism(cache_optimized_code, rdd_creations_partitions_path, spark_final_conf_path, optimization_report)
-# print ""
-# print "=================================Set ReduceByKey=============================================================="
 spark_code_advise = optimizations.recommendReduceByKey(cache_optimized_code)
-# print ""
-# print "=================================Set Memory Fraction==========================================="
 new_conf_file = optimizations.setMemoryFraction(cache_optimized_code, spark_final_conf_path)
-# print ""
-# print "=================================Optimized Code (output/optimizedCode.scala)=================================="
-# print cache_optimized_code
 
 #Generate optimization report
 with open("output/optimization-report.txt", 'wr') as opt_report:
