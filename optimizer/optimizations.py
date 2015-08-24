@@ -64,8 +64,8 @@ def setParallelism(application_code, rdd_creations_partitions_path, spark_final_
 		.*?				# (anything after) ending at newline
 		''' %pattern_list, application_code, re.X)
 	if matched_iter:
-		for m in matched_iter:
-			line = m.group()
+		for matched_obj in matched_iter:
+			line = matched_obj.group()
 			recommended_line = line.rsplit(")",1)
 			recommended_line = recommended_line[0] + ", " + str(default_parallelism) + ")" + recommended_line[1]
 			optimization_report += "Modified from: " + line + "\n"

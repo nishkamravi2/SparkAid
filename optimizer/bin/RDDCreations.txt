@@ -6,8 +6,8 @@ emptyRDD
 makeRDD
 sequenceFile
 parallelize
-hadoopFile[optional 5th out of 5 args]
-hadoopRDD[optional 5th out of 5 args]
+hadoopFile
+hadoopRDD
 union
 binaryRecords
 newAPIHadoopFile
