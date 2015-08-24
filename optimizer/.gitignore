@@ -2,3 +2,4 @@ output/*
 test.py
 sample-code
 bin/spark-final.conf
+*.pyc
