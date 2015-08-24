@@ -3,9 +3,9 @@ import cacheOptimization
 
 application_code_path = "sample-code/pagerank_exp_0.scala"
 spark_final_conf_path = "bin/spark-final.conf"
-rdd_actions_path = "RDDActions.txt"
-rdd_creations_path = "RDDCreations.txt"
-rdd_creations_partitions_path = "RDDCreationsPartitions.txt"
+rdd_actions_path = "bin/RDDActions.txt"
+rdd_creations_path = "bin/RDDCreations.txt"
+rdd_creations_partitions_path = "bin/RDDCreationsPartitions.txt"
 
 #first find optimizations and insert rdd caching if needed
 cache_optimized_code, optimization_report = cacheOptimization.cacheOptimization(application_code_path, rdd_actions_path, rdd_creations_path)
