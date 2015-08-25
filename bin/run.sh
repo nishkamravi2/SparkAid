@@ -4,3 +4,4 @@ fi
 
 java -classpath sparkaid.jar console.src.main.ConfigurationConsole "$@"
 python ../optimizer/main.py
+rm code.file.path
