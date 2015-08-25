@@ -348,7 +348,7 @@ public class ConfigurationConsole {
 				+ "<app JAR location> \n"
 				+ "<app arguments as one string>\n"
 				+ "\n"
-				+ "e.g ./run.sh 40 15 16 64 1.0 ext3 spark://hostname.com:7077 client standalone y Pagerank /path/to/Spark.jar \"\"\n"
+				+ "e.g ./run.sh 40 15 16 64 1.0 ext3 spark://hostname.com:7077 client standalone y Pagerank /path/to/code /path/to/Spark.jar \"\"\n"
 				+ "\n"
 				+ "YOU CAN ALSO FOLLOW PROMPTS\n");
 	}

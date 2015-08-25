@@ -29,7 +29,7 @@ with open("../bin/output/optimization-report.txt", 'wr') as opt_report:
 with open("../bin/output/optimizedCode.scala", 'wr') as opt_code:
 	opt_code.write(cache_optimized_code)
 #Generate the new configuration settings file
-with open("../bin/output/spark.final.conf", 'wr') as spark_conf_update:
+with open("../bin/output/spark-final.conf", 'wr') as spark_conf_update:
 	spark_conf_update.write(new_conf_file)
 #Generate the recommendations report
 with open("../bin/output/spark.code.advise", 'wr') as advise:

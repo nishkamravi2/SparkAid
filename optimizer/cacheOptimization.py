@@ -113,28 +113,44 @@ def findReassignedRDD(body, pattern_list):
 def findFirstLoopIndex(loop_keywords, application_code):
 	loop_keyword_indexes = []
 	f = application_code.split("\n")
-	first_loop_index = len(f) + 1
+	first_loop_line_num = len(f) + 1
 	for keyword in loop_keywords:
 		for i in range(0,len(f)):
 			matched = re.search(keyword, f[i], re.S)
 			if matched:
-				if i < first_loop_index:
-					first_loop_index = i 
-	return first_loop_index + 1
+				if i < first_loop_line_num:
+					first_loop_line_num = i 
+	return first_loop_line_num + 1
 
-def generateCachedCode(cache_candidates):
-	cache_inserted_code = "//inserted new cache code below \n"
+def generateSpaceBuffer(length):
+	space_buffer = ""
+	for i in range(length):
+		space_buffer += " "
+	return space_buffer
+
+def generateCachedCode(cache_candidates, prev_line):
+	leading_spaces = len(prev_line.expandtabs(2)) - len(prev_line.expandtabs(2).lstrip())
+	cache_inserted_code = generateSpaceBuffer(leading_spaces) + "//inserted new cache code below \n"
+	if len(cache_candidates) == 0:
+		cache_inserted_code = "No cache optimizations done."
+		return cache_inserted_code
+
 	for rdd in cache_candidates:
-		cached_line = rdd + ".cache()" + "\n"
+		cached_line = generateSpaceBuffer(leading_spaces) + rdd + ".cache()" + "\n"
 		cache_inserted_code += cached_line
 	return cache_inserted_code
 
-def generateApplicationCode (application_code, first_loop_index, cache_candidates, optimization_report):
+def generateApplicationCode (application_code, first_loop_line_num, cache_candidates, optimization_report):
 	f = application_code.split("\n")
-	generatedCode = generateCachedCode(cache_candidates)
-	line_inserted = first_loop_index-1
+	generatedCode = generateCachedCode(cache_candidates, f[first_loop_line_num - 2])
+
+	if "No cache optimizations done." in generatedCode:
+		optimization_report += "No cache optimizations done.\n"
+		return application_code, optimization_report
+
+	line_inserted = first_loop_line_num - 1
 	optimization_report += "Inserted code block at Line: " + str(line_inserted) + "\n" + generatedCode + "\n"
-	f = '\n'.join(f[:first_loop_index-1]) + '\n' + generatedCode + '\n'.join(f[first_loop_index-1:])
+	f = '\n'.join(f[:first_loop_line_num - 1]) + '\n' + generatedCode + '\n'.join(f[first_loop_line_num - 1:])
 	return f, optimization_report
 
 def cacheOptimization(application_code, rdd_actions, rdd_creations):

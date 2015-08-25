@@ -19,8 +19,10 @@ def recommendReduceByKey(application_code):
 	f = application_code.split("\n")
 	advise_file = ""
 	for i in range(0,len(f)):
-		if "groupByKey()" in f[i] and not isComment(f[i]):
+		if "groupByKey()" in f[i]:
 			advise_file += "Consider using reduceByKey() instead of groupByKey() if possible in " + "Line " + str(i+1) + ": " + f[i] + "\n"
+	if len(advise_file) == 0:
+		advise_file += "No advise for this code"
 	return advise_file
 
 def isCached(rdd, application_code):
@@ -78,7 +80,7 @@ def changeSettingValue(key, new_value, settings_file):
 	return "\n".join(f)
 
 def setParallelism(application_code, rdd_creations_partitions, spark_final_conf, optimization_report):
-	optimization_report += "=====================Parallelism Optimizations========================\n"
+	optimization_report += "\n=====================Parallelism Optimizations========================\n"
 	default_parallelism = getSettingValue("spark.default.parallelism", spark_final_conf)
 	pattern_list = '|'.join(rdd_creations_partitions.split("\n"))
 	matched_iter = re.finditer(r'''	# captures textFile("anything")
