@@ -1,0 +1,10 @@
+textFile
+objectFile
+objectFile\[.*\]
+wholeTextFiles
+binaryFiles
+emptyRDD
+makeRDD
+sequenceFile
+hadoopFile
+hadoopRDD

@@ -38,6 +38,7 @@ public class ConfigurationConsole {
 		String clusterManager = ""; // standalone, yarn
 		String dynamicAllocationFlag = ""; // y, n
 		String className = ""; // name of app class
+		String codePath = "";
 		String appJar = ""; // app Jar URL
 		String appArgs = ""; // app args as a single string
 		
@@ -51,9 +52,16 @@ public class ConfigurationConsole {
 		
 		//file names
 		String sparkDefaultConf = "spark-default.conf";
-		String sparkFinalConf = "../output/spark-final.conf";
-		String sparkConfAdvise = "../output/spark.conf.advise";
+		String sparkFinalConf = "output/spark-final.conf";
+		String sparkConfAdvise = "output/spark.conf.advise";
+		String codeFilePath = "../bin/code.file.path";
 	
+		//legal input arguments
+		String [] legalFileSystemInput = {"ext3","ext4","xfs"};
+		String [] legalDeployModeInput = {"client","cluster"};
+		String [] legalClusterManagerInput = {"standalone","yarn"};
+		String [] legalYesNoInput = {"y","n"};
+		
 		//get input parameters
 		if (args.length == 0){
 			printUsage();
@@ -68,37 +76,57 @@ public class ConfigurationConsole {
 					"Invalid input. Please re-enter valid integer.", scanner);
 			resourceFraction = errorResourceFractionCheck("Enter fraction of cluster resources for this job (from 0.0 to 1.0): ", 
 					"Invalid input. Please re-enter valid double from 0.0 to 1.0.", scanner);
-			fileSystem = fileSystemCheck("Enter file system of input raw data: ext3/ext4/xfs", 
+			fileSystem = checkValidHelper("Enter file system of input raw data: ext3/ext4/xfs", legalFileSystemInput,
 					"Invalid input. Enter ext3/ext4/xfs.", scanner);
 			master = scanNextWithPrompt("Enter master URL:", scanner);
-			deployMode = deployModeCheck("Enter deploy mode: cluster / client", 
+			deployMode = checkValidHelper("Enter deploy mode: cluster / client", legalDeployModeInput,
 					"Invalid input. Enter cluster / client.", scanner);
-			clusterManager = clusterManagerCheck("Enter Cluster Manager: standalone / yarn", "Invalid input. Enter standalone / yarn.", scanner);
-			dynamicAllocationFlag = yesNoCheck("Is this a Dynamic Allocation application? y/n", 
+			clusterManager = checkValidHelper("Enter Cluster Manager: standalone / yarn", legalClusterManagerInput, 
+					"Invalid input. Enter standalone / yarn.", scanner);
+			dynamicAllocationFlag = checkValidHelper("Is this a Dynamic Allocation application? y/n", legalYesNoInput,
 					"Invalid input. Enter y/n.", scanner);
 			className = scanNextWithPrompt("Enter Class Name of application: ", scanner);
+			codePath = scanNextWithPrompt("Enter file path of application code: ", scanner);
 			appJar = scanNextWithPrompt("Enter file path of application JAR ", scanner);
 			appArgs = scanNextWithPrompt("Enter Application Arguments if any", scanner);
 		}
-		else if(args.length != 13) {
-			System.out.println("Invalid input, please enter 13 arguments. \n");
+		else if(args.length != 14) {
+			System.out.println("Invalid input, please enter 14 arguments. \n");
 			System.out.println("Your input: " + Arrays.toString(args) + "\n");	
 			printUsage();
 			System.exit(0);
 		} else {
+			boolean invalidFlag = false;
+			//inputDataSize = check(args[0]);
 			inputDataSize = args[0];
+			if (checkIllegalInt(inputDataSize,"Invalid input data size arg.")){invalidFlag = true;}
 			numNodes = args[1];
+			if (checkIllegalInt(numNodes,"Invalid number of nodes.")){invalidFlag = true;}
 			numCoresPerNode = args[2];
+			if (checkIllegalInt(numCoresPerNode,"Invalid num cores per node.")){invalidFlag = true;}
 			memoryPerNode = args[3];
+			if (checkIllegalInt(memoryPerNode,"Invalid memory per node.")){invalidFlag = true;}
 			resourceFraction = args[4];
+			if (checkIllegalDouble(resourceFraction,"Invalid resource fraction.")){invalidFlag = true;}
 			fileSystem = args[5];
+			if (checkLegalInputs(fileSystem, legalFileSystemInput,"Invalid filesystem.")){invalidFlag = true;}
 			master = args[6];
 			deployMode = args[7];
+			if (checkLegalInputs(deployMode, legalDeployModeInput,"Invalid deploy mode.")){invalidFlag = true;}
 			clusterManager = args[8];
+			if (checkLegalInputs(clusterManager, legalClusterManagerInput,"Invalid cluster manager.")){invalidFlag = true;}
 			dynamicAllocationFlag = args[9];
+			if (checkLegalInputs(dynamicAllocationFlag, legalYesNoInput,"Invalid y/n flag.")){invalidFlag = true;}
 			className = args[10];
-			appJar = args[11];
-			appArgs = args[12];
+			codePath = args[11];
+			appJar = args[12];
+			appArgs = args[13];
+			
+			if (invalidFlag){
+				System.out.println("Please re-enter arguments properly. \n");
+				printUsage();
+				System.exit(0);
+			}
 		}
 		
 		inputsTable.put("inputDataSize", inputDataSize);
@@ -154,6 +182,9 @@ public class ConfigurationConsole {
 		
 		createOutputFile(sparkFinalConf, optionsTable, "options");
 		createOutputFile(sparkConfAdvise, recommendationsTable, "recommendations");
+		
+		createCodePathFile(codeFilePath, codePath);
+		
 		String cmdLineParams = generateParamsString(commandLineParamsTable);
 		constructCmdLine(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable, cmdLineParams);
 	}
@@ -199,7 +230,6 @@ public class ConfigurationConsole {
 			}
 		}
 		return categoryTable;
-		
 	}
 	
 	private static void writeCategory(Hashtable <String, String> catTable , BufferedWriter b){
@@ -212,12 +242,26 @@ public class ConfigurationConsole {
 				String key = it.next();
 				String value = catTable.get(key);
 				int spaceBufferLength = Math.max(5, startParamIndex - key.length());
-				// if nothing was set, do not add it to outfile
-				if (value.equals("")) {
+				if (value.equals("")) { // if nothing was set, do not add it to outfile
 					continue;
 				}
 				b.write(key + spaceBuffer(spaceBufferLength) + value + "\n");
 			}
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	private static void createCodePathFile(String fileName, String filePath){
+		try{
+			File outFile = new File(fileName);
+			if (!outFile.exists()) {
+				outFile.createNewFile();
+			}
+			BufferedWriter b1 = new BufferedWriter(new FileWriter(outFile));	
+			b1.write(filePath);
+			b1.close();
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -263,19 +307,19 @@ public class ConfigurationConsole {
 			writeCategory(table, b1);
 			b1.write("\n"
 					+ "#################################################################################################################"
-					+ "\n#YARN Mode Default Settings (ignore if not using YARN)\n"
+					+ "\n#YARN Settings (ignore if not using YARN)\n"
 					+ "#################################################################################################################"
 					+ "\n\n");
 			writeCategory(yarnKeySet, b1);
 			b1.write("\n"
 					+ "#################################################################################################################"
-					+ "\n#Streaming Default Settings (ignore if not using Spark Streaming)\n"
+					+ "\n#Streaming Settings (ignore if not using Spark Streaming)\n"
 					+ "#################################################################################################################"
 					+ "\n\n");
 			writeCategory(streamingKeySet, b1);
 			b1.write("\n"
 					+ "#################################################################################################################"
-					+ "\n#Dynamic Allocation Default Settings (ignore if not using Dynamic Allocation)\n"
+					+ "\n#Dynamic Allocation Settings (ignore if not using Dynamic Allocation)\n"
 					+ "#################################################################################################################"
 					+ "\n\n");
 			writeCategory(dynamicAllocationKeySet, b1);
@@ -300,10 +344,11 @@ public class ConfigurationConsole {
 				+ "<clusterManger: standalone/yarn> \n"
 				+ "<dynamicAllocation: y/n> \n"
 				+ "<app className> \n"
+				+ "<app codeFilePath> \n"
 				+ "<app JAR location> \n"
 				+ "<app arguments as one string>\n"
 				+ "\n"
-				+ "e.g ./run.sh 40 15 16 64 1.0 ext3 spark://hostname.com:7077 client standalone y Pagerank /path/to/Spark.jar \"\"\n"
+				+ "e.g ./run.sh 40 15 16 64 1.0 ext3 spark://hostname.com:7077 client standalone y Pagerank /path/to/code /path/to/Spark.jar \"\"\n"
 				+ "\n"
 				+ "YOU CAN ALSO FOLLOW PROMPTS\n");
 	}
@@ -320,7 +365,7 @@ public class ConfigurationConsole {
 				+ " --properties-file spark-final.conf " 
 				+ cmdLineParams + " " + appJar + " " + appArgs;
 		
-		System.out.println("Auto-generated files in output folder: spark-final.conf, spark.conf.advise \n");
+		System.out.println("Auto-generated files in output folder: spark-final.conf, spark.conf.advise, optimization-report.txt, optimizedCode.scala, spark.code.advise \n");
 		System.out.println("Invoke command line: " + cmdLine + "\n");
 	}
 	
@@ -329,17 +374,11 @@ public class ConfigurationConsole {
 		while (true){
 			System.out.print(prompt + "\n");
 			input = scanner.nextLine();
-			try {
-				int inputInt = Integer.parseInt(input);
-				if (inputInt <= 0){
-					System.out.println(errorMsg+ "\n");
-					continue;
-				}
-			} catch (Exception e){
-				System.out.println(errorMsg+ "\n");
+			if (checkIllegalInt(input, errorMsg)){
 				continue;
+			}else{
+				break;
 			}
-			break;
 		}
 		return input;
 	}
@@ -349,85 +388,82 @@ public class ConfigurationConsole {
 		while (true){
 			System.out.print(prompt + "\n");
 			input = scanner.nextLine();
-			try {
-				double inputDouble = Double.parseDouble(input);
-				if (inputDouble <= 0 || inputDouble > 1.0){
-					System.out.println(errorMsg+ "\n");
-					continue;
-				}
-			} catch (Exception e){
-				System.out.println(errorMsg+ "\n");
+			if (checkIllegalDouble(input, errorMsg)){
 				continue;
-			}
-			break;
-		}
-		return input;
-	}
-	
-	public static String fileSystemCheck (String prompt, String errorMsg, Scanner scanner ){
-		String input = "";
-		while (true){
-			System.out.print(prompt + "\n");
-			input = scanner.nextLine();
-			if (input.equals("ext3") || input.equals("ext4") ||input.equals("xfs") ){
+			}else{
 				break;
 			}
-			else{
-				System.out.println(errorMsg+ "\n");
-			}
 		}
 		return input;
 	}
 	
-	public static String deployModeCheck (String prompt, String errorMsg, Scanner scanner ){
-		String input = "";
-		while (true){
-			System.out.print(prompt + "\n");
-			input = scanner.nextLine();
-			if (input.equals("client") || input.equals("cluster")){
-				break;
-			}
-			else{
-				System.out.println(errorMsg+ "\n");
-			}
-		}
-		return input;
-	}
-	
-	public static String clusterManagerCheck (String prompt, String errorMsg, Scanner scanner ){
-		String input = "";
-		while (true){
-			System.out.print(prompt + "\n");
-			input = scanner.nextLine();
-			if (input.equals("standalone") || input.equals("yarn")){
-				break;
-			}
-			else{
-				System.out.println(errorMsg+ "\n");
-			}
-		}
-		return input;
-	}
-	
-	public static String yesNoCheck (String prompt, String errorMsg, Scanner scanner ){
-		String input = "";
-		while (true){
-			System.out.print(prompt + "\n");
-			input = scanner.nextLine();
-			if (input.equals("y") || input.equals("n")){
-				break;
-			}
-			else{
-				System.out.println(errorMsg+ "\n");
-			}
-		}
-		return input;
-	}
-	
-	public static String scanNextWithPrompt (String prompt, Scanner scanner ){
+	public static String scanNextWithPrompt (String prompt, Scanner scanner){
 		System.out.print(prompt + "\n");
 		String input = scanner.nextLine();
 		return input;
 	}
 	
+	public static String checkValidHelper (String prompt, String[] options, String errorMsg, Scanner scanner){
+		String input = "";
+		while (true){
+			System.out.print(prompt + "\n");
+			input = scanner.nextLine();
+			boolean validFlag = false;
+			for (int i = 0; i < options.length; i++){
+				if (input.equals(options[i])){
+					validFlag = true;
+				}
+			}
+			if (validFlag){
+				break;
+			}
+			else{
+				System.out.println(errorMsg+ "\n");
+			}
+		}
+		return input;
+	}
+	
+	public static boolean checkIllegalInt(String arg, String errorMsg){
+		boolean flag = false;
+		try {
+			int inputInt = Integer.parseInt(arg);
+			if (inputInt <= 0){
+				System.out.println(errorMsg + " [" +arg + "]");
+				flag = true;
+			}
+		} catch (Exception e){
+			System.out.println(errorMsg + " [" +arg + "]");
+			flag = true;
+		}
+		return flag;
+	}
+	
+	public static boolean checkIllegalDouble(String arg, String errorMsg){
+		boolean flag = false;
+		try {
+			double inputDouble = Double.parseDouble(arg);
+			if (inputDouble <= 0 || inputDouble > 1){
+				System.out.println(errorMsg + " [" +arg + "]");
+				flag = true;
+			}
+		} catch (Exception e){
+			System.out.println(errorMsg + " [" +arg + "]");
+			flag = true;
+		}
+		return flag;
+	}
+	
+	public static boolean checkLegalInputs(String arg, String[] legalOptions, String errorMsg){
+		boolean flag = false;
+		for (int i = 0; i < legalOptions.length; i++){
+			if (arg.equals(legalOptions[i])){
+				flag = true;
+			}
+		}
+		if (!flag){
+			System.out.println(errorMsg + " [" +arg + "]");
+		}
+		return !flag;
+	}
 }
