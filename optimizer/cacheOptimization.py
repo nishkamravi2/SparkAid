@@ -1,5 +1,5 @@
 import re
-import optimizations
+import optimizations as op
 
 #http://stackoverflow.com/questions/241327/python-snippet-to-remove-c-and-c-comments
 def commentRemover(text):
@@ -56,37 +56,37 @@ def printBodyCode(loop_body_indexes, application_code):
 		print application_code[index[0]:index[1]]
 		print "\n\n================================================================================================================\n\n"
 
-def isCached(rdd,f):
-	#checks if the rdd calls cache()
-	matched_action = re.search(r'\n\s*[^/]\s*%s\.(cache|persist)' %rdd, f, re.S)
-	return matched_action is not None
-	#check if cached at the instantiation
-	# matched_creation = re.search(r'\n\s*[^/]\s*(val|var)\s+(%s)\s*=\s*.*\.(cache|persist)' %rdd, f, re.S)
-	# return (matched_action is not None) or (matched_creation is not None)
+# def isCached(rdd,f):
+# 	#checks if the rdd calls cache()
+# 	matched_action = re.search(r'\n\s*[^/]\s*%s\.(cache|persist)' %rdd, f, re.S)
+# 	return matched_action is not None
+# 	#check if cached at the instantiation
+# 	# matched_creation = re.search(r'\n\s*[^/]\s*(val|var)\s+(%s)\s*=\s*.*\.(cache|persist)' %rdd, f, re.S)
+# 	# return (matched_action is not None) or (matched_creation is not None)
 
 #non-capturing group
-def findRDD(application_code, rdd_actions_list, rdd_creations_list):
-	f = application_code.split("\n")
-	rdd_set = set()
-	#finds RDDs by RDD actions
-	for i in range(0,len(f)):
-		#((space*)(val|var)(space*)(var-name)(space*)=(space*)(.*).(map|groupByKey|reduceByKey).*)
-		matched = re.match(r'\s*(val|var)\s+(.+?)\s*=\s*.*\.(%s).*' %rdd_actions_list, f[i])
-		if matched and not optimizations.isComment(f[i]):
-			rdd = matched.group(2)
-			if not isCached(rdd,application_code):
-				rdd_set.add(rdd)
+# def findRDD(application_code, rdd_actions_list, rdd_creations_list):
+# 	f = application_code.split("\n")
+# 	rdd_set = set()
+# 	#finds RDDs by RDD actions
+# 	for i in range(0,len(f)):
+# 		#((space*)(val|var)(space*)(var-name)(space*)=(space*)(.*).(map|groupByKey|reduceByKey).*)
+# 		matched = re.match(r'\s*(val|var)\s+(.+?)\s*=\s*.*\.(%s).*' %rdd_actions_list, f[i])
+# 		if matched and not optimizations.isComment(f[i]):
+# 			rdd = matched.group(2)
+# 			if not isCached(rdd,application_code):
+# 				rdd_set.add(rdd)
 
-	#find RDDs by RDD creation
-	for i in range(0,len(f)):
-		# (var|val) (name) = (sc|somethingelse). (parallelize|objectFile|hadoopFile)
-		matched = re.match(r'\s*(val|var)\s+(.+?)\s*=\s*(sc|.*).*\.(%s).*' %rdd_creations_list, f[i])
-		# if matched:
-		if matched and not optimizations.isComment(f[i]):
-			rdd = matched.group(2)
-			if not isCached(rdd,application_code):
-				rdd_set.add(rdd)
-	return rdd_set
+# 	#find RDDs by RDD creation
+# 	for i in range(0,len(f)):
+# 		# (var|val) (name) = (sc|somethingelse). (parallelize|objectFile|hadoopFile)
+# 		matched = re.match(r'\s*(val|var)\s+(.+?)\s*=\s*(sc|.*).*\.(%s).*' %rdd_creations_list, f[i])
+# 		# if matched:
+# 		if matched and not optimizations.isComment(f[i]):
+# 			rdd = matched.group(2)
+# 			if not isCached(rdd,application_code):
+# 				rdd_set.add(rdd)
+# 	return rdd_set
 
 def findRDDInBody(body, pattern_list): #implement commenting functionality, consider removing all comments right from the start
 	cache_candidates = set()
@@ -98,7 +98,7 @@ def findRDDInBody(body, pattern_list): #implement commenting functionality, cons
 
 def getRDDOutsideLoops(rdd_set, body_code_list, rdd_actions_list, rdd_creations_list):
 	for body in body_code_list:
-		body_rdd_set = findRDD(body, rdd_actions_list, rdd_creations_list)
+		body_rdd_set = op.findAllRDDs(body, rdd_actions_list, rdd_creations_list)
 		rdd_set = rdd_set - body_rdd_set
 	return rdd_set
 
@@ -137,14 +137,14 @@ def generateApplicationCode (application_code, first_loop_index, cache_candidate
 	f = '\n'.join(f[:first_loop_index-1]) + '\n' + generatedCode + '\n'.join(f[first_loop_index-1:])
 	return f, optimization_report
 
-def cacheOptimization(application_code_path, rdd_actions, rdd_creations):
+def cacheOptimization(application_code, rdd_actions, rdd_creations):
 	optimization_report = "=====================Cache Optimizations========================\n"
-	application_code = commentRemover(open(application_code_path).read())
-	rdd_actions_list = '|'.join(open(rdd_actions).read().split("\n")) 
-	rdd_creations_list = '|'.join(open(rdd_creations).read().split("\n"))
+	application_code = commentRemover(application_code)
+	rdd_actions_list = '|'.join(rdd_actions.split("\n")) 
+	rdd_creations_list = '|'.join(rdd_creations.split("\n"))
 
 	#find all RDDs in the code
-	rdd_set = findRDD(application_code, rdd_actions_list, rdd_creations_list)
+	rdd_set = op.findAllRDDs(application_code, rdd_actions_list, rdd_creations_list)
 	#regex to capture for/while/do loops
 	loop_keywords = [r'for\s*\(.+?\)\s*\{', r'while\s*\(.+?\)\s*\{', r'do\s*\{.*\}']
 	#sort indexes by starting indexes to prevent overlap

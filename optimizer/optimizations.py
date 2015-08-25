@@ -1,8 +1,8 @@
 import re
 import cacheOptimization
 
-def getSettingValue(key, conf_path):
-	f = open(conf_path).read().split('\n')
+def getSettingValue(key, conf):
+	f = conf.split('\n')
 	parallelism = 0
 	for i in range (0, len(f)):
 		if key in f[i]:
@@ -23,17 +23,50 @@ def recommendReduceByKey(application_code):
 			advise_file += "Consider using reduceByKey() instead of groupByKey() if possible in " + "Line " + str(i+1) + ": " + f[i] + "\n"
 	return advise_file
 
-def setMemoryFraction(application_code, spark_final_conf_path):
+def isCached(rdd, application_code):
+	matched_action = re.search(r'%s\.(cache|persist)' %rdd, application_code, re.X)
+	matched_assign = re.search(r'%s\s*?=[^=]*\.(cache|persist)'  %rdd, application_code, re.S|re.X)
+	return matched_action is not None or matched_assign is not None
+
+def findAllRDDs(application_code, rdd_actions_pattern, rdd_creations_pattern):
+	#rewrite function to be more robust, multiline
 	f = application_code.split("\n")
-	settings_file = open(spark_final_conf_path).read()
-	persistFlag = False
+	rdd_set = set()
+	#finds RDDs by RDD actions
 	for i in range(0,len(f)):
-		if (("persist" in f[i] or "cache" in f[i])) and not isComment(f[i]):
+		#((space*)(val|var)(space*)(var-name)(space*)=(space*)(.*).(map|groupByKey|reduceByKey).*)
+		matched = re.match(r'\s*(val|var)\s+(.+?)\s*=\s*.*\.(%s).*' %rdd_actions_pattern, f[i])
+		if matched:
+			rdd = matched.group(2)
+			rdd_set.add(rdd)
+
+	#find RDDs by RDD creation
+	for i in range(0,len(f)):
+		# (var|val) (name) = (sc|somethingelse). (parallelize|objectFile|hadoopFile)
+		matched = re.match(r'\s*(val|var)\s+(.+?)\s*=\s*(sc|.*).*\.(%s).*' %rdd_creations_pattern, f[i])
+		if matched:
+			rdd = matched.group(2)
+			rdd_set.add(rdd)
+	return rdd_set
+
+def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creations):
+	rdd_actions_pattern = '|'.join(rdd_actions.split('\n'))
+	rdd_creations_pattern = '|'.join(rdd_creations.split('\n'))
+	f = application_code.split("\n")
+	rdd_set = findAllRDDs(application_code, rdd_actions_pattern, rdd_creations_pattern)
+	persistFlag = False
+	# cached = set()
+
+	for rdd in rdd_set:
+		if isCached(rdd, application_code):
+			# print "CACHED RDDDDD:::======== ", rdd
+			# cached.add(rdd)
 			persistFlag = True
 	if (not persistFlag):
 		print "Setting spark.storage.memoryFraction to 0.1 since there are no RDDs being persisted/cached."
-		return changeSettingValue("spark.storage.memoryFraction", "0.1", settings_file)
-	return settings_file
+		return changeSettingValue("spark.storage.memoryFraction", "0.1", spark_final_conf)
+	# print "cached: ", 	cached
+	return spark_final_conf
 
 def changeSettingValue(key, new_value, settings_file):
 	f = settings_file.split("\n")
@@ -44,24 +77,24 @@ def changeSettingValue(key, new_value, settings_file):
 			break
 	return "\n".join(f)
 
-def setParallelism(application_code, rdd_creations_partitions_path, spark_final_conf_path, optimization_report):
+def setParallelism(application_code, rdd_creations_partitions, spark_final_conf, optimization_report):
 	optimization_report += "=====================Parallelism Optimizations========================\n"
-	default_parallelism = getSettingValue("spark.default.parallelism", spark_final_conf_path)
-	pattern_list = '|'.join(open(rdd_creations_partitions_path).read().split("\n"))
+	default_parallelism = getSettingValue("spark.default.parallelism", spark_final_conf)
+	pattern_list = '|'.join(rdd_creations_partitions.split("\n"))
 	matched_iter = re.finditer(r'''	# captures textFile("anything")
-		.*				# start of string with any char starting
+		.*				# any char starting
 		\s*=\s*\w+
 		\.(%s)			# .parallelize|objectFile|textFile|...
 		\(			
-		(
+		((
 			\w*
-			|\s*\".*\"\s*.* # explicit file path only  -  "/path/to/file"
+			|\s*\".*\"\s* # explicit file path only  -  "/path/to/file"
 			|\s*\w+\s* # file path as a var name only - path-var-name
 			|\s*\".*\"\s*\,\s*.*\s*\,\s*.*\s*\,\s*.*\s* # 4 arguments explicit file path - "/path/to/file" , 3 args
 			|\s*\w*\s*\,\s*.*\s*\,\s*.*\s*\,\s*.*\s* # 4 arguments path-var-name
-		)
-		\)			# (any char)
-		.*?				# (anything after) ending at newline
+		))
+		\)			
+		.*?				# (anything after)
 		''' %pattern_list, application_code, re.X)
 	if matched_iter:
 		for matched_obj in matched_iter:
