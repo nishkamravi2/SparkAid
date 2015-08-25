@@ -142,7 +142,10 @@ def generateCachedCode(cache_candidates, prev_line):
 
 def generateApplicationCode (application_code, first_loop_line_num, cache_candidates, optimization_report):
 	f = application_code.split("\n")
-	generatedCode = generateCachedCode(cache_candidates, f[first_loop_line_num - 2])
+	if first_loop_line_num >= len(f):
+		first_loop_line_num = 0
+	prev_line_num = max(first_loop_line_num-2, 0)
+	generatedCode = generateCachedCode(cache_candidates, f[prev_line_num])
 
 	if "No cache optimizations done." in generatedCode:
 		optimization_report += "No cache optimizations done.\n"
