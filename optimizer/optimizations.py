@@ -28,21 +28,7 @@ def recommendReduceByKey(application_code):
 def isCached(rdd, application_code):
 	matched_action = re.search(r'(%s)\.(cache|persist)' %rdd, application_code, re.X)
 	matched_assign = re.search(r'(%s)\s*?=[^=]*?((\=\>)[^\n\n]*)*?\.(cache|persist)' %rdd, application_code, re.S|re.X)
-	# matched_3 = re.search(r'(%s)\s*?=[^=]*?((\=\>)[^=]*)*?\.(cache|persist)' %rdd, application_code, re.S|re.X)
-	matched_3 = None
-	retval = matched_action is not None or matched_assign is not None or matched_3 is not None
-	print rdd, "========", retval
-	if rdd == "y":
-		print "LOOK HERE\n===================================================================================================="
-	if matched_action is not None:
-		print matched_action.group()
-	if matched_assign is not None:
-		print matched_assign.group()
-	if matched_3 is not None:
-		print matched_3.group()
-
-	# return retval
-	return matched_action is not None or matched_assign is not None or matched_3 is not None
+	return matched_action is not None or matched_assign is not None
 
 def findAllRDDs(application_code, rdd_patterns):
 	rdd_set = set()
@@ -50,9 +36,7 @@ def findAllRDDs(application_code, rdd_patterns):
 	if matched_iter:
 		for matched_obj in matched_iter:
 			rddname = matched_obj.group(2)
-			# if not isCached(rddname, application_code):
 			rdd_set.add(rddname) 
-	print rdd_set
 	return rdd_set
 
 def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creations):
@@ -99,7 +83,6 @@ def setParallelism(application_code, rdd_creations_partitions, spark_final_conf,
 	if matched_iter:
 		for matched_obj in matched_iter:
 			line = matched_obj.group()
-			print line, "\n=========================="
 			recommended_line = line.rsplit(")",1)
 			recommended_line = recommended_line[0] + ", " + str(default_parallelism) + ")" + recommended_line[1]
 			optimization_report += "Modified from: " + line + "\n"

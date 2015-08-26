@@ -148,21 +148,15 @@ def cacheOptimization(application_code, rdd_actions, rdd_creations):
 	#cache rdd if rdd is instantiated outside && is in loop && is not cached outside the loop
 	for body in loop_body_list:
 		cache_candidates.update(findRDDInBody(body, regex_pattern))
-	print "instantiated outside: ", cache_candidates
 	#clear those that are getting reassigned.
 	for body in loop_body_list:
 		cache_candidates.difference_update(findReassignedRDD(body, regex_pattern))
 	#filter out those that are cached
 	filtered_cache_candidates = set()
 
-
-	print "cleared reassigned: ", cache_candidates
 	for rdd in cache_candidates:
 		if op.isCached(rdd, application_code) == False:
 			filtered_cache_candidates.add(rdd)
-
-	print "\nfinal: ", filtered_cache_candidates
-	print ""
 
 	first_loop_linenum = findFirstLoopIndex(loop_patterns, application_code)
 	new_application_code, optimization_report = generateApplicationCode(application_code, first_loop_linenum, filtered_cache_candidates, optimization_report)
