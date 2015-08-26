@@ -26,48 +26,46 @@ def recommendReduceByKey(application_code):
 	return advise_file
 
 def isCached(rdd, application_code):
-	matched_action = re.search(r'%s\.(cache|persist)' %rdd, application_code, re.X)
-	matched_assign = re.search(r'%s\s*?=[^=]*\.(cache|persist)'  %rdd, application_code, re.S|re.X)
-	return matched_action is not None or matched_assign is not None
+	matched_action = re.search(r'(%s)\.(cache|persist)' %rdd, application_code, re.X)
+	matched_assign = re.search(r'(%s)\s*?=[^=]*?((\=\>)[^\n\n]*)*?\.(cache|persist)' %rdd, application_code, re.S|re.X)
+	# matched_3 = re.search(r'(%s)\s*?=[^=]*?((\=\>)[^=]*)*?\.(cache|persist)' %rdd, application_code, re.S|re.X)
+	matched_3 = None
+	retval = matched_action is not None or matched_assign is not None or matched_3 is not None
+	print rdd, "========", retval
+	if rdd == "y":
+		print "LOOK HERE\n===================================================================================================="
+	if matched_action is not None:
+		print matched_action.group()
+	if matched_assign is not None:
+		print matched_assign.group()
+	if matched_3 is not None:
+		print matched_3.group()
 
-def findAllRDDs(application_code, rdd_actions_pattern, rdd_creations_pattern):
-	#rewrite function to be more robust, multiline
-	f = application_code.split("\n")
+	# return retval
+	return matched_action is not None or matched_assign is not None or matched_3 is not None
+
+def findAllRDDs(application_code, rdd_patterns):
 	rdd_set = set()
-	#finds RDDs by RDD actions
-	for i in range(0,len(f)):
-		#((space*)(val|var)(space*)(var-name)(space*)=(space*)(.*).(map|groupByKey|reduceByKey).*)
-		matched = re.match(r'\s*(val|var)\s+(.+?)\s*=\s*.*\.(%s).*' %rdd_actions_pattern, f[i])
-		if matched:
-			rdd = matched.group(2)
-			rdd_set.add(rdd)
-
-	#find RDDs by RDD creation
-	for i in range(0,len(f)):
-		# (var|val) (name) = (sc|somethingelse). (parallelize|objectFile|hadoopFile)
-		matched = re.match(r'\s*(val|var)\s+(.+?)\s*=\s*(sc|.*).*\.(%s).*' %rdd_creations_pattern, f[i])
-		if matched:
-			rdd = matched.group(2)
-			rdd_set.add(rdd)
+	matched_iter = re.finditer(r'(val|var)\s*([^=]*?)\s*?=[^=]*?\.(%s)'%rdd_patterns, application_code, re.S|re.X)
+	if matched_iter:
+		for matched_obj in matched_iter:
+			rddname = matched_obj.group(2)
+			# if not isCached(rddname, application_code):
+			rdd_set.add(rddname) 
+	print rdd_set
 	return rdd_set
 
 def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creations):
-	rdd_actions_pattern = '|'.join(rdd_actions.split('\n'))
-	rdd_creations_pattern = '|'.join(rdd_creations.split('\n'))
+	rdd_patterns = '|'.join(rdd_actions.split('\n') + rdd_creations.split('\n'))
 	f = application_code.split("\n")
-	rdd_set = findAllRDDs(application_code, rdd_actions_pattern, rdd_creations_pattern)
+	rdd_set = findAllRDDs(application_code, rdd_patterns)
 	persistFlag = False
-	# cached = set()
-
 	for rdd in rdd_set:
 		if isCached(rdd, application_code):
-			# print "CACHED RDDDDD:::======== ", rdd
-			# cached.add(rdd)
 			persistFlag = True
 	if (not persistFlag):
 		print "Setting spark.storage.memoryFraction to 0.1 since there are no RDDs being persisted/cached."
 		return changeSettingValue("spark.storage.memoryFraction", "0.1", spark_final_conf)
-	# print "cached: ", 	cached
 	return spark_final_conf
 
 def changeSettingValue(key, new_value, settings_file):
@@ -88,19 +86,20 @@ def setParallelism(application_code, rdd_creations_partitions, spark_final_conf,
 		\s*=\s*\w+
 		\.(%s)			# .parallelize|objectFile|textFile|...
 		\(			
-		((
+		(
 			\w*
 			|\s*\".*\"\s* # explicit file path only  -  "/path/to/file"
 			|\s*\w+\s* # file path as a var name only - path-var-name
-			|\s*\".*\"\s*\,\s*.*\s*\,\s*.*\s*\,\s*.*\s* # 4 arguments explicit file path - "/path/to/file" , 3 args
-			|\s*\w*\s*\,\s*.*\s*\,\s*.*\s*\,\s*.*\s* # 4 arguments path-var-name
-		))
-		\)			
-		.*?				# (anything after)
+			|\s*\".*\"\s*\,\s*[^\)\(\,]*\s*\,\s*[^\)\(\,]*\s*\,\s*[^\)\(\,]*\s* # 4 arguments explicit file path - "/path/to/file" , 3 args
+			|\s*\w*\s*\,\s*[^\)\(\,]*\s*\,\s*[^\)\(\,]*\s*\,\s*[^\)\(\,]*\s* # 4 arguments path-var-name - path-var-name, 3 args
+		)
+		\)
 		''' %pattern_list, application_code, re.X)
+
 	if matched_iter:
 		for matched_obj in matched_iter:
 			line = matched_obj.group()
+			print line, "\n=========================="
 			recommended_line = line.rsplit(")",1)
 			recommended_line = recommended_line[0] + ", " + str(default_parallelism) + ")" + recommended_line[1]
 			optimization_report += "Modified from: " + line + "\n"

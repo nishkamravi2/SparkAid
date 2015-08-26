@@ -6,13 +6,12 @@ def commentRemover(text):
     def replacer(match):
         s = match.group(0)
         if s.startswith('/'):
-            #find the character it is in
             return " " # note: a space and not an empty string
         else:
             return s
     pattern = re.compile(
         r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
-        re.DOTALL | re.MULTILINE
+        re.DOTALL | re.MULTILINE | re.X
     )
     return re.sub(pattern, replacer, text)
     
@@ -41,9 +40,9 @@ def getBodyIndex(indexes, application_code):
 		body_indexes.append((start_index,end_index))
 	return body_indexes
 
-def getKeywordIndex(loop_keywords, application_code):
+def getLoopPatternIndex(loop_patterns, application_code):
 	loop_keyword_indexes = []
-	for keyword in loop_keywords:
+	for keyword in loop_patterns:
 		matched = re.finditer(keyword, application_code, re.S)
 		loop_keyword_indexes += [m.span() for m in matched]
 	return loop_keyword_indexes
@@ -51,54 +50,17 @@ def getKeywordIndex(loop_keywords, application_code):
 def getBodyCodeList(loop_body_indexes, application_code):
 	return [application_code[index[0]:index[1]] for index in loop_body_indexes]
 
-def printBodyCode(loop_body_indexes, application_code):
-	for index in loop_body_indexes:
-		print application_code[index[0]:index[1]]
-		print "\n\n================================================================================================================\n\n"
-
-# def isCached(rdd,f):
-# 	#checks if the rdd calls cache()
-# 	matched_action = re.search(r'\n\s*[^/]\s*%s\.(cache|persist)' %rdd, f, re.S)
-# 	return matched_action is not None
-# 	#check if cached at the instantiation
-# 	# matched_creation = re.search(r'\n\s*[^/]\s*(val|var)\s+(%s)\s*=\s*.*\.(cache|persist)' %rdd, f, re.S)
-# 	# return (matched_action is not None) or (matched_creation is not None)
-
-#non-capturing group
-# def findRDD(application_code, rdd_actions_list, rdd_creations_list):
-# 	f = application_code.split("\n")
-# 	rdd_set = set()
-# 	#finds RDDs by RDD actions
-# 	for i in range(0,len(f)):
-# 		#((space*)(val|var)(space*)(var-name)(space*)=(space*)(.*).(map|groupByKey|reduceByKey).*)
-# 		matched = re.match(r'\s*(val|var)\s+(.+?)\s*=\s*.*\.(%s).*' %rdd_actions_list, f[i])
-# 		if matched and not optimizations.isComment(f[i]):
-# 			rdd = matched.group(2)
-# 			if not isCached(rdd,application_code):
-# 				rdd_set.add(rdd)
-
-# 	#find RDDs by RDD creation
-# 	for i in range(0,len(f)):
-# 		# (var|val) (name) = (sc|somethingelse). (parallelize|objectFile|hadoopFile)
-# 		matched = re.match(r'\s*(val|var)\s+(.+?)\s*=\s*(sc|.*).*\.(%s).*' %rdd_creations_list, f[i])
-# 		# if matched:
-# 		if matched and not optimizations.isComment(f[i]):
-# 			rdd = matched.group(2)
-# 			if not isCached(rdd,application_code):
-# 				rdd_set.add(rdd)
-# 	return rdd_set
-
-def findRDDInBody(body, pattern_list): #implement commenting functionality, consider removing all comments right from the start
+def findRDDInBody(body, pattern_list):
 	cache_candidates = set()
 	matched = re.finditer(r'(%s)[.\)]' %pattern_list, body, re.MULTILINE) #only find RDDs that will have actions
 	if matched:
-		for m in matched:
-			cache_candidates.add(m.group(1))
+		for matched_obj in matched:
+			cache_candidates.add(matched_obj.group(1))
 	return cache_candidates
 
-def getRDDOutsideLoops(rdd_set, body_code_list, rdd_actions_list, rdd_creations_list):
+def getRDDOutsideLoops(rdd_set, body_code_list, rdd_patterns):
 	for body in body_code_list:
-		body_rdd_set = op.findAllRDDs(body, rdd_actions_list, rdd_creations_list)
+		body_rdd_set = op.findAllRDDs(body, rdd_patterns)
 		rdd_set = rdd_set - body_rdd_set
 	return rdd_set
 
@@ -106,15 +68,15 @@ def findReassignedRDD(body, pattern_list):
 	reassigned_candidates = set()
 	matched = re.finditer(r'.*(%s)\s+=\s+\w+' %pattern_list, body, re.S)
 	if matched:
-		for m in matched:
-			reassigned_candidates.add(m.group(1))
+		for matched_obj in matched:
+			reassigned_candidates.add(matched_obj.group(1))
 	return reassigned_candidates
 
-def findFirstLoopIndex(loop_keywords, application_code):
+def findFirstLoopIndex(loop_patterns, application_code):
 	loop_keyword_indexes = []
 	f = application_code.split("\n")
 	first_loop_line_num = len(f) + 1
-	for keyword in loop_keywords:
+	for keyword in loop_patterns:
 		for i in range(0,len(f)):
 			matched = re.search(keyword, f[i], re.S)
 			if matched:
@@ -129,7 +91,7 @@ def generateSpaceBuffer(length):
 	return space_buffer
 
 def generateCachedCode(cache_candidates, prev_line):
-	leading_spaces = len(prev_line.expandtabs(2)) - len(prev_line.expandtabs(2).lstrip())
+	leading_spaces = len(prev_line.expandtabs(4)) - len(prev_line.expandtabs(4).lstrip())
 	cache_inserted_code = generateSpaceBuffer(leading_spaces) + "//inserted new cache code below \n"
 	if len(cache_candidates) == 0:
 		cache_inserted_code = "No cache optimizations done."
@@ -138,6 +100,7 @@ def generateCachedCode(cache_candidates, prev_line):
 	for rdd in cache_candidates:
 		cached_line = generateSpaceBuffer(leading_spaces) + rdd + ".cache()" + "\n"
 		cache_inserted_code += cached_line
+	cache_inserted_code += generateSpaceBuffer(leading_spaces) + "//end of inserted code\n"
 	return cache_inserted_code
 
 def generateApplicationCode (application_code, first_loop_line_num, cache_candidates, optimization_report):
@@ -156,36 +119,53 @@ def generateApplicationCode (application_code, first_loop_line_num, cache_candid
 	f = '\n'.join(f[:first_loop_line_num - 1]) + '\n' + generatedCode + '\n'.join(f[first_loop_line_num - 1:])
 	return f, optimization_report
 
-def cacheOptimization(application_code, rdd_actions, rdd_creations):
-	optimization_report = "=====================Cache Optimizations========================\n"
-	application_code = commentRemover(application_code)
-	rdd_actions_list = '|'.join(rdd_actions.split("\n")) 
-	rdd_creations_list = '|'.join(rdd_creations.split("\n"))
-
-	#find all RDDs in the code
-	rdd_set = op.findAllRDDs(application_code, rdd_actions_list, rdd_creations_list)
-	#regex to capture for/while/do loops
-	loop_keywords = [r'for\s*\(.+?\)\s*\{', r'while\s*\(.+?\)\s*\{', r'do\s*\{.*\}']
+def extractLoopBodies(application_code, loop_patterns):
+	
 	#sort indexes by starting indexes to prevent overlap
-	loop_keyword_indexes = sorted(getKeywordIndex(loop_keywords, application_code), key=lambda x: x[0])  #change this to linenumbers
+	loop_keyword_indexes = sorted(getLoopPatternIndex(loop_patterns, application_code), key=lambda x: x[0])
 	#find all loop body indexes
 	loop_body_indexes = getBodyIndex(loop_keyword_indexes,application_code)
 	#get all loop body code
-	body_code_list = getBodyCodeList(loop_body_indexes, application_code) #collapse into one with loopbodyindexes.
-	#
-	rdd_body_set = getRDDOutsideLoops(rdd_set, body_code_list, rdd_actions_list, rdd_creations_list)
-	regex_pattern = "|".join(rdd_body_set)
+	loop_body_list = getBodyCodeList(loop_body_indexes, application_code)
+	return loop_body_list
 
+def cacheOptimization(application_code, rdd_actions, rdd_creations):
+	optimization_report = "=====================Cache Optimizations========================\n"
+	application_code = commentRemover(application_code)
+	rdd_patterns = '|'.join(rdd_actions.split("\n") + rdd_creations.split("\n")) 
+	loop_patterns = [r'for\s*\(.+?\)\s*\{', r'while\s*\(.+?\)\s*\{', r'do\s*\{.*\}']
+
+	#find all RDDs in the code
+	rdd_set = op.findAllRDDs(application_code, rdd_patterns)
+	#extract all the loop bodies 
+	loop_body_list = extractLoopBodies(application_code, loop_patterns)
+	#extract rdds outside loops
+	rdd_body_set = getRDDOutsideLoops(rdd_set, loop_body_list, rdd_patterns)
+	#create pattern to capture rdds outside
+	regex_pattern = "|".join(rdd_body_set)
 	cache_candidates = set()
 
-	#for each body
-	for body in body_code_list:
+	#cache rdd if rdd is instantiated outside && is in loop && is not cached outside the loop
+	for body in loop_body_list:
 		cache_candidates.update(findRDDInBody(body, regex_pattern))
-	for body in body_code_list:
+	print "instantiated outside: ", cache_candidates
+	#clear those that are getting reassigned.
+	for body in loop_body_list:
 		cache_candidates.difference_update(findReassignedRDD(body, regex_pattern))
+	#filter out those that are cached
+	filtered_cache_candidates = set()
 
-	first_loop_index = findFirstLoopIndex(loop_keywords, application_code)
-	new_application_code, optimization_report = generateApplicationCode(application_code, first_loop_index, cache_candidates, optimization_report)
+
+	print "cleared reassigned: ", cache_candidates
+	for rdd in cache_candidates:
+		if op.isCached(rdd, application_code) == False:
+			filtered_cache_candidates.add(rdd)
+
+	print "\nfinal: ", filtered_cache_candidates
+	print ""
+
+	first_loop_linenum = findFirstLoopIndex(loop_patterns, application_code)
+	new_application_code, optimization_report = generateApplicationCode(application_code, first_loop_linenum, filtered_cache_candidates, optimization_report)
 
 	return new_application_code, optimization_report
 
