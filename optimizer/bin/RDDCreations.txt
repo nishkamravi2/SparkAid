@@ -1,0 +1,16 @@
+textFile
+objectFile
+objectFile\[.*\]
+wholeTextFiles
+binaryFiles
+emptyRDD
+makeRDD
+sequenceFile
+parallelize
+hadoopFile
+hadoopRDD
+union
+binaryRecords
+newAPIHadoopFile
+newAPIHadoopRDD
+range

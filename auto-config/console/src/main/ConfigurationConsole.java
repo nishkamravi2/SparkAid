@@ -38,6 +38,7 @@ public class ConfigurationConsole {
 		String clusterManager = ""; // standalone, yarn
 		String dynamicAllocationFlag = ""; // y, n
 		String className = ""; // name of app class
+		String codePath = "";
 		String appJar = ""; // app Jar URL
 		String appArgs = ""; // app args as a single string
 		
@@ -53,6 +54,7 @@ public class ConfigurationConsole {
 		String sparkDefaultConf = "spark-default.conf";
 		String sparkFinalConf = "output/spark-final.conf";
 		String sparkConfAdvise = "output/spark.conf.advise";
+		String codeFilePath = "../bin/code.file.path";
 	
 		//legal input arguments
 		String [] legalFileSystemInput = {"ext3","ext4","xfs"};
@@ -84,11 +86,12 @@ public class ConfigurationConsole {
 			dynamicAllocationFlag = checkValidHelper("Is this a Dynamic Allocation application? y/n", legalYesNoInput,
 					"Invalid input. Enter y/n.", scanner);
 			className = scanNextWithPrompt("Enter Class Name of application: ", scanner);
+			codePath = scanNextWithPrompt("Enter file path of application code: ", scanner);
 			appJar = scanNextWithPrompt("Enter file path of application JAR ", scanner);
 			appArgs = scanNextWithPrompt("Enter Application Arguments if any", scanner);
 		}
-		else if(args.length != 13) {
-			System.out.println("Invalid input, please enter 13 arguments. \n");
+		else if(args.length != 14) {
+			System.out.println("Invalid input, please enter 14 arguments. \n");
 			System.out.println("Your input: " + Arrays.toString(args) + "\n");	
 			printUsage();
 			System.exit(0);
@@ -115,8 +118,9 @@ public class ConfigurationConsole {
 			dynamicAllocationFlag = args[9];
 			if (checkLegalInputs(dynamicAllocationFlag, legalYesNoInput,"Invalid y/n flag.")){invalidFlag = true;}
 			className = args[10];
-			appJar = args[11];
-			appArgs = args[12];
+			codePath = args[11];
+			appJar = args[12];
+			appArgs = args[13];
 			
 			if (invalidFlag){
 				System.out.println("Please re-enter arguments properly. \n");
@@ -178,6 +182,9 @@ public class ConfigurationConsole {
 		
 		createOutputFile(sparkFinalConf, optionsTable, "options");
 		createOutputFile(sparkConfAdvise, recommendationsTable, "recommendations");
+		
+		createCodePathFile(codeFilePath, codePath);
+		
 		String cmdLineParams = generateParamsString(commandLineParamsTable);
 		constructCmdLine(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable, cmdLineParams);
 	}
@@ -240,6 +247,21 @@ public class ConfigurationConsole {
 				}
 				b.write(key + spaceBuffer(spaceBufferLength) + value + "\n");
 			}
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	private static void createCodePathFile(String fileName, String filePath){
+		try{
+			File outFile = new File(fileName);
+			if (!outFile.exists()) {
+				outFile.createNewFile();
+			}
+			BufferedWriter b1 = new BufferedWriter(new FileWriter(outFile));	
+			b1.write(filePath);
+			b1.close();
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -322,10 +344,11 @@ public class ConfigurationConsole {
 				+ "<clusterManger: standalone/yarn> \n"
 				+ "<dynamicAllocation: y/n> \n"
 				+ "<app className> \n"
+				+ "<app codeFilePath> \n"
 				+ "<app JAR location> \n"
 				+ "<app arguments as one string>\n"
 				+ "\n"
-				+ "e.g ./run.sh 40 15 16 64 1.0 ext3 spark://hostname.com:7077 client standalone y Pagerank /path/to/Spark.jar \"\"\n"
+				+ "e.g ./run.sh 40 15 16 64 1.0 ext3 spark://hostname.com:7077 client standalone y Pagerank /path/to/code /path/to/Spark.jar \"\"\n"
 				+ "\n"
 				+ "YOU CAN ALSO FOLLOW PROMPTS\n");
 	}
@@ -342,7 +365,7 @@ public class ConfigurationConsole {
 				+ " --properties-file spark-final.conf " 
 				+ cmdLineParams + " " + appJar + " " + appArgs;
 		
-		System.out.println("Auto-generated files in output folder: spark-final.conf, spark.conf.advise \n");
+		System.out.println("Auto-generated files in output folder: spark-final.conf, spark.conf.advise, optimization-report.txt, optimizedCode.scala, spark.code.advise \n");
 		System.out.println("Invoke command line: " + cmdLine + "\n");
 	}
 	
