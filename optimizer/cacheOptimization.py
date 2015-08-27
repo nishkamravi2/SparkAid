@@ -156,7 +156,6 @@ def extractNonLoopCode(application_code, loop_patterns):
 
 def getRDDInstantiatedInLoopsSet(loop_body_list, regex_pattern):
 	cache_candidates = set()
-	#get RDDs instantiated outside loops and used in loops
 	for body in loop_body_list:
 		cache_candidates.update(findRDDInBody(body, regex_pattern))
 	return cache_candidates
@@ -167,7 +166,6 @@ def removeReassignedRDDs(loop_body_list, regex_pattern, cache_candidates):
 	return cache_candidates
 
 def removeCachedRDDs(cache_candidates, application_code):
-	#filter out those that are already cached
 	filtered_cache_candidates = set()
 	for rdd in cache_candidates:
 		if op.isCached(rdd, application_code) == False:
