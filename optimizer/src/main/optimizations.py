@@ -1,92 +1,166 @@
 import re
-import cacheOptimization
+import optimizations as op
 
-def getSettingValue(key, conf):
-	f = conf.split('\n')
-	parallelism = 0
-	for i in range (0, len(f)):
-		if key in f[i]:
-			line = f[i].split()
-			parallelism = int(line[1])
-			break
-	return parallelism
+#http://stackoverflow.com/questions/241327/python-snippet-to-remove-c-and-c-comments
+def commentRemover(text):
+    def replacer(match):
+        s = match.group(0)
+        if s.startswith('/'):
+            return " " # note: a space and not an empty string
+        else:
+            return s
+    pattern = re.compile(
+        r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+        re.DOTALL | re.MULTILINE | re.X
+    )
+    return re.sub(pattern, replacer, text)
+    
+def getBodyIndex(indexes, application_code):
+	body_indexes = []
+	last_closing_index = -1 #this is to take care of nested loops to prevent overlapping analysis
+	for i in range(len(indexes)):
+		start_index = indexes[i][0]
+		if last_closing_index > start_index: #this is to take care of nested loops to prevent overlapping analysis
+			continue
+		end_index = -1
+		stack = []
+		for j in range(start_index,len(application_code)):
+			curr_char = application_code[j]
+			if curr_char == "{":
+				stack.append(curr_char)
+				if start_index == indexes[i][0]: #re-initialize start index
+					start_index = j
+			elif curr_char == "}":
+				stack.pop()	 #error check for incorrect open close brackets
+				if (len(stack)==0):
+					end_index = j+1
+					last_closing_index = end_index #this is to take care of nested loops to prevent overlapping analysis
+					break;
+		#error check for invalid open close (with end index)
+		body_indexes.append((start_index,end_index))
+	return body_indexes
 
-def isComment(line):
-	matched = re.match(r'\s*//\s*.*',line)
-	return matched is not None
+def getLoopPatternIndex(loop_patterns, application_code):
+	loop_keyword_indexes = []
+	for keyword in loop_patterns:
+		matched = re.finditer(keyword, application_code, re.S)
+		loop_keyword_indexes += [m.span() for m in matched]
+	return loop_keyword_indexes
 
-def recommendReduceByKey(application_code):
-	f = application_code.split("\n")
-	advise_file = ""
-	for i in range(0,len(f)):
-		if "groupByKey()" in f[i]:
-			advise_file += "Consider using reduceByKey() instead of groupByKey() if possible in " + "Line " + str(i+1) + ": " + f[i] + "\n"
-	if len(advise_file) == 0:
-		advise_file += "No advise for this code"
-	return advise_file
+def getBodyCodeList(loop_body_indexes, application_code):
+	return [application_code[index[0]:index[1]] for index in loop_body_indexes]
 
-def isCached(rdd, application_code):
-	matched_action = re.search(r'(%s)\.(cache|persist)' %rdd, application_code, re.X)
-	matched_assign = re.search(r'(%s)\s*?=[^=]*?((\=\>)[^\n\n]*)*?\.(cache|persist)' %rdd, application_code, re.S|re.X)
-	return matched_action is not None or matched_assign is not None
+def findRDDInBody(body, pattern_list):
+	cache_candidates = set()
+	matched = re.finditer(r'(%s)[.\)]' %pattern_list, body, re.MULTILINE) #only find RDDs that will have actions
+	if matched:
+		for matched_obj in matched:
+			cache_candidates.add(matched_obj.group(1))
+	return cache_candidates
 
-def findAllRDDs(application_code, rdd_patterns):
-	rdd_set = set()
-	matched_iter = re.finditer(r'(val|var)\s*([^=]*?)\s*?=[^=]*?\.(%s)'%rdd_patterns, application_code, re.S|re.X)
-	if matched_iter:
-		for matched_obj in matched_iter:
-			rddname = matched_obj.group(2)
-			rdd_set.add(rddname) 
+def getRDDOutsideLoops(rdd_set, body_code_list, rdd_patterns):
+	for body in body_code_list:
+		body_rdd_set = op.findAllRDDs(body, rdd_patterns)
+		rdd_set = rdd_set - body_rdd_set
 	return rdd_set
 
-def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creations):
-	rdd_patterns = '|'.join(rdd_actions.split('\n') + rdd_creations.split('\n'))
+def findReassignedRDD(body, pattern_list):
+	reassigned_candidates = set()
+	matched = re.finditer(r'.*(%s)\s+=\s+\w+' %pattern_list, body, re.S)
+	if matched:
+		for matched_obj in matched:
+			reassigned_candidates.add(matched_obj.group(1))
+	return reassigned_candidates
+
+def findFirstLoopIndex(loop_patterns, application_code):
+	loop_keyword_indexes = []
 	f = application_code.split("\n")
-	rdd_set = findAllRDDs(application_code, rdd_patterns)
-	persistFlag = False
-	for rdd in rdd_set:
-		if isCached(rdd, application_code):
-			persistFlag = True
-	if (not persistFlag):
-		print "Setting spark.storage.memoryFraction to 0.1 since there are no RDDs being persisted/cached."
-		return changeSettingValue("spark.storage.memoryFraction", "0.1", spark_final_conf)
-	return spark_final_conf
+	first_loop_line_num = len(f) + 1
+	for keyword in loop_patterns:
+		for i in range(0,len(f)):
+			matched = re.search(keyword, f[i], re.S)
+			if matched:
+				if i < first_loop_line_num:
+					first_loop_line_num = i 
+	return first_loop_line_num + 1
 
-def changeSettingValue(key, new_value, settings_file):
-	f = settings_file.split("\n")
-	for i in range(0, len(f)):
-		if key in f[i]:
-			old_value = f[i].split()[1]
-			f[i] = f[i].replace(old_value, new_value)
-			break
-	return "\n".join(f)
+def generateSpaceBuffer(length):
+	space_buffer = ""
+	for i in range(length):
+		space_buffer += " "
+	return space_buffer
 
-def setParallelism(application_code, rdd_creations_partitions, spark_final_conf, optimization_report):
-	optimization_report += "\n=====================Parallelism Optimizations========================\n"
-	default_parallelism = getSettingValue("spark.default.parallelism", spark_final_conf)
-	pattern_list = '|'.join(rdd_creations_partitions.split("\n"))
-	matched_iter = re.finditer(r'''	# captures textFile("anything")
-		.*				# any char starting
-		\s*=\s*\w+
-		\.(%s)			# .parallelize|objectFile|textFile|...
-		\(			
-		(
-			\w*
-			|\s*\".*\"\s* # explicit file path only  -  "/path/to/file"
-			|\s*\w+\s* # file path as a var name only - path-var-name
-			|\s*\".*\"\s*\,\s*[^\)\(\,]*\s*\,\s*[^\)\(\,]*\s*\,\s*[^\)\(\,]*\s* # 4 arguments explicit file path - "/path/to/file" , 3 args
-			|\s*\w*\s*\,\s*[^\)\(\,]*\s*\,\s*[^\)\(\,]*\s*\,\s*[^\)\(\,]*\s* # 4 arguments path-var-name - path-var-name, 3 args
-		)
-		\)
-		''' %pattern_list, application_code, re.X)
+def generateCachedCode(cache_candidates, prev_line):
+	leading_spaces = len(prev_line.expandtabs(4)) - len(prev_line.expandtabs(4).lstrip())
+	cache_inserted_code = generateSpaceBuffer(leading_spaces) + "//inserted new cache code below \n"
+	if len(cache_candidates) == 0:
+		cache_inserted_code = "No cache optimizations done."
+		return cache_inserted_code
 
-	if matched_iter:
-		for matched_obj in matched_iter:
-			line = matched_obj.group()
-			recommended_line = line.rsplit(")",1)
-			recommended_line = recommended_line[0] + ", " + str(default_parallelism) + ")" + recommended_line[1]
-			optimization_report += "Modified from: " + line + "\n"
-			optimization_report += "To this: " + recommended_line + "\n\n"
-			application_code = application_code.replace(line, recommended_line)
+	for rdd in cache_candidates:
+		cached_line = generateSpaceBuffer(leading_spaces) + rdd + ".cache()" + "\n"
+		cache_inserted_code += cached_line
+	cache_inserted_code += generateSpaceBuffer(leading_spaces) + "//end of inserted code\n"
+	return cache_inserted_code
 
-	return application_code, optimization_report
+def generateApplicationCode (application_code, first_loop_line_num, cache_candidates, optimization_report):
+	f = application_code.split("\n")
+	if first_loop_line_num >= len(f):
+		first_loop_line_num = 0
+	prev_line_num = max(first_loop_line_num-2, 0)
+	generatedCode = generateCachedCode(cache_candidates, f[prev_line_num])
+
+	if "No cache optimizations done." in generatedCode:
+		optimization_report += "No cache optimizations done.\n"
+		return application_code, optimization_report
+
+	line_inserted = first_loop_line_num - 1
+	optimization_report += "Inserted code block at Line: " + str(line_inserted) + "\n" + generatedCode + "\n"
+	f = '\n'.join(f[:first_loop_line_num - 1]) + '\n' + generatedCode + '\n'.join(f[first_loop_line_num - 1:])
+	return f, optimization_report
+
+def extractLoopBodies(application_code, loop_patterns):
+	
+	#sort indexes by starting indexes to prevent overlap
+	loop_keyword_indexes = sorted(getLoopPatternIndex(loop_patterns, application_code), key=lambda x: x[0])
+	#find all loop body indexes
+	loop_body_indexes = getBodyIndex(loop_keyword_indexes,application_code)
+	#get all loop body code
+	loop_body_list = getBodyCodeList(loop_body_indexes, application_code)
+	return loop_body_list
+
+def cacheOptimization(application_code, rdd_actions, rdd_creations):
+	optimization_report = "=====================Cache Optimizations========================\n"
+	application_code = commentRemover(application_code)
+	rdd_patterns = '|'.join(rdd_actions.split("\n") + rdd_creations.split("\n")) 
+	loop_patterns = [r'for\s*\(.+?\)\s*\{', r'while\s*\(.+?\)\s*\{', r'do\s*\{.*\}']
+
+	#find all RDDs in the code
+	rdd_set = op.findAllRDDs(application_code, rdd_patterns)
+	#extract all the loop bodies 
+	loop_body_list = extractLoopBodies(application_code, loop_patterns)
+	#extract rdds outside loops
+	rdd_body_set = getRDDOutsideLoops(rdd_set, loop_body_list, rdd_patterns)
+	#create pattern to capture rdds outside
+	regex_pattern = "|".join(rdd_body_set)
+	cache_candidates = set()
+
+	#cache rdd if rdd is instantiated outside && is in loop && is not cached outside the loop
+	for body in loop_body_list:
+		cache_candidates.update(findRDDInBody(body, regex_pattern))
+	#clear those that are getting reassigned.
+	for body in loop_body_list:
+		cache_candidates.difference_update(findReassignedRDD(body, regex_pattern))
+	#filter out those that are cached
+	filtered_cache_candidates = set()
+
+	for rdd in cache_candidates:
+		if op.isCached(rdd, application_code) == False:
+			filtered_cache_candidates.add(rdd)
+
+	first_loop_linenum = findFirstLoopIndex(loop_patterns, application_code)
+	new_application_code, optimization_report = generateApplicationCode(application_code, first_loop_linenum, filtered_cache_candidates, optimization_report)
+
+	return new_application_code, optimization_report
+
+#dependency for many different loops
