@@ -53,8 +53,8 @@ public class ConfigurationConsole {
 		//file names
 		String sparkDefaultConf = "spark-default.conf";
 		String sparkFinalConf = "output/spark-final.conf";
-		String sparkConfAdvise = "output/spark.conf.advise";
-		String codeFilePath = "../bin/code.file.path";
+		String sparkConfAdvise = "output/spark-conf.advice";
+		String codeFilePath = "tmp-code-file-path.txt";
 	
 		//legal input arguments
 		String [] legalFileSystemInput = {"ext3","ext4","xfs"};
@@ -85,10 +85,10 @@ public class ConfigurationConsole {
 					"Invalid input. Enter standalone / yarn.", scanner);
 			dynamicAllocationFlag = checkValidHelper("Is this a Dynamic Allocation application? y/n", legalYesNoInput,
 					"Invalid input. Enter y/n.", scanner);
-			className = scanNextWithPrompt("Enter Class Name of application: ", scanner);
-			codePath = scanNextWithPrompt("Enter file path of application code: ", scanner);
-			appJar = scanNextWithPrompt("Enter file path of application JAR ", scanner);
-			appArgs = scanNextWithPrompt("Enter Application Arguments if any", scanner);
+			className = scanNextWithPrompt("Enter application class name: ", scanner);
+			codePath = scanNextWithPrompt("Enter application code path: ", scanner);
+			appJar = scanNextWithPrompt("Enter application JAR path", scanner);
+			appArgs = scanNextWithPrompt("Enter application arguments if any", scanner);
 		}
 		else if(args.length != 14) {
 			System.out.println("Invalid input, please enter 14 arguments. \n");

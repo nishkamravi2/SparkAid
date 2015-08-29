@@ -4,11 +4,15 @@ import sys
 import os.path
 
 script_dir = os.path.dirname(__file__)
-application_code_path = open(os.path.join(script_dir, "../bin/code.file.path")).read()
-spark_final_conf_path =  os.path.join(script_dir, "../bin/output/spark-final.conf")
-rdd_actions_path = os.path.join(script_dir, "bin/RDDActions.txt")
-rdd_creations_path = os.path.join(script_dir, "bin/RDDCreations.txt")
-rdd_creations_partitions_path = os.path.join (script_dir, "bin/RDDCreationsPartitions.txt")
+application_code_path = open(os.path.join(script_dir, "../../../bin/tmp-code-file-path.txt")).read()
+
+#delete this file here.
+
+
+spark_final_conf_path =  os.path.join(script_dir, "../../../bin/output/spark-final.conf")
+rdd_actions_path = os.path.join(script_dir, "data/RDDActions.txt")
+rdd_creations_path = os.path.join(script_dir, "data/RDDCreations.txt")
+rdd_creations_partitions_path = os.path.join (script_dir, "data/RDDCreationsPartitions.txt")
 
 spark_final_conf = open(spark_final_conf_path).read()
 rdd_actions_file = open(rdd_actions_path).read()
@@ -21,6 +25,13 @@ cache_optimized_code, optimization_report = optimizations.setParallelism(cache_o
 spark_code_advise = optimizations.recommendReduceByKey(cache_optimized_code)
 new_conf_file = optimizations.setMemoryFraction(cache_optimized_code, spark_final_conf, rdd_actions_file, rdd_creations_file)
 
+
+#if nothing was done, do not even output 
+	#optional
+		#optimized code.scala
+		#spark-code.advice
+
+
 #Generate optimization report
 with open("../bin/output/optimization-report.txt", 'wr') as opt_report:
 	opt_report.write(optimization_report)
@@ -31,5 +42,5 @@ with open("../bin/output/optimizedCode.scala", 'wr') as opt_code:
 with open("../bin/output/spark-final.conf", 'wr') as spark_conf_update:
 	spark_conf_update.write(new_conf_file)
 #Generate the recommendations report
-with open("../bin/output/spark.code.advise", 'wr') as advise:
+with open("../bin/output/spark-code.advice", 'wr') as advise:
 	advise.write(spark_code_advise)
