@@ -4,11 +4,11 @@ import sys
 import os.path
 
 script_dir = os.path.dirname(__file__)
-application_code_path = open(os.path.join(script_dir, "../bin/code.file.path")).read()
-spark_final_conf_path =  os.path.join(script_dir, "../bin/output/spark-final.conf")
-rdd_actions_path = os.path.join(script_dir, "bin/RDDActions.txt")
-rdd_creations_path = os.path.join(script_dir, "bin/RDDCreations.txt")
-rdd_creations_partitions_path = os.path.join (script_dir, "bin/RDDCreationsPartitions.txt")
+application_code_path = open(os.path.join(script_dir, "../../../bin/tmp-code-file-path.txt")).read()
+spark_final_conf_path =  os.path.join(script_dir, "../../../bin/output/spark-final.conf")
+rdd_actions_path = os.path.join(script_dir, "data/RDDActions.txt")
+rdd_creations_path = os.path.join(script_dir, "data/RDDCreations.txt")
+rdd_creations_partitions_path = os.path.join (script_dir, "data/RDDCreationsPartitions.txt")
 
 spark_final_conf = open(spark_final_conf_path).read()
 rdd_actions_file = open(rdd_actions_path).read()

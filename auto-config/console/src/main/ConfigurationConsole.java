@@ -54,7 +54,7 @@ public class ConfigurationConsole {
 		String sparkDefaultConf = "spark-default.conf";
 		String sparkFinalConf = "output/spark-final.conf";
 		String sparkConfAdvise = "output/spark.conf.advise";
-		String codeFilePath = "../bin/code.file.path";
+		String codeFilePath = "tmp-code-file-path.txt";
 	
 		//legal input arguments
 		String [] legalFileSystemInput = {"ext3","ext4","xfs"};
