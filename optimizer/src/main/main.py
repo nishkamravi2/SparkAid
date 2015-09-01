@@ -1,4 +1,4 @@
-import optimizations
+import optimizations as op
 import cacheOptimization
 import sys
 import os.path
@@ -19,9 +19,9 @@ rdd_creations_partitions_file = open(rdd_creations_partitions_path).read()
 application_code = open(application_code_path).read()
 
 cache_optimized_code, optimization_report = cacheOptimization.cacheOptimization(application_code, rdd_actions_file, rdd_creations_file)
-cache_optimized_code, optimization_report = optimizations.setParallelism(cache_optimized_code, rdd_creations_partitions_file, spark_final_conf, optimization_report)
-spark_code_advise , optimization_report= optimizations.recommendReduceByKey(cache_optimized_code, optimization_report)
-new_conf_file = optimizations.setMemoryFraction(cache_optimized_code, spark_final_conf, rdd_actions_file, rdd_creations_file)
+cache_optimized_code, optimization_report = op.setParallelism(cache_optimized_code, rdd_creations_partitions_file, spark_final_conf, optimization_report)
+spark_code_advise , optimization_report = op.recommendReduceByKey(cache_optimized_code, optimization_report)
+new_conf_file = op.setMemoryFraction(cache_optimized_code, spark_final_conf, rdd_actions_file, rdd_creations_file)
 
 
 #if nothing was done, do not even output 
