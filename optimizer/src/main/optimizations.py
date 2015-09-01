@@ -11,17 +11,26 @@ def getSettingValue(key, conf):
 			break
 	return parallelism
 
+def changeSettingValue(key, new_value, settings_file):
+	f = settings_file.split("\n")
+	for i in range(0, len(f)):
+		if key in f[i]:
+			old_value = f[i].split()[1]
+			f[i] = f[i].replace(old_value, new_value)
+			break
+	return "\n".join(f)
+
 #further implementation
 def isComment(line, application_code):
 	return False
-	line = re.escape(line)
-	print "line: ", line
-	matched = re.search(r'''//[^/]*?{0}[^/]*?'''.format(line), application_code, re.DOTALL| re.MULTILINE| re.X)
-	if matched:
-		print "matched result: ", matched.group()
+	# line = re.escape(line)
+	# print "line: ", line
+	# matched = re.search(r'''//[^/]*?{0}[^/]*?'''.format(line), application_code, re.DOTALL| re.MULTILINE| re.X)
+	# if matched:
+	# 	print "matched result: ", matched.group()
 
-	print "=================================================================="
-	return matched is not None
+	# print "=================================================================="
+	# return matched is not None
 
 #http://stackoverflow.com/questions/241327/python-snippet-to-remove-c-and-c-comments , not used for now
 def removeComments(text):
@@ -37,37 +46,39 @@ def removeComments(text):
     )
     return re.sub(pattern, replacer, text)
 
-def exists():
-	return True
+def inComment(matched_obj, application_code):
+	line = matched_obj.group()
+	return False
 
-def recommendReduceByKey(application_code):
+def recommendReduceByKey(application_code, optimization_report):
 	f = application_code.split("\n")
 	advise_file = "\n===================== GroupByKey() Recommendation ========================\n"
-	optimization_report = "\n===================== GroupByKey() Optimization ========================\n"
+	optimization_report += "\n===================== GroupByKey() Optimization ========================\n"
+	recommendFlag = False
 
+	matched_iter = re.finditer(r'''
+		^.*\.groupByKey.*$
+		''', application_code, re.M|re.X)
 
-	
+	for matched_obj in matched_iter:
+		if not inComment(matched_obj, application_code):
+			line = matched_obj.group()
+			advise_file += "Consider using reduceByKey() instead of groupByKey() if possible at: \n" + line
+			recommendFlag = True
 
-	for i in range(0,len(f)):
-		if "groupByKey()" in f[i]:
-			advise_file += "Consider using reduceByKey() instead of groupByKey() if possible in " + "Line " + str(i+1) + ": " + f[i] + "\n"
-
-	if len(advise_file) == 0:
+	if not recommendFlag:
 		advise_file += "No advice for this code" 
-
-
-	if exists():
+		optimization_report += "\n"
+	else:
 		optimization_report += "See spark-code.advice file"
 
-
-	return advise_file
+	return advise_file, optimization_report
 
 def isCached(rdd, application_code):
 
 	print "rdd", rdd, "|||||||||||||||||||before"
 	matched_action = re.search(r'(%s)\.(cache|persist)' %rdd, application_code, re.X|re.M)
 	matched_assign = re.search(r'^[^/]*?(%s)\s*?=[^=]*?((\=\>)[^\n\n]*)*?\.(cache|persist)' %rdd, application_code, re.S|re.X|re.M)
-
 
 	if matched_action:
 		line = matched_action.group()
@@ -86,16 +97,17 @@ def isCached(rdd, application_code):
 
 def findAllRDDs(application_code, rdd_patterns):
 	rdd_set = set()
-	matched_iter = re.finditer(r'^[^/]*(val|var)\s*([^=]*?)\s*?=[^=]*?\.(%s)'%rdd_patterns, application_code, re.S|re.X|re.M)
+	matched_iter = re.finditer(r'(val|var)\s*([^=]*?)\s*?=[^=]*?\.(%s)'%rdd_patterns, application_code, re.S|re.X|re.M)
 	if matched_iter:
 		for matched_obj in matched_iter:
 			line = matched_obj.group()
 			if (not isComment(line, application_code)):
 				# line = matched_obj.group()
-				x = 1
-				# print "FINDING RDDS **%$%$%", line
+				print "FINDING RDDS **%$%$%", line
 				rddname = matched_obj.group(2)
+				print matched_obj.group(2)
 				rdd_set.add(rddname) 
+	print rdd_set
 	return rdd_set
 
 def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creations):
@@ -108,19 +120,9 @@ def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creat
 		if isCached(rdd, application_code):
 			persistFlag = True
 	if (not persistFlag):
-		# print "Setting spark.storage.memoryFraction to 0.1 since there are no RDDs being persisted/cached."
 		optimization_report += "spark.storage.memoryFraction set to 0.1 since there are no RDDs being persisted/cached.\n" #return this out later.
 		return changeSettingValue("spark.storage.memoryFraction", "0.1", spark_final_conf)
 	return spark_final_conf
-
-def changeSettingValue(key, new_value, settings_file):
-	f = settings_file.split("\n")
-	for i in range(0, len(f)):
-		if key in f[i]:
-			old_value = f[i].split()[1]
-			f[i] = f[i].replace(old_value, new_value)
-			break
-	return "\n".join(f)
 
 def setParallelism(application_code, rdd_creations_partitions, spark_final_conf, optimization_report):
 	optimization_report += "\n===================== Parallelism Optimization ========================\n"

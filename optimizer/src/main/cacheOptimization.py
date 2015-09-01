@@ -195,6 +195,7 @@ def cacheOptimization(application_code, rdd_actions, rdd_creations):
 	rdds_instantiated_outside_loops = getRDDOutsideLoops(application_code, loop_body_list, rdd_patterns)
 	#create pattern to capture rdds outside
 	outside_rdd_pattern = "|".join(rdds_instantiated_outside_loops)
+	print "\nOUTSIDE RDD: " , outside_rdd_pattern
 	#get RDDs instantiated outside loops and used in loops
 	cache_candidates = getRDDUsedInLoopsSet(loop_body_list, outside_rdd_pattern, application_code)
 	print "out but in: ", cache_candidates

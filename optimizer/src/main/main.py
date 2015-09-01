@@ -5,9 +5,7 @@ import os.path
 
 script_dir = os.path.dirname(__file__)
 application_code_path = open(os.path.join(script_dir, "../../../bin/tmp-code-file-path.txt")).read()
-
-#delete this file here.
-
+os.remove(os.path.join(script_dir, "../../../bin/tmp-code-file-path.txt"))
 
 spark_final_conf_path =  os.path.join(script_dir, "../../../bin/output/spark-final.conf")
 rdd_actions_path = os.path.join(script_dir, "data/RDDActions.txt")
@@ -22,7 +20,7 @@ application_code = open(application_code_path).read()
 
 cache_optimized_code, optimization_report = cacheOptimization.cacheOptimization(application_code, rdd_actions_file, rdd_creations_file)
 cache_optimized_code, optimization_report = optimizations.setParallelism(cache_optimized_code, rdd_creations_partitions_file, spark_final_conf, optimization_report)
-spark_code_advise = optimizations.recommendReduceByKey(cache_optimized_code)
+spark_code_advise , optimization_report= optimizations.recommendReduceByKey(cache_optimized_code, optimization_report)
 new_conf_file = optimizations.setMemoryFraction(cache_optimized_code, spark_final_conf, rdd_actions_file, rdd_creations_file)
 
 
@@ -30,7 +28,6 @@ new_conf_file = optimizations.setMemoryFraction(cache_optimized_code, spark_fina
 	#optional
 		#optimized code.scala
 		#spark-code.advice
-
 
 #Generate optimization report
 with open("../bin/output/optimization-report.txt", 'wr') as opt_report:
