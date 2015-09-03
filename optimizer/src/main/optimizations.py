@@ -9,6 +9,7 @@ def getSettingValue(key, conf):
 			line = f[i].split()
 			parallelism = int(line[1])
 			break
+
 	return parallelism
 
 def changeSettingValue(key, new_value, settings_file):
@@ -18,6 +19,7 @@ def changeSettingValue(key, new_value, settings_file):
 			old_value = f[i].split()[1]
 			f[i] = f[i].replace(old_value, new_value)
 			break
+
 	return "\n".join(f)
 
 def findCommentSpans(code_body):
@@ -108,12 +110,12 @@ def findAllRDDs(application_code, rdd_patterns):
 			if not inComment(matched_obj, application_code, comments_span_list):
 				rddname = matched_obj.group(2)
 				rdd_set.add(rddname) 
+
 	return rdd_set
 
 def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creations, optimization_report):
 	comments_span_list = findCommentSpans(application_code)
 	rdd_patterns = '|'.join(rdd_actions.split('\n') + rdd_creations.split('\n'))
-	f = application_code.split("\n") #delete this line
 	rdd_set = findAllRDDs(application_code, rdd_patterns)
 	persistFlag = False
 	for rdd in rdd_set:
@@ -126,24 +128,56 @@ def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creat
 
 	return spark_final_conf, optimization_report
 
+def processRddCreationPartitionsPatternNames(rdd_creations_partitions):
+	rdd_creations_partitions_list = rdd_creations_partitions.split("\n")
+	pattern_list = '|'.join([x.split(",")[0] for x in rdd_creations_partitions_list])
+	return pattern_list
+
+def processRddCreationPartitionsPatternArgs(rdd_creations_partitions):
+	rdd_creations_partitions_list = rdd_creations_partitions.split("\n")
+	num_args_set = set()
+
+	for rdd_creation_tuple in rdd_creations_partitions_list:
+		num_args = int(rdd_creation_tuple.split(',')[1])
+		#get the number of times we should append the pattern = maximum number of args the function can take minus 2
+		num_args_set.add(num_args - 2) 
+
+	final_arg_pattern = ""
+
+	base_arg_pattern = '''
+			|\s*\".*\"\s*
+			|\s*\w+\s* 
+	'''
+
+	base_file_path_explicit_pattern = "|\s*\".*\"\s*"
+	base_file_path_var_pattern = "|\s*\w+\s* "
+
+	append_pattern = "\,\s*[^\)\(\,]*\s*"
+
+	for num in num_args_set:
+		new_explicit_pattern = base_file_path_explicit_pattern
+		new_var_pattern = base_file_path_var_pattern
+		for i in range (num):
+			new_explicit_pattern +=  append_pattern 
+			new_var_pattern += append_pattern
+		final_arg_pattern += new_explicit_pattern  
+		final_arg_pattern += new_var_pattern 
+
+	return final_arg_pattern
+
 def setParallelism(application_code, rdd_creations_partitions, spark_final_conf, optimization_report):
 	comments_span_list = findCommentSpans(application_code)
 	default_parallelism = getSettingValue("spark.default.parallelism", spark_final_conf)
-	pattern_list = '|'.join(rdd_creations_partitions.split("\n"))
+	pattern_names_list = processRddCreationPartitionsPatternNames(rdd_creations_partitions)
+	pattern_args_list = processRddCreationPartitionsPatternArgs(rdd_creations_partitions)
 	matched_iter = re.finditer(r'''	# captures textFile("anything")
 		^.*?				
 		\s*=\s*\w+
-		\.(%s)			# .parallelize|objectFile|textFile|...
+		\.({0})			# .parallelize|objectFile|textFile|...
 		\(			
-		(
-			\w* 
-			|\s*\".*\"\s* # explicit file path only  -  "/path/to/file"
-			|\s*\w+\s* # file path as a var name only - path-var-name
-			|\s*\".*\"\s*\,\s*[^\)\(\,]*\s*\,\s*[^\)\(\,]*\s*\,\s*[^\)\(\,]*\s* # 4 arguments explicit file path - "/path/to/file" , 3 args
-			|\s*\w*\s*\,\s*[^\)\(\,]*\s*\,\s*[^\)\(\,]*\s*\,\s*[^\)\(\,]*\s* # 4 arguments path-var-name - path-var-name, 3 args
-		)
+		(\w*{1})
 		\)
-		''' %pattern_list, application_code, re.X|re.M)
+		'''.format(pattern_names_list, pattern_args_list), application_code, re.X|re.M)
 
 	parallelism_report = ""
 

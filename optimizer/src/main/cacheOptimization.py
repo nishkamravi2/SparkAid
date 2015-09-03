@@ -156,13 +156,11 @@ def cacheOptimization(application_code, rdd_actions, rdd_creations):
 	outside_rdd_pattern = "|".join(rdds_instantiated_outside_loops)
 	#get RDDs instantiated outside loops and used in loops
 	cache_candidates = getRDDUsedInLoopsSet(loop_body_list, outside_rdd_pattern, application_code)
-	print "out but in: ", cache_candidates
 	#filter that are getting reassigned/written to.
 	cache_candidates = removeReassignedRDDs(loop_body_list, outside_rdd_pattern, cache_candidates, comments_span_list, application_code)
-	print "not reassigned: ", cache_candidates
 	#filter out those that are already cached
 	cache_candidates = removeCachedRDDs(cache_candidates, application_code)
-	print "not cached: ", cache_candidates
+
 	first_loop_linenum = findFirstLoopIndex(loop_patterns, application_code)
 	#insert generated code, and create optimization report
 	new_application_code, optimization_report = generateApplicationCode(application_code, first_loop_linenum, cache_candidates, optimization_report)
