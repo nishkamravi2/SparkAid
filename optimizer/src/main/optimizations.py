@@ -59,8 +59,8 @@ def recommendReduceByKey(application_code, optimization_report):
 	comments_span_list = findCommentSpans(application_code)
 
 	f = application_code.split("\n")
-	advice_file = "===================== GroupByKey() Recommendation ========================\n"
-	optimization_report += "\n===================== GroupByKey() Recommendation ========================\n"
+	advice_file = "===================== GroupByKey() Recommendation ====================\n"
+	optimization_report += "\n===================== GroupByKey() Recommendation ====================\n"
 	recommendFlag = False
 
 	matched_iter = re.finditer(r'''
@@ -120,7 +120,7 @@ def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creat
 		if isCached(rdd, comments_span_list, application_code):
 			persistFlag = True
 	if (not persistFlag):
-		optimization_report += "\n===================== Storage Memory Fraction Optimization ========================\n"
+		optimization_report += "\n===================== Storage Memory Fraction Optimization ===========\n"
 		optimization_report += "\nspark.storage.memoryFraction set to 0.1 since there are no RDDs being persisted/cached.\n" #return this out later.
 		return changeSettingValue("spark.storage.memoryFraction", "0.1", spark_final_conf), optimization_report
 
@@ -159,7 +159,7 @@ def setParallelism(application_code, rdd_creations_partitions, spark_final_conf,
 			application_code = application_code.replace(line, recommended_line)
 
 	if len(parallelism_report):
-		optimization_report += "\n========================= Parallelism Optimization ===============================\n"
+		optimization_report += "\n===================== Parallelism Optimization =======================\n"
 		optimization_report += parallelism_report
 
 	return application_code, optimization_report

@@ -144,7 +144,7 @@ def removeCachedRDDs(cache_candidates, application_code):
 
 def cacheOptimization(application_code, rdd_actions, rdd_creations):
 	comments_span_list = op.findCommentSpans(application_code)
-	optimization_report = "===================== Cache Optimization ========================\n"
+	optimization_report = "===================== Cache Optimization =============================\n"
 	# application_code = removeComments(application_code) 
 	rdd_patterns = '|'.join(rdd_actions.split("\n") + rdd_creations.split("\n")) 
 	loop_patterns = [r'for\s*\(.+?\)\s*\{', r'while\s*\(.+?\)\s*\{', r'do\s*\{.*\}']
