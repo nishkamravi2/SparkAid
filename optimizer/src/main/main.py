@@ -15,15 +15,13 @@ rdd_creations_partitions_path = os.path.join (script_dir, "data/RDDCreationsPart
 spark_final_conf = open(spark_final_conf_path).read()
 rdd_actions_file = open(rdd_actions_path).read()
 rdd_creations_file = open(rdd_creations_path).read()
-
-#redo the reading for this.
 rdd_creations_partitions_file = open(rdd_creations_partitions_path).read()
 
 application_code = open(application_code_path).read()
 
 cache_optimized_code, optimization_report = cacheOptimization.cacheOptimization(application_code, rdd_actions_file, rdd_creations_file)
 cache_optimized_code, optimization_report = op.setParallelism(cache_optimized_code, rdd_creations_partitions_file, spark_final_conf, optimization_report)
-spark_code_advise , optimization_report = op.recommendReduceByKey(cache_optimized_code, optimization_report)
+spark_code_advice , optimization_report = op.recommendReduceByKey(cache_optimized_code, optimization_report)
 new_conf_file, optimization_report = op.setMemoryFraction(cache_optimized_code, spark_final_conf, rdd_actions_file, rdd_creations_file, optimization_report)
 
 #Generate optimization report
@@ -41,8 +39,7 @@ with open("../bin/output/optimizedCode.scala", 'wr') as opt_code:
 with open("../bin/output/spark-final.conf", 'wr') as spark_conf_update:
 	spark_conf_update.write(new_conf_file)
 
-
-#DO NOT OUTPUT IF NO CODE WAS MODIFIED
 #Generate the recommendations report
-with open("../bin/output/spark-code.advice", 'wr') as advise:
-	advise.write(spark_code_advise)
+if len(spark_code_advice) > 1:
+	with open("../bin/output/spark-code.advice", 'wr') as advice:
+		advice.write(spark_code_advice)

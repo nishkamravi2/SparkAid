@@ -23,7 +23,7 @@ public class ConfigurationConsole {
 	public static void main(String[] args) {
 		
 		/** 
-		 * Simple tool to initialize and configure Spark config params, generate the command line and advise
+		 * Simple tool to initialize and configure Spark config params, generate the command line and advice
 		 */
 		
 		// input config parameters
@@ -53,7 +53,7 @@ public class ConfigurationConsole {
 		//file names
 		String sparkDefaultConf = "spark-default.conf";
 		String sparkFinalConf = "output/spark-final.conf";
-		String sparkConfAdvise = "output/spark-conf.advice";
+		String sparkConfAdvice = "output/spark-conf.advice";
 		String codeFilePath = "tmp-code-file-path.txt";
 	
 		//legal input arguments
@@ -181,7 +181,7 @@ public class ConfigurationConsole {
 		Streaming.configureStreamingSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		
 		createOutputFile(sparkFinalConf, optionsTable, "options");
-		createOutputFile(sparkConfAdvise, recommendationsTable, "recommendations");
+		createOutputFile(sparkConfAdvice, recommendationsTable, "recommendations");
 		
 		createCodePathFile(codeFilePath, codePath);
 		
@@ -365,7 +365,7 @@ public class ConfigurationConsole {
 				+ " --properties-file spark-final.conf " 
 				+ cmdLineParams + " " + appJar + " " + appArgs;
 		
-		System.out.println("Auto-generated files in output folder: spark-final.conf, spark.conf.advise, optimization-report.txt, optimizedCode.scala, spark.code.advise \n");
+		System.out.println("Auto-generated files in output folder: spark-final.conf, spark.conf.advice, optimization-report.txt, optimizedCode.scala, spark.code.advice \n");
 		System.out.println("Invoke command line: " + cmdLine + "\n");
 	}
 	
