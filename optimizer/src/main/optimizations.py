@@ -2,17 +2,23 @@ import re
 import cacheOptimization
 
 def getSettingValue(key, conf):
+	"""
+	Reads setting value from conf file given a key
+	"""
 	f = conf.split('\n')
-	parallelism = 0
+	value = 0
 	for i in range (0, len(f)):
 		if key in f[i]:
 			line = f[i].split()
-			parallelism = int(line[1])
+			value = int(line[1])
 			break
 
-	return parallelism
+	return value
 
 def changeSettingValue(key, new_value, settings_file):
+	"""
+	Returns a new settings file with new value
+	"""
 	f = settings_file.split("\n")
 	for i in range(0, len(f)):
 		if key in f[i]:
@@ -23,19 +29,25 @@ def changeSettingValue(key, new_value, settings_file):
 	return "\n".join(f)
 
 def findCommentSpans(code_body):
-    matched_comment_iter = re.finditer(
+	"""
+	Finds comment spans given a code body
+	"""
+	matched_comment_iter = re.finditer(
         r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
         code_body, re.DOTALL | re.MULTILINE | re.X
         )
-    comments_span_list = []
-    for matched_com_obj in matched_comment_iter:
-    	if matched_com_obj.group().startswith('/'):
-        	comments_span_list.append(matched_com_obj.span())
+	comments_span_list = []
+	for matched_com_obj in matched_comment_iter:
+		if matched_com_obj.group().startswith('/'):
+			comments_span_list.append(matched_com_obj.span())
 
-    comments_span_list = sorted(comments_span_list, key = lambda x: x[0])
-    return comments_span_list
+	comments_span_list = sorted(comments_span_list, key = lambda x: x[0])
+	return comments_span_list
 
 def trimmedSpan(matched_obj):
+	"""
+	Helper function to remove leading white spaces in a span
+	"""
 	current_span = matched_obj.span()
 	line = matched_obj.group()
 	l_trimed_line = line.lstrip()
@@ -45,6 +57,9 @@ def trimmedSpan(matched_obj):
 
 
 def inComment(matched_obj, code_body, comments_span_list = None):
+	"""
+	Checks if a matched object is part of a comment
+	"""
 	if comments_span_list == None:
 		comments_span_list = findCommentSpans(code_body)
 	line_span = trimmedSpan(matched_obj)
@@ -58,6 +73,9 @@ def inComment(matched_obj, code_body, comments_span_list = None):
 	return commentFlag
 
 def recommendReduceByKey(application_code, optimization_report):
+	"""
+	Recommend reduceByKey instead of groupByKey if found in code 
+	"""
 	comments_span_list = findCommentSpans(application_code)
 
 	f = application_code.split("\n")
@@ -84,7 +102,9 @@ def recommendReduceByKey(application_code, optimization_report):
 	return advice_file, optimization_report
 
 def isCached(rdd, comments_span_list, application_code):
-	#change to finditer instead
+	"""
+	Checks if an rdd is cached
+	"""
 	matched_action_iter = re.finditer(r'^\s*(%s)\.(cache|persist)' %rdd, application_code, re.X|re.M)
 	matched_assign_iter = re.finditer(r'(%s)\s*?=[^=]*?((\=\>)[^\n\n]*)*?\.(cache|persist)' %rdd, application_code, re.S|re.X|re.M)
 
@@ -101,6 +121,9 @@ def isCached(rdd, comments_span_list, application_code):
 	return len(uncommented_cached_rdd_set) >= 1
 
 def findAllRDDs(application_code, rdd_patterns):
+	"""
+	Finds all the rdd var names in the code
+	"""
 	comments_span_list = findCommentSpans(application_code)
 	rdd_set = set()
 	matched_iter = re.finditer(r'(val|var)\s*([^=]*?)\s*?=[^=]*?\.(%s)'%rdd_patterns, application_code, re.S|re.X|re.M)
@@ -114,6 +137,9 @@ def findAllRDDs(application_code, rdd_patterns):
 	return rdd_set
 
 def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creations, optimization_report):
+	"""
+	Sets spark.storage.memoryFraction if no rdd cache instance exists
+	"""
 	comments_span_list = findCommentSpans(application_code)
 	rdd_patterns = '|'.join(rdd_actions.split('\n') + rdd_creations.split('\n'))
 	rdd_set = findAllRDDs(application_code, rdd_patterns)
@@ -129,11 +155,17 @@ def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creat
 	return spark_final_conf, optimization_report
 
 def processRddCreationPartitionsPatternNames(rdd_creations_partitions):
+	"""
+	Generates regex pattern for RDD creation names
+	"""
 	rdd_creations_partitions_list = rdd_creations_partitions.split("\n")
 	pattern_list = '|'.join([x.split(",")[0] for x in rdd_creations_partitions_list])
 	return pattern_list
 
 def processRddCreationPartitionsPatternArgs(rdd_creations_partitions):
+	"""
+	Generates regex pattern for X number of args
+	"""
 	rdd_creations_partitions_list = rdd_creations_partitions.split("\n")
 	num_args_set = set()
 
@@ -166,6 +198,9 @@ def processRddCreationPartitionsPatternArgs(rdd_creations_partitions):
 	return final_arg_pattern
 
 def setParallelism(application_code, rdd_creations_partitions, spark_final_conf, optimization_report):
+	"""
+	Ensures RDD instantiation partitions is consistent with spark.default.parallelism
+	"""
 	comments_span_list = findCommentSpans(application_code)
 	default_parallelism = getSettingValue("spark.default.parallelism", spark_final_conf)
 	pattern_names_list = processRddCreationPartitionsPatternNames(rdd_creations_partitions)
