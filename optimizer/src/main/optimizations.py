@@ -74,7 +74,7 @@ def recommendReduceByKey(application_code, optimization_report):
 	return advice_file, optimization_report
 
 def isCached(rdd, comments_span_list, application_code):
-	#add find iter
+	#change to finditer instead
 	matched_action = re.search(r'(%s)\.(cache|persist)' %rdd, application_code, re.X|re.M)
 	matched_assign = re.search(r'^[^/]*?(%s)\s*?=[^=]*?((\=\>)[^\n\n]*)*?\.(cache|persist)' %rdd, application_code, re.S|re.X|re.M)
 
@@ -117,11 +117,11 @@ def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creat
 
 def setParallelism(application_code, rdd_creations_partitions, spark_final_conf, optimization_report):
 	comments_span_list = findCommentSpans(application_code)
-	optimization_report += "\n===================== Parallelism Optimization ========================\n"
+	optimization_report += "\n========================= Parallelism Optimization ===============================\n"
 	default_parallelism = getSettingValue("spark.default.parallelism", spark_final_conf)
 	pattern_list = '|'.join(rdd_creations_partitions.split("\n"))
 	matched_iter = re.finditer(r'''	# captures textFile("anything")
-		^[^/]*				# removing comments
+		^.*				
 		\s*=\s*\w+
 		\.(%s)			# .parallelize|objectFile|textFile|...
 		\(			
@@ -142,8 +142,8 @@ def setParallelism(application_code, rdd_creations_partitions, spark_final_conf,
 			line = matched_obj.group()
 			recommended_line = line.rsplit(")",1)
 			recommended_line = recommended_line[0] + ", " + str(default_parallelism) + ")" + recommended_line[1]
-			optimization_report += "Modified from: " + line + "\n"
-			optimization_report += "To this: " + recommended_line + "\n\n"
+			optimization_report += "Modified from: \n" + line + "\n"
+			optimization_report += "To:\n" + recommended_line + "\n\n"
 			application_code = application_code.replace(line, recommended_line)
 
 	return application_code, optimization_report

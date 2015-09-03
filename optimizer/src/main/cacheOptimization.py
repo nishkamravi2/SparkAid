@@ -86,7 +86,7 @@ def generateSpaceBuffer(length):
 
 def generateCachedCode(cache_candidates, prev_line):
 	leading_spaces = len(prev_line.expandtabs(4)) - len(prev_line.expandtabs(4).lstrip())
-	cache_inserted_code = generateSpaceBuffer(leading_spaces) + "//inserted new cache code below \n"
+	cache_inserted_code = ""
 	cacheOptFlag = 1
 	if len(cache_candidates) == 0:
 		cacheOptFlag = 0
@@ -95,7 +95,7 @@ def generateCachedCode(cache_candidates, prev_line):
 	for rdd in cache_candidates:
 		cached_line = generateSpaceBuffer(leading_spaces) + rdd + ".cache()" + "\n"
 		cache_inserted_code += cached_line
-	cache_inserted_code += generateSpaceBuffer(leading_spaces) + "//end of inserted code\n"
+
 	return cache_inserted_code, cacheOptFlag
 
 def generateApplicationCode (application_code, first_loop_line_num, cache_candidates, optimization_report):
