@@ -90,7 +90,6 @@ def recommendReduceByKey(application_code, optimization_report):
 	for matched_obj in matched_iter:
 		if not inComment(matched_obj, application_code, comments_span_list):
 			line = matched_obj.group()
-			print line, matched_obj.span()
 			advice_file += "Consider using reduceByKey() instead of groupByKey() if possible at: \n" + line + "\n\n"
 			recommendFlag = True
 
