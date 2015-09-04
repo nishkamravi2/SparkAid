@@ -1,5 +1,6 @@
 import re
 import cacheOptimization
+import os
 
 def getSettingValue(key, conf):
 	"""
@@ -62,6 +63,7 @@ def inComment(matched_obj, code_body, comments_span_list = None):
 	"""
 	if comments_span_list == None:
 		comments_span_list = findCommentSpans(code_body)
+
 	line_span = trimmedSpan(matched_obj)
 	start_index = line_span[0]
 	commentFlag = False
@@ -152,7 +154,7 @@ def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creat
 
 	return spark_final_conf, optimization_report
 
-def processRddCreationPartitionsPatternNames(rdd_creations_partitions):
+def processRddCreationPartitionsPatternMethodNames(rdd_creations_partitions):
 	"""
 	Generates regex pattern for RDD creation names
 	"""
@@ -160,7 +162,7 @@ def processRddCreationPartitionsPatternNames(rdd_creations_partitions):
 	pattern_list = '|'.join([x.split(",")[0] for x in rdd_creations_partitions_list])
 	return pattern_list
 
-def processRddCreationPartitionsPatternArgs(rdd_creations_partitions):
+def processRddCreationPartitionsPatternNumArgs(rdd_creations_partitions):
 	"""
 	Generates regex pattern for X number of args
 	"""
@@ -169,8 +171,7 @@ def processRddCreationPartitionsPatternArgs(rdd_creations_partitions):
 
 	for rdd_creation_tuple in rdd_creations_partitions_list:
 		num_args = int(rdd_creation_tuple.split(',')[1])
-		#get the number of times we should append the pattern = maximum number of args the function can take minus 2
-		num_args_set.add(num_args - 2) 
+		num_args_set.add(num_args - 2) #get the number of times we should append the pattern = maximum number of args the function can take minus 2
 
 	final_arg_pattern = ""
 
@@ -195,14 +196,21 @@ def processRddCreationPartitionsPatternArgs(rdd_creations_partitions):
 
 	return final_arg_pattern
 
+def getLineNumber(start, application_code):
+	"""
+	Gets the line number of a given char index in the application code
+	"""
+	line_num = application_code.count(os.linesep, 0, start+1) + 1
+	return line_num
+
 def setParallelism(application_code, rdd_creations_partitions, spark_final_conf, optimization_report):
 	"""
 	Ensures RDD instantiation partitions is consistent with spark.default.parallelism
 	"""
 	comments_span_list = findCommentSpans(application_code)
 	default_parallelism = getSettingValue("spark.default.parallelism", spark_final_conf)
-	pattern_names_list = processRddCreationPartitionsPatternNames(rdd_creations_partitions)
-	pattern_args_list = processRddCreationPartitionsPatternArgs(rdd_creations_partitions)
+	pattern_method_names_list = processRddCreationPartitionsPatternMethodNames(rdd_creations_partitions)
+	pattern_num_args_list = processRddCreationPartitionsPatternNumArgs(rdd_creations_partitions)
 	matched_iter = re.finditer(r'''	# captures textFile("anything")
 		^.*?				
 		\s*=\s*\w+
@@ -210,18 +218,24 @@ def setParallelism(application_code, rdd_creations_partitions, spark_final_conf,
 		\(			
 		(\w*{1})
 		\)
-		'''.format(pattern_names_list, pattern_args_list), application_code, re.X|re.M)
+		'''.format(pattern_method_names_list, pattern_num_args_list), application_code, re.X|re.M)
 
 	parallelism_report = ""
 
+	#a copy is made for determining comments as application_code is getting replaced every iteration of matching
+	application_code_original = application_code
 	if matched_iter:
 		for matched_obj in matched_iter:
-			if inComment(matched_obj, application_code):
+			if inComment(matched_obj, application_code_original):
 				continue
 			line = matched_obj.group()
 			recommended_line = line.rsplit(")",1)
 			recommended_line = recommended_line[0] + ", " + str(default_parallelism) + ")" + recommended_line[1]
-			parallelism_report += "Modified from: \n" + line + "\n" + \
+
+			line_num = getLineNumber(matched_obj.start(), application_code_original)
+
+			parallelism_report += "At line " + str(line_num) + ":\n"+ \
+								  "Modified from: \n" + line + "\n" + \
 								  "To:\n" + recommended_line + "\n\n"
 			application_code = application_code.replace(line, recommended_line)
 

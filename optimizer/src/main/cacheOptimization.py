@@ -30,9 +30,6 @@ def getLoopBodyIndex(indexes, application_code):
 	return body_indexes
 
 def getLoopPatternIndex(loop_patterns, application_code):
-	"""
-	 
-	"""
 	loop_keyword_indexes = []
 	for keyword in loop_patterns:
 		matched_iter = re.finditer(keyword, application_code, re.S)
