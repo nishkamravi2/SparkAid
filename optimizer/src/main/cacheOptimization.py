@@ -2,6 +2,9 @@ import re
 import optimizations as op
 
 def getLoopBodyIndex(indexes, application_code):
+	"""
+	Get loop body indexes from the application code 
+	"""
 	body_indexes = []
 	last_closing_index = -1 #this is to take care of nested loops to prevent overlapping analysis
 	for i in range(len(indexes)):
@@ -27,6 +30,9 @@ def getLoopBodyIndex(indexes, application_code):
 	return body_indexes
 
 def getLoopPatternIndex(loop_patterns, application_code):
+	"""
+	 
+	"""
 	loop_keyword_indexes = []
 	for keyword in loop_patterns:
 		matched_iter = re.finditer(keyword, application_code, re.S)
@@ -79,12 +85,18 @@ def findFirstLoopIndex(loop_patterns, application_code):
 	return first_loop_line_num + 1
 
 def generateSpaceBuffer(length):
+	"""
+	Generates space buffer for inserting rdd.cache() neatly
+	""" 
 	space_buffer = ""
 	for i in range(length):
 		space_buffer += " "
 	return space_buffer
 
 def generateCachedCode(cache_candidates, prev_line):
+	"""
+	Generates cached code and outputs cache flag given rdd cache cache_candidates
+	"""
 	leading_spaces = len(prev_line.expandtabs(4)) - len(prev_line.expandtabs(4).lstrip())
 	cache_inserted_code = ""
 	cacheOptFlag = 1
@@ -98,11 +110,22 @@ def generateCachedCode(cache_candidates, prev_line):
 
 	return cache_inserted_code, cacheOptFlag
 
+def getPrevNonEmptyLine(first_loop_line_num, application_code_array):
+	"""
+	Obtains the line number of the first prescediing non-empty line
+	"""
+	prev_line_num = first_loop_line_num - 2
+	line = application_code_array[prev_line_num]
+	while (line is not None and len(line) == 0):
+		prev_line_num -= 1
+		line = application_code_array[prev_line_num]
+	return max(prev_line_num, 0)
+
 def generateApplicationCode (application_code, first_loop_line_num, cache_candidates, optimization_report):
 	f = application_code.split("\n")
 	if first_loop_line_num >= len(f):
 		first_loop_line_num = 0
-	prev_line_num = max(first_loop_line_num-2, 0)
+	prev_line_num = getPrevNonEmptyLine(first_loop_line_num, f)
 	generatedCode, cacheOptFlag = generateCachedCode(cache_candidates, f[prev_line_num])
 
 	if cacheOptFlag == 0:

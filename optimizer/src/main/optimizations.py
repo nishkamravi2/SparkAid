@@ -80,9 +80,7 @@ def recommendReduceByKey(application_code, optimization_report):
 
 	f = application_code.split("\n")
 	advice_file = "===================== GroupByKey() Recommendation ====================\n"
-	optimization_report += "\n===================== GroupByKey() Recommendation ====================\n"
 	recommendFlag = False
-
 	matched_iter = re.finditer(r'''
 		[^\s]*\.groupByKey.*$
 		''', application_code, re.M|re.X)
@@ -95,9 +93,9 @@ def recommendReduceByKey(application_code, optimization_report):
 
 	if not recommendFlag:
 		advice_file = ""
-		optimization_report += "\n"
 	else:
-		optimization_report += "\nSee spark-code.advice file\n"
+		optimization_report += "\n===================== GroupByKey() Recommendation ====================\n" + \
+							   "\nSee spark-code.advice file\n"
 
 	return advice_file, optimization_report
 
@@ -148,8 +146,8 @@ def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creat
 		if isCached(rdd, comments_span_list, application_code):
 			persistFlag = True
 	if (not persistFlag):
-		optimization_report += "\n===================== Storage Memory Fraction Optimization ===========\n"
-		optimization_report += "\nspark.storage.memoryFraction set to 0.1 since there are no RDDs being persisted/cached.\n" #return this out later.
+		optimization_report += "\n===================== Storage Memory Fraction Optimization ===========\n" + \
+							   "\nspark.storage.memoryFraction set to 0.1 since there are no RDDs being persisted/cached.\n"
 		return changeSettingValue("spark.storage.memoryFraction", "0.1", spark_final_conf), optimization_report
 
 	return spark_final_conf, optimization_report
@@ -223,12 +221,12 @@ def setParallelism(application_code, rdd_creations_partitions, spark_final_conf,
 			line = matched_obj.group()
 			recommended_line = line.rsplit(")",1)
 			recommended_line = recommended_line[0] + ", " + str(default_parallelism) + ")" + recommended_line[1]
-			parallelism_report += "Modified from: \n" + line + "\n"
-			parallelism_report += "To:\n" + recommended_line + "\n\n"
+			parallelism_report += "Modified from: \n" + line + "\n" + \
+								  "To:\n" + recommended_line + "\n\n"
 			application_code = application_code.replace(line, recommended_line)
 
 	if len(parallelism_report):
-		optimization_report += "\n===================== Parallelism Optimization =======================\n"
-		optimization_report += parallelism_report
+		optimization_report += "\n===================== Parallelism Optimization =======================\n" + \
+							   parallelism_report
 
 	return application_code, optimization_report
