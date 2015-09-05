@@ -1,28 +1,10 @@
 import re
 import optimizations as op
 
-<<<<<<< HEAD
-#http://stackoverflow.com/questions/241327/python-snippet-to-remove-c-and-c-comments
-def commentRemover(text):
-    def replacer(match):
-        s = match.group(0)
-        if s.startswith('/'):
-            return " " # note: a space and not an empty string
-        else:
-            return s
-    pattern = re.compile(
-        r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
-        re.DOTALL | re.MULTILINE | re.X
-    )
-    return re.sub(pattern, replacer, text)
-    
-def getBodyIndex(indexes, application_code):
-=======
 def getLoopBodyIndex(indexes, application_code):
 	"""
 	Get loop body indexes from the application code 
 	"""
->>>>>>> master
 	body_indexes = []
 	last_closing_index = -1 #this is to take care of nested loops to prevent overlapping analysis
 	for i in range(len(indexes)):
@@ -50,31 +32,26 @@ def getLoopBodyIndex(indexes, application_code):
 def getLoopPatternIndex(loop_patterns, application_code):
 	loop_keyword_indexes = []
 	for keyword in loop_patterns:
-		matched = re.finditer(keyword, application_code, re.S)
-		loop_keyword_indexes += [m.span() for m in matched]
+		matched_iter = re.finditer(keyword, application_code, re.S)
+		loop_keyword_indexes += [m.span() for m in matched_iter]
 	return loop_keyword_indexes
 
-def getBodyCodeList(loop_body_indexes, application_code):
+def getCodeFromIndexes(loop_body_indexes, application_code):
 	return [application_code[index[0]:index[1]] for index in loop_body_indexes]
 
 def findRDDInBody(body, pattern_list, application_code):
 	comments_span_list = op.findCommentSpans(body)
 	cache_candidates = set()
-<<<<<<< HEAD
-	matched = re.finditer(r'(%s)[.\)]' %pattern_list, body, re.MULTILINE) #only find RDDs that will have actions
-	if matched:
-		for matched_obj in matched:
-=======
 	matched_iter = re.finditer(r'(%s)\s*[.\)]' %pattern_list, body, re.MULTILINE) #only find RDDs that will have actions
 	if matched_iter:
 		for matched_obj in matched_iter:
 			if op.inComment(matched_obj, body):
 				continue
->>>>>>> master
 			cache_candidates.add(matched_obj.group(1))
 	return cache_candidates
 
-def getRDDOutsideLoops(rdd_set, body_code_list, rdd_patterns):
+def getRDDOutsideLoops(application_code, body_code_list, rdd_patterns):
+	rdd_set = op.findAllRDDs(application_code, rdd_patterns)
 	for body in body_code_list:
 		body_rdd_set = op.findAllRDDs(body, rdd_patterns)
 		rdd_set = rdd_set - body_rdd_set
@@ -82,17 +59,11 @@ def getRDDOutsideLoops(rdd_set, body_code_list, rdd_patterns):
 
 def findReassignedRDD(body, pattern_list, comments_span_list, application_code):
 	reassigned_candidates = set()
-<<<<<<< HEAD
-	matched = re.finditer(r'.*(%s)\s+=\s+\w+' %pattern_list, body, re.S)
-	if matched:
-		for matched_obj in matched:
-=======
 	matched_iter = re.finditer(r'.*(%s)\s+=\s+\w+' %pattern_list, body, re.S)
 	if matched_iter:
 		for matched_obj in matched_iter:
 			if op.inComment(matched_obj, body):
 				continue
->>>>>>> master
 			reassigned_candidates.add(matched_obj.group(1))
 	return reassigned_candidates
 
@@ -164,44 +135,17 @@ def generateApplicationCode (application_code, first_loop_line_num, cache_candid
 	return f, optimization_report
 
 def extractLoopBodies(application_code, loop_patterns):
-	
 	#sort indexes by starting indexes to prevent overlap
 	loop_keyword_indexes = sorted(getLoopPatternIndex(loop_patterns, application_code), key=lambda x: x[0])
 	#find all loop body indexes
-	loop_body_indexes = getBodyIndex(loop_keyword_indexes,application_code)
+	loop_body_indexes = getLoopBodyIndex(loop_keyword_indexes,application_code)
 	#get all loop body code
-	loop_body_list = getBodyCodeList(loop_body_indexes, application_code)
+	loop_body_list = getCodeFromIndexes(loop_body_indexes, application_code)
 	return loop_body_list
 
-<<<<<<< HEAD
-def cacheOptimization(application_code, rdd_actions, rdd_creations):
-	optimization_report = "=====================Cache Optimizations========================\n"
-	application_code = commentRemover(application_code)
-	rdd_patterns = '|'.join(rdd_actions.split("\n") + rdd_creations.split("\n")) 
-	loop_patterns = [r'for\s*\(.+?\)\s*\{', r'while\s*\(.+?\)\s*\{', r'do\s*\{.*\}']
-
-	#find all RDDs in the code
-	rdd_set = op.findAllRDDs(application_code, rdd_patterns)
-	#extract all the loop bodies 
-	loop_body_list = extractLoopBodies(application_code, loop_patterns)
-	#extract rdds outside loops
-	rdd_body_set = getRDDOutsideLoops(rdd_set, loop_body_list, rdd_patterns)
-	#create pattern to capture rdds outside
-	regex_pattern = "|".join(rdd_body_set)
-=======
 def getRDDUsedInLoopsSet(loop_body_list, regex_pattern, application_code):
->>>>>>> master
 	cache_candidates = set()
-
-	#cache rdd if rdd is instantiated outside && is in loop && is not cached outside the loop
 	for body in loop_body_list:
-<<<<<<< HEAD
-		cache_candidates.update(findRDDInBody(body, regex_pattern))
-	#clear those that are getting reassigned.
-	for body in loop_body_list:
-		cache_candidates.difference_update(findReassignedRDD(body, regex_pattern))
-	#filter out those that are cached
-=======
 		cache_candidates.update(findRDDInBody(body, regex_pattern, application_code))
 	return cache_candidates
 
@@ -212,14 +156,10 @@ def removeReassignedRDDs(loop_body_list, regex_pattern, cache_candidates, commen
 
 def removeCachedRDDs(cache_candidates, application_code):
 	comments_span_list = op.findCommentSpans(application_code)
->>>>>>> master
 	filtered_cache_candidates = set()
-
 	for rdd in cache_candidates:
 		if op.isCached(rdd, comments_span_list, application_code) == False:
 			filtered_cache_candidates.add(rdd)
-<<<<<<< HEAD
-=======
 	return filtered_cache_candidates
 
 def cacheOptimization(application_code, rdd_actions, rdd_creations):
@@ -240,12 +180,10 @@ def cacheOptimization(application_code, rdd_actions, rdd_creations):
 	cache_candidates = removeReassignedRDDs(loop_body_list, outside_rdd_pattern, cache_candidates, comments_span_list, application_code)
 	#filter out those that are already cached
 	cache_candidates = removeCachedRDDs(cache_candidates, application_code)
->>>>>>> master
 
 	first_loop_linenum = findFirstLoopIndex(loop_patterns, application_code)
-	new_application_code, optimization_report = generateApplicationCode(application_code, first_loop_linenum, filtered_cache_candidates, optimization_report)
+	#insert generated code, and create optimization report
+	new_application_code, optimization_report = generateApplicationCode(application_code, first_loop_linenum, cache_candidates, optimization_report)
 
 	return new_application_code, optimization_report
-
-#dependency for many different loops
-
+	
