@@ -7,12 +7,9 @@ import shutil
 #remove intermediate tmp application code file path
 script_dir = os.path.dirname(__file__)
 application_code_path = open(os.path.join(script_dir, "../../../bin/tmp-code-file-path.txt")).read()
-<<<<<<< HEAD
-=======
 os.remove(os.path.join(script_dir, "../../../bin/tmp-code-file-path.txt"))
 
 #load data from auto-config and data folder
->>>>>>> master
 spark_final_conf_path =  os.path.join(script_dir, "../../../bin/output/spark-final.conf")
 rdd_actions_path = os.path.join(script_dir, "data/RDDActions.txt")
 rdd_creations_path = os.path.join(script_dir, "data/RDDCreations.txt")
