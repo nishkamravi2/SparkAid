@@ -8,6 +8,7 @@ public class DynamicAllocation {
 	static String dynamicAllocationEnabled = "false"; //false
 	static String shuffleServiceEnabled = "false";
 	static String dynamicAllocationMaxExecutors = ""; //Integer.MAX_VALUE
+	static String schedulerMaxRegisteredResourcesWaitingTime = "30000";
 	
 	public static void configureDynamicAllocationSettings(Hashtable<String, String> inputsTable,
 			Hashtable<String, String> optionsTable,
@@ -21,6 +22,7 @@ public class DynamicAllocation {
 		setDynamicAllocationEnabled(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	    setDynamicAllocationMaxExecutors(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	    setShuffleServiceEnabled(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+	    setSchedulerMaxRegisteredResourcesWaitingTime(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
 
 	private static void removeExecutorInstances(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
@@ -44,5 +46,9 @@ public class DynamicAllocation {
 		optionsTable.put("spark.shuffle.service.enabled", shuffleServiceEnabled);
 	}
 	
+	private static void setSchedulerMaxRegisteredResourcesWaitingTime(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		schedulerMaxRegisteredResourcesWaitingTime = "5000";
+		optionsTable.put("spark.scheduler.maxRegisteredResourcesWaitingTime", schedulerMaxRegisteredResourcesWaitingTime);
+	}
 	
 }
