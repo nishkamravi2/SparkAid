@@ -2,4 +2,5 @@ output/*
 test.py
 sample-code
 bin/spark-final.conf
+bin/tmp-code-file-path.txt
 *.pyc
