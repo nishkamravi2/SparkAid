@@ -94,6 +94,9 @@ def getPrevNonEmptyLine(loop_line_num, application_code_array):
 	return max(prev_line_num, 0)
 
 def generateApplicationCode (application_code, loop_line_num, cache_candidates, optimization_report):
+	"""
+	Generates new application code with cache inserts, and an optimization report
+	"""
 	f = application_code.split("\n")
 	if loop_line_num >= len(f):
 		loop_line_num = 0
