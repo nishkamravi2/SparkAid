@@ -1,5 +1,4 @@
 import re
-import cacheOptimization
 import os
 
 def getSettingValue(key, conf):
@@ -101,21 +100,26 @@ def recommendReduceByKey(application_code, optimization_report):
 
 	return advice_file, optimization_report
 
-def isCached(rdd, comments_span_list, application_code):
+def isCached(rdd, comments_span_list, application_code, end_limit = -1):
 	"""
-	Checks if an rdd is cached
+	Checks if an rdd is cached within code from 0 to end_limit
 	"""
-	matched_action_iter = re.finditer(r'^\s*(%s)\.(cache|persist)' %rdd, application_code, re.X|re.M)
-	matched_assign_iter = re.finditer(r'(%s)\s*?=[^=]*?((\=\>)[^\n\n]*)*?\.(cache|persist)' %rdd, application_code, re.S|re.X|re.M)
+	if end_limit == -1:
+		end_limit = len(application_code) - 1
+
+	search_region = application_code[:end_limit]
+
+	matched_action_iter = re.finditer(r'^\s*(%s)\.(cache|persist)' %rdd, search_region, re.X|re.M)
+	matched_assign_iter = re.finditer(r'(%s)\s*?=[^=/]*?((\=\>)[^\n\n]*)*?\.(cache|persist)' %rdd, search_region, re.S|re.X|re.M)
 
 	uncommented_cached_rdd_set = set()
 
 	for matched_obj in matched_action_iter:
-		if not inComment(matched_obj, application_code, comments_span_list):
+		if not inComment(matched_obj, search_region, comments_span_list):
 			uncommented_cached_rdd_set.add(matched_obj.group(1))
 
 	for matched_obj in matched_assign_iter:
-		if not inComment(matched_obj, application_code, comments_span_list):
+		if not inComment(matched_obj, search_region, comments_span_list):
 			uncommented_cached_rdd_set.add(matched_obj.group(1))
 
 	return len(uncommented_cached_rdd_set) >= 1
@@ -224,20 +228,19 @@ def setParallelism(application_code, rdd_creations_partitions, spark_final_conf,
 
 	#a copy is made for determining comments as application_code is getting replaced every iteration of matching
 	application_code_original = application_code
-	if matched_iter:
-		for matched_obj in matched_iter:
-			if inComment(matched_obj, application_code_original):
-				continue
-			line = matched_obj.group()
-			recommended_line = line.rsplit(")",1)
-			recommended_line = recommended_line[0] + ", " + str(default_parallelism) + ")" + recommended_line[1]
+	for matched_obj in matched_iter:
+		if inComment(matched_obj, application_code_original):
+			continue
+		line = matched_obj.group()
+		recommended_line = line.rsplit(")",1)
+		recommended_line = recommended_line[0] + ", " + str(default_parallelism) + ")" + recommended_line[1]
 
-			line_num = getLineNumber(matched_obj.start(), application_code_original)
+		line_num = getLineNumber(matched_obj.start(), application_code_original)
 
-			parallelism_report += "At line " + str(line_num) + ":\n"+ \
-								  "Modified from: \n" + line + "\n" + \
-								  "To:\n" + recommended_line + "\n\n"
-			application_code = application_code.replace(line, recommended_line)
+		parallelism_report += "At line " + str(line_num) + ":\n"+ \
+							  "Modified from: \n" + line + "\n" + \
+							  "To:\n" + recommended_line + "\n\n"
+		application_code = application_code.replace(line, recommended_line)
 
 	if len(parallelism_report):
 		optimization_report += "\n===================== Parallelism Optimization =======================\n" + \
