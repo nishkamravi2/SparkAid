@@ -1,4 +1,4 @@
-import optimizations as op
+import optimizations as opt
 import re
 
 def getLoopBodyIndex(indexes, application_code):
@@ -27,21 +27,21 @@ def getLoopBodyIndex(indexes, application_code):
 		body_indexes.append((start_index,end_index))
 	return body_indexes
 
-def getLoopPatternIndex(loop_patterns, application_code):
+def getLoopPatternPosition(loop_patterns, application_code):
 	"""
-	Gets the index of loop regex occurence in code
+	Gets the position of loop regex (for/while/do) occurence in code
 	"""
-	loop_keyword_indexes = []
+	loop_keyword_positions = []
 	for keyword in loop_patterns:
 		matched_iter = re.finditer(keyword, application_code, re.S)
-		loop_keyword_indexes += [m.span() for m in matched_iter]
-	return loop_keyword_indexes
+		loop_keyword_positions += [matched_obj.span() for matched_obj in matched_iter]
+	return loop_keyword_positions
 
-def getLoopTupleFromIndexes(loop_body_indexes, application_code):
+def getLoopBodyAndSpan(loop_body_indexes, application_code):
 	"""
 	Gets the loop body and index from indexes
 	"""
-	return [(application_code[index[0]:index[1]],index) for index in loop_body_indexes]
+	return [(application_code[span[0]:span[1]],span) for span in loop_body_indexes]
 
 def findReassignedRDD(body, pattern_list, comments_span_list):
 	"""
@@ -51,14 +51,14 @@ def findReassignedRDD(body, pattern_list, comments_span_list):
 	matched_iter = re.finditer(r'.*(%s)\s+=\s+\w+' %pattern_list, body, re.S)
 	if matched_iter:
 		for matched_obj in matched_iter:
-			if op.inComment(matched_obj, body):
+			if opt.inComment(matched_obj, body):
 				continue
 			reassigned_candidates.add(matched_obj.group(1))
 	return reassigned_candidates
 
 def generateSpaceBuffer(length):
 	"""
-	Generates space buffer for inserting rdd.cache() neatly
+	Generates space buffer for inserting rdd.cache() with indentation
 	""" 
 	space_buffer = ""
 	for i in range(length):
@@ -67,78 +67,74 @@ def generateSpaceBuffer(length):
 
 def generateCachedCode(cache_candidates, prev_line):
 	"""
-	Generates cached code and outputs cache flag given rdd cache cache_candidates
+	Generates rdd.cache() for each rdd in cache_candidates and outputs cache flag 
 	"""
 	leading_spaces = len(prev_line.expandtabs(4)) - len(prev_line.expandtabs(4).lstrip())
-	cache_inserted_code = ""
-	cacheOptFlag = 1
-	if len(cache_candidates) == 0:
-		cacheOptFlag = 0
-		return cache_inserted_code, cacheOptFlag
+	generated_code = "" #this is rdd1.cache(), rdd2.cache() ...
+	cache_opt_flag = 0
 
 	for rdd in cache_candidates:
 		cached_line = generateSpaceBuffer(leading_spaces) + rdd + ".cache()" + "\n"
-		cache_inserted_code += cached_line
+		generated_code += cached_line
+		cache_opt_flag = 1
 
-	return cache_inserted_code, cacheOptFlag
+	return generated_code, cache_opt_flag
 
-def getPrevNonEmptyLine(loop_line_num, application_code_array):
+def getPrevNonEmptyLine(loop_line_num, list_application_code):
 	"""
 	Obtains the line number of the first presceding non-empty line
 	"""
 	prev_line_num = loop_line_num - 2
-	line = application_code_array[prev_line_num]
+	line = list_application_code[prev_line_num]
 	while (line is not None and len(line) == 0):
 		prev_line_num -= 1
-		line = application_code_array[prev_line_num]
+		line = list_application_code[prev_line_num]
 	return max(prev_line_num, 0)
 
 def generateApplicationCode (application_code, loop_line_num, cache_candidates, optimization_report):
 	"""
 	Generates new application code with cache inserts, and an optimization report
 	"""
-	f = application_code.split("\n")
-	if loop_line_num >= len(f):
+	list_application_code = application_code.split("\n")
+	if loop_line_num >= len(list_application_code):
 		loop_line_num = 0
-	prev_line_num = getPrevNonEmptyLine(loop_line_num, f)
-	generatedCode, cacheOptFlag = generateCachedCode(cache_candidates, f[prev_line_num])
+	prev_line_num = getPrevNonEmptyLine(loop_line_num, list_application_code)
+	generated_code, cache_opt_flag = generateCachedCode(cache_candidates, list_application_code[prev_line_num])
 
-	if cacheOptFlag == 0:
-		# optimization_report += "No cache optimizations done.\n"
-		return application_code, optimization_report
+	if cache_opt_flag == 1:
+		optimization_report += "Inserted code block at Line: " + str(loop_line_num) + "\n" + generated_code + "\n"
+		application_code = '\n'.join(list_application_code[:loop_line_num - 1]) + '\n' + generated_code + '\n'.join(list_application_code[loop_line_num - 1:])
 
-	optimization_report += "Inserted code block at Line: " + str(loop_line_num) + "\n" + generatedCode + "\n"
-	f = '\n'.join(f[:loop_line_num - 1]) + '\n' + generatedCode + '\n'.join(f[loop_line_num - 1:])
-	return f, optimization_report
+	return application_code, optimization_report
 
-def extractLoopBodyAndIndexes(application_code, loop_patterns):
+def extractLoopBodyAndPositions(application_code, loop_patterns):
 	"""
-	Extracts loop body strings and their corresponding indexes
+	Extracts loop body strings and their corresponding position indexes
 	"""
-	#sort indexes by starting indexes to prevent overlap
-	loop_keyword_indexes = sorted(getLoopPatternIndex(loop_patterns, application_code), key=lambda x: x[0])
+	#sort positions by starting positions
+	loop_keyword_positions = sorted(getLoopPatternPosition(loop_patterns, application_code), key=lambda x: x[0])
 	#find all loop body indexes
-	loop_body_indexes = getLoopBodyIndex(loop_keyword_indexes,application_code)
+	loop_body_positions = getLoopBodyIndex(loop_keyword_positions, application_code)
 	#get all loop body code
-	loop_tuple_list = getLoopTupleFromIndexes(loop_body_indexes, application_code)
+	loop_tuple_list = getLoopBodyAndSpan(loop_body_positions, application_code)
 	return loop_tuple_list
 
 
-def getRDDsFromLoops(loop, rdd_patterns):
+def getRDDsFromLoops(loop, rdd_actions):
 	"""
 	finds all RDD candidates from loop and returns it as a set
 	"""
-	comments_span_list = op.findCommentSpans(loop)
+	comments_span_list = opt.findCommentSpans(loop)
 	rdd_set = set()
-	non_arg_matched_iter = re.finditer(r'(\w+?)\.(%s)'%rdd_patterns, loop, re.S|re.X|re.M)
+	non_arg_matched_iter = re.finditer(r'(\w+?)\.(%s)'%rdd_actions, loop, re.S|re.X|re.M)
 	for matched_obj in non_arg_matched_iter:
-		if not op.inComment(matched_obj, loop, comments_span_list):
+		if not opt.inComment(matched_obj, loop, comments_span_list):
 			rddname = matched_obj.group(1)
 			rdd_set.add(rddname) 
 
-	arg_matched_iter = re.finditer(r'(%s)\(\s*(\w+?)\s*\)'%rdd_patterns, loop, re.S|re.X|re.M)
+	arg_matched_iter = re.finditer(r'(%s)\(\s*(\w+?)\s*\)'%rdd_actions, loop, re.S|re.X|re.M)
 	for matched_obj in arg_matched_iter:
-		if not op.inComment(matched_obj, loop, comments_span_list):
+		if not opt.inComment(matched_obj, loop, comments_span_list):
 			rddname = matched_obj.group(2)
 			rdd_set.add(rddname) 
 
@@ -148,10 +144,10 @@ def removeCachedRDDs(cache_candidate_set, application_code, end_limit):
 	"""
 	Removes cached rdds from set that occur before end_limit in application_code
 	"""
-	comments_span_list = op.findCommentSpans(application_code)
+	comments_span_list = opt.findCommentSpans(application_code)
 	filtered_cache_candidates = set()
 	for rdd in cache_candidate_set:
-		if op.isCached(rdd, comments_span_list, application_code, end_limit) == False:
+		if opt.isCached(rdd, comments_span_list, application_code, end_limit) == False:
 			filtered_cache_candidates.add(rdd)
 	return filtered_cache_candidates
 
@@ -160,11 +156,13 @@ def initBeforeLoop(application_code, rdd, end_limit):
 	Finds all the rdd var names in the code
 	"""
 	search_region = application_code[:end_limit]
-	comments_span_list = op.findCommentSpans(search_region)
+	comments_span_list = opt.findCommentSpans(search_region)
 	rdd_set = set()
-	matched_iter = re.findall(r'(val|var)\s*(%s)\s*?='%rdd, search_region, re.S|re.X|re.M)
-
-	return len(matched_iter) > 0
+	matched_iter = re.finditer(r'(val|var)\s*(%s)\s*?='%rdd, search_region, re.S|re.X|re.M)
+	for matched_obj in matched_iter:
+		if not opt.inComment (matched_obj, search_region):
+			rdd_set.add(matched_obj.group())
+	return len(rdd_set) > 0
 
 def removeRDDsInitBeforeLoop(application_code, cache_candidate_set, loop_start_index):
 	"""
@@ -181,7 +179,7 @@ def removeReassignedRDDs(loop, cache_candidate_set):
 	Removes reassigned RDDs from set within the loop
 	"""
 	rdd_candidate_regex_pattern = '|'.join(cache_candidate_set)
-	comments_span_list = op.findCommentSpans(loop)
+	comments_span_list = opt.findCommentSpans(loop)
 	cache_candidate_set.difference_update(findReassignedRDD(loop, rdd_candidate_regex_pattern, comments_span_list))
 
 	return cache_candidate_set
@@ -193,9 +191,9 @@ def cacheOptimization(application_code, rdd_actions, rdd_creations):
 	optimization_report = "===================== Cache Optimization =============================\n"
 	updated_opt_report = optimization_report
 	new_application_code = application_code
-	rdd_actions = '|'.join(rdd_actions.split("\n")) 
+	rdd_actions = '|'.join(rdd_actions.split("\n")) # (a|b|c)
 	loop_patterns = [r'for\s*\(.+?\)\s*\{', r'while\s*\(.+?\)\s*\{', r'do\s*\{.*\}']
-	loop_tuple_list = extractLoopBodyAndIndexes(application_code, loop_patterns)
+	loop_tuple_list = extractLoopBodyAndPositions(application_code, loop_patterns) #change to positions
 	loop_line_num_offset = 0 #this is to help to offset line numbers when additional code is added
 	global_cache_set = set()
 
@@ -210,12 +208,12 @@ def cacheOptimization(application_code, rdd_actions, rdd_creations):
 		cache_candidate_set = removeCachedRDDs(cache_candidate_set, application_code, loop_start_index)
 		#remove RDDs not initialized outside, and before the loop
 		cache_candidate_set = removeRDDsInitBeforeLoop(application_code, cache_candidate_set, loop_start_index)
-		#remove RDDs that have been already been cached through optimizations
+		#remove RDDs that have been already been cached through our optimizations in a prior loop
 		cache_candidate_set.difference_update(global_cache_set)
-		#update all RDDs that will be cached in optimized code
+		#update the set of RDDs cached through our optimizations
 		global_cache_set.update(cache_candidate_set)
 		#get loop line number
-		loop_line_num = op.getLineNumber(loop_start_index, application_code) 
+		loop_line_num = opt.getLineNumber(loop_start_index, application_code) 
 		#generate application code
 		new_application_code, updated_opt_report = generateApplicationCode(new_application_code, loop_line_num + loop_line_num_offset, cache_candidate_set, updated_opt_report)
 		#update line insertion offset for optimized code
