@@ -1,31 +1,28 @@
 import optimizations as opt
 import re
 
-def getLoopBodyIndex(indexes, application_code):
+def getLoopBodySpans(keyword_positions, application_code):
 	"""
-	Get loop body indexes from the application code 
+	Get loop body spans from the application code and keyword_positions
 	"""
-	body_indexes = []
-	last_closing_index = -1 #this is to take care of nested loops to prevent overlapping analysis
-	for i in range(len(indexes)):
-		start_index = indexes[i][0]
-		end_index = -1
+	body_spans = []
+	for i in range(len(keyword_positions)):
+		start_pos = keyword_positions[i][0]
+		end_pos = -1
 		stack = []
-		for j in range(start_index,len(application_code)):
+		for j in range(start_pos,len(application_code)):
 			curr_char = application_code[j]
 			if curr_char == "{":
 				stack.append(curr_char)
-				if start_index == indexes[i][0]: #re-initialize start index
-					start_index = j
+				if start_pos == keyword_positions[i][0]: #re-initialize start index
+					start_pos = j
 			elif curr_char == "}":
-				stack.pop()	 #error check for incorrect open close brackets
+				stack.pop()	 
 				if (len(stack)==0):
-					end_index = j+1
-					last_closing_index = end_index #this is to take care of nested loops to prevent overlapping analysis
+					end_pos = j+1
 					break;
-		#error check for invalid open close (with end index)
-		body_indexes.append((start_index,end_index))
-	return body_indexes
+		body_spans.append((start_pos,end_pos))
+	return body_spans
 
 def getLoopPatternPosition(loop_patterns, application_code):
 	"""
@@ -37,11 +34,11 @@ def getLoopPatternPosition(loop_patterns, application_code):
 		loop_keyword_positions += [matched_obj.span() for matched_obj in matched_iter]
 	return loop_keyword_positions
 
-def getLoopBodyAndSpan(loop_body_indexes, application_code):
+def getLoopBodyAndSpan(loop_body_spans, application_code):
 	"""
-	Gets the loop body and index from indexes
+	Gets the loop body and spans from keyword_positions
 	"""
-	return [(application_code[span[0]:span[1]],span) for span in loop_body_indexes]
+	return [(application_code[span[0]:span[1]],span) for span in loop_body_spans]
 
 def findReassignedRDD(body, pattern_list, comments_span_list):
 	"""
@@ -113,10 +110,10 @@ def extractLoopBodyAndPositions(application_code, loop_patterns):
 	"""
 	#sort positions by starting positions
 	loop_keyword_positions = sorted(getLoopPatternPosition(loop_patterns, application_code), key=lambda x: x[0])
-	#find all loop body indexes
-	loop_body_positions = getLoopBodyIndex(loop_keyword_positions, application_code)
+	#find all loop body spans
+	loop_body_spans = getLoopBodySpans(loop_keyword_positions, application_code)
 	#get all loop body code
-	loop_tuple_list = getLoopBodyAndSpan(loop_body_positions, application_code)
+	loop_tuple_list = getLoopBodyAndSpan(loop_body_spans, application_code)
 	return loop_tuple_list
 
 
@@ -164,13 +161,13 @@ def initBeforeLoop(application_code, rdd, end_limit):
 			rdd_set.add(matched_obj.group())
 	return len(rdd_set) > 0
 
-def removeRDDsInitBeforeLoop(application_code, cache_candidate_set, loop_start_index):
+def removeRDDsInitBeforeLoop(application_code, cache_candidate_set, loop_start_position):
 	"""
 	Removes RDDs that were not initalized before the loop
 	"""
 	filtered_set = set()
 	for candidate in cache_candidate_set:
-		if initBeforeLoop(application_code, candidate, loop_start_index):
+		if initBeforeLoop(application_code, candidate, loop_start_position):
 			filtered_set.add(candidate)
 	return filtered_set
 
@@ -199,21 +196,21 @@ def cacheOptimization(application_code, rdd_actions, rdd_creations):
 
 	for loop_tuple in loop_tuple_list:
 		loop = loop_tuple[0]
-		loop_start_index = loop_tuple[1][0]
+		loop_start_position = loop_tuple[1][0]
 		#get RDDs from loop
 		cache_candidate_set = getRDDsFromLoops(loop, rdd_actions)
 		#remove re-assigned RDDs
 		cache_candidate_set = removeReassignedRDDs(loop, cache_candidate_set)
 		#remove cached RDDs
-		cache_candidate_set = removeCachedRDDs(cache_candidate_set, application_code, loop_start_index)
+		cache_candidate_set = removeCachedRDDs(cache_candidate_set, application_code, loop_start_position)
 		#remove RDDs not initialized outside, and before the loop
-		cache_candidate_set = removeRDDsInitBeforeLoop(application_code, cache_candidate_set, loop_start_index)
+		cache_candidate_set = removeRDDsInitBeforeLoop(application_code, cache_candidate_set, loop_start_position)
 		#remove RDDs that have been already been cached through our optimizations in a prior loop
 		cache_candidate_set.difference_update(global_cache_set)
 		#update the set of RDDs cached through our optimizations
 		global_cache_set.update(cache_candidate_set)
 		#get loop line number
-		loop_line_num = opt.getLineNumber(loop_start_index, application_code) 
+		loop_line_num = opt.getLineNumber(loop_start_position, application_code) 
 		#generate application code
 		new_application_code, updated_opt_report = generateApplicationCode(new_application_code, loop_line_num + loop_line_num_offset, cache_candidate_set, updated_opt_report)
 		#update line insertion offset for optimized code
