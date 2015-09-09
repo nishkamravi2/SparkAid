@@ -14,7 +14,7 @@ def getLoopBodySpans(keyword_positions, application_code):
 			curr_char = application_code[j]
 			if curr_char == "{":
 				stack.append(curr_char)
-				if start_pos == keyword_positions[i][0]: #re-initialize start index
+				if start_pos == keyword_positions[i][0]: 
 					start_pos = j
 			elif curr_char == "}":
 				stack.pop()	 
