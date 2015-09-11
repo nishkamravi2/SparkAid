@@ -69,3 +69,4 @@ unpersist
 zipWithIndex
 zipWithUniqueId
 map
+flatMap

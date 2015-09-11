@@ -73,6 +73,26 @@ def inComment(matched_obj, code_body, comments_span_list = None):
 
 	return commentFlag
 
+def inFunctionDeclHelper(span, code_body, func_spans):
+	"""
+	Checks if a span is in function declaration
+	"""
+	start_pos , end_pos = span
+	inFunctionFlag = False
+
+	for i in range(len(func_spans)):
+		if start_pos >= func_spans[i][0] and end_pos <= func_spans[i][1]:
+			inFunctionFlag = True
+
+	return inFunctionFlag
+
+def inFunctionDecl(matched_obj, code_body, func_spans):
+	"""
+	Checks if a matched object is in function declaration
+	"""
+	line_span = trimmedSpan(matched_obj)
+	return inFunctionDeclHelper(line_span, code_body, func_spans)
+
 def recommendReduceByKey(application_code, optimization_report):
 	"""
 	Recommend reduceByKey instead of groupByKey if found in code 
@@ -100,14 +120,40 @@ def recommendReduceByKey(application_code, optimization_report):
 
 	return advice_file, optimization_report
 
-def isCached(rdd, comments_span_list, application_code, end_limit = -1):
+def spansWithEndLimit(func_spans, end_limit):
+	"""
+	Gets the spans of function from start to end_limit
+	"""
+	span_with_limit = []
+	for i in range(len(func_spans)):
+		start_pos, end_pos = func_spans[i]
+		if end_pos < end_limit:
+			span_with_limit.append((start_pos,end_pos))
+			continue
+		if end_limit > start_pos and end_limit < end_pos:
+			span_with_limit.append((start_pos,end_limit))
+	return span_with_limit
+
+def extractSearchRegion(func_spans, application_code):
+	"""
+	Extracts Search region from application code and spans
+	"""
+	search_region = [application_code[span[0]:span[1]] for span in func_spans]
+	search_region = "\n".join(search_region)
+	return search_region
+
+def isCached(rdd, comments_span_list, application_code, end_limit, func_spans = None):
 	"""
 	Checks if an rdd is cached within code from 0 to end_limit
 	"""
+	search_region = ""
+
 	if end_limit == -1:
 		end_limit = len(application_code) - 1
-
-	search_region = application_code[:end_limit]
+		search_region = application_code[:end_limit]
+	if func_spans is not None:
+		span_with_limit = spansWithEndLimit(func_spans, end_limit)
+		search_region = extractSearchRegion(span_with_limit, application_code)
 
 	matched_action_iter = re.finditer(r'^\s*(%s)\.(cache|persist)' %rdd, search_region, re.X|re.M)
 	matched_assign_iter = re.finditer(r'(%s)\s*?=[^=/]*?((\=\>)[^\n\n]*)*?\.(cache|persist)' %rdd, search_region, re.S|re.X|re.M)
@@ -124,13 +170,38 @@ def isCached(rdd, comments_span_list, application_code, end_limit = -1):
 
 	return len(uncommented_cached_rdd_set) >= 1
 
-def findAllRDDs(application_code, rdd_patterns):
+def addReassignedRDDs(application_code, rdd_set, accum_set = set()):
+	"""
+	Recursively finds rdds that are reassignments of rdds. val rdd1 = rdd2
+	"""
+	comments_span_list = findCommentSpans(application_code)
+	rdd_list = [rdd for rdd in rdd_set]
+	rdd_patterns = "|".join(rdd_list)
+	rdd_copied_set = set()
+	accum_set = accum_set.union(rdd_set)
+	matched_iter = re.finditer(r'(val|var)\s*([^=\s]+)\s*?=\s*(%s)'%rdd_patterns, application_code, re.S|re.X|re.M)
+	if matched_iter:
+		for matched_obj in matched_iter:
+			line = matched_obj.group()
+			if not inComment(matched_obj, application_code, comments_span_list):
+				rddname = matched_obj.group(2)
+				rdd_copied_set.add(rddname) 
+
+	#remove already counted rdd names
+	rdd_copied_set = rdd_copied_set.difference(accum_set)
+	if len(rdd_copied_set) == 0:
+		return accum_set
+	else:
+		accum_set = accum_set.union(rdd_copied_set)
+		return addReassignedRDDs(application_code,rdd_copied_set, accum_set) 
+
+def findInitialRDDs(application_code, rdd_method_patterns):
 	"""
 	Finds all the rdd var names in the code
 	"""
 	comments_span_list = findCommentSpans(application_code)
 	rdd_set = set()
-	matched_iter = re.finditer(r'(val|var)\s*([^=]*?)\s*?=[^=]*?\.(%s)'%rdd_patterns, application_code, re.S|re.X|re.M)
+	matched_iter = re.finditer(r'(val|var)\s*([^=/]*?)\s*?=[^=/]*?\.(%s)'%rdd_method_patterns, application_code, re.S|re.X|re.M)
 	if matched_iter:
 		for matched_obj in matched_iter:
 			line = matched_obj.group()
@@ -145,11 +216,12 @@ def setMemoryFraction(application_code, spark_final_conf, rdd_actions, rdd_creat
 	Sets spark.storage.memoryFraction if no rdd cache instance exists
 	"""
 	comments_span_list = findCommentSpans(application_code)
-	rdd_patterns = '|'.join(rdd_actions.split('\n') + rdd_creations.split('\n'))
-	rdd_set = findAllRDDs(application_code, rdd_patterns)
+	rdd_method_patterns = '|'.join(rdd_actions.split('\n') + rdd_creations.split('\n'))
+	rdd_set = findInitialRDDs(application_code, rdd_method_patterns)
+	rdd_set = addReassignedRDDs(application_code, rdd_set)
 	persistFlag = False
 	for rdd in rdd_set:
-		if isCached(rdd, comments_span_list, application_code):
+		if isCached(rdd, comments_span_list, application_code, -1):
 			persistFlag = True
 	if (not persistFlag):
 		optimization_report += "\n===================== Storage Memory Fraction Optimization ===========\n" + \
