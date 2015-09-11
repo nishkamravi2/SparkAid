@@ -181,10 +181,15 @@ def removeCachedRDDs(cache_candidate_set, application_code, end_limit, func_span
 			filtered_cache_candidates.add(rdd)
 	return filtered_cache_candidates
 
-def initBeforeLoop(application_code, rdd, end_limit, func_spans):
+def initBeforeLoop(application_code, rdd, end_limit, func_spans, func_rdd_args):
 	"""
 	Finds all the rdd var names in the code
 	"""
+	#Check if the args of the function was one of the candidate
+	for rdd_arg in func_rdd_args:
+		if rdd_arg == rdd:
+			return True
+
 	span_with_limit = opt.spansWithEndLimit(func_spans, end_limit)
 	search_region = opt.extractSearchRegion(span_with_limit, application_code)
 	comments_span_list = opt.findCommentSpans(search_region)
@@ -195,13 +200,13 @@ def initBeforeLoop(application_code, rdd, end_limit, func_spans):
 			rdd_set.add(matched_obj.group())
 	return len(rdd_set) > 0
 
-def removeRDDsInitBeforeLoop(application_code, cache_candidate_set, loop_start_position, func_spans):
+def removeRDDsInitBeforeLoop(application_code, cache_candidate_set, loop_start_position, func_spans, func_rdd_args):
 	"""
 	Removes RDDs that were not initialized before the loop
 	"""
 	filtered_set = set()
 	for candidate in cache_candidate_set:
-		if initBeforeLoop(application_code, candidate, loop_start_position, func_spans):
+		if initBeforeLoop(application_code, candidate, loop_start_position, func_spans, func_rdd_args):
 			filtered_set.add(candidate)
 	return filtered_set
 
@@ -238,7 +243,7 @@ def generateNewApplicationCodeAndOptReport(application_code, line_insert_list):
 	new_application_code = "\n".join(list_application_code)
 	return new_application_code, updated_opt_report
 
-def functionCacheOpt(application_code, rdd_actions, rdd_functions, func_spans):
+def functionCacheOpt(application_code, rdd_actions, rdd_functions, func_spans, func_rdd_args):
 	"""
 	Finds RDDs that should be cached and inserts the code to do so
 	"""
@@ -260,7 +265,7 @@ def functionCacheOpt(application_code, rdd_actions, rdd_functions, func_spans):
 		#remove cached RDDs
 		cache_candidate_set = removeCachedRDDs(cache_candidate_set, application_code, loop_start_position, func_spans) 
 		#remove RDDs not initialized outside, and before the loop
-		cache_candidate_set = removeRDDsInitBeforeLoop(application_code, cache_candidate_set, loop_start_position, func_spans) 
+		cache_candidate_set = removeRDDsInitBeforeLoop(application_code, cache_candidate_set, loop_start_position, func_spans, func_rdd_args) 
 		#remove RDDs that have been already been cached through our optimizations in a prior loop
 		cache_candidate_set.difference_update(global_cache_set)
 		#update the set of RDDs cached through our optimizations
@@ -426,7 +431,13 @@ def cacheOptimization(application_code, rdd_actions, rdd_creations):
 	for func in closure_function_list:
 	    # function_body = extractFunctionBody(func, application_code)
 	    func_spans = func[2]
-	    master_line_insert_list += functionCacheOpt(application_code, rdd_actions, closure_function_list, func_spans)
+	    func_rdd_args = func[1]
+	    for args in func_rdd_args:
+	    	arg_name = args[0]
+	    	arg_type = args[1]
+	    	if hasRDDType(arg_type):
+	    		func_rdd_args.append(arg_name)
+	    master_line_insert_list += functionCacheOpt(application_code, rdd_actions, closure_function_list, func_spans, func_rdd_args)
 
 	optimized_code, optimization_report = generateNewApplicationCodeAndOptReport(application_code, master_line_insert_list)
 	return optimized_code, optimization_report
