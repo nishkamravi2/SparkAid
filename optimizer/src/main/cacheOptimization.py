@@ -296,7 +296,7 @@ def hasRDDType(return_type_regex):
 	"""
 	Checks if return type is RDD type
 	"""
-	if "RDD" in return_type_regex:
+	if "RDD" in return_type_regex or "rdd" in return_type_regex or "Rdd" in return_type_regex: 
 	    return True
 	return False
 
@@ -404,18 +404,17 @@ def extractFunctionData(application_code):
 
     return closure_function_list
 
-#ensure correctness of line numbers
-def extractFunctionBody(func, application_code):
-	"""
-	Extracts function body from application code
-	"""
-	effective_span_list = func[2]
-	function_body = ""
-	last_span_added_line_num = 0
-	for i in range(len(effective_span_list)):
-		span = effective_span_list[i]
-		function_body += application_code[span[0]:span[1]] 
-	return function_body
+# def extractFunctionBody(func, application_code):
+# 	"""
+# 	Extracts function body from application code
+# 	"""
+# 	effective_span_list = func[2]
+# 	function_body = ""
+# 	last_span_added_line_num = 0
+# 	for i in range(len(effective_span_list)):
+# 		span = effective_span_list[i]
+# 		function_body += application_code[span[0]:span[1]] 
+# 	return function_body
 
 def cacheOptimization(application_code, rdd_actions, rdd_creations):
 	"""
@@ -425,7 +424,7 @@ def cacheOptimization(application_code, rdd_actions, rdd_creations):
 	master_line_insert_list = []
 
 	for func in closure_function_list:
-	    function_body = extractFunctionBody(func, application_code)
+	    # function_body = extractFunctionBody(func, application_code)
 	    func_spans = func[2]
 	    master_line_insert_list += functionCacheOpt(application_code, rdd_actions, closure_function_list, func_spans)
 
