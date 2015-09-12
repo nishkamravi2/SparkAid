@@ -185,10 +185,10 @@ def initBeforeLoop(application_code, rdd, end_limit, func_spans, func_rdd_args):
 	"""
 	Finds all the rdd var names in the code
 	"""
-	#Check if the args of the function was one of the candidate
-	# for rdd_arg in func_rdd_args:
-	# 	if rdd_arg == rdd:
-	# 		return True
+	# Check if the args of the function was one of the candidate
+	for rdd_arg in func_rdd_args:
+		if rdd_arg == rdd:
+			return True
 
 	span_with_limit = opt.spansWithEndLimit(func_spans, end_limit)
 	search_region = opt.extractSearchRegion(span_with_limit, application_code)
