@@ -235,12 +235,9 @@ def generateNewApplicationCodeAndOptReport(application_code, line_insert_list):
 		generated_code = line_insert_list[i][1]
 		offset = line_insert_list[i][2]
 		split_pt = loop_num + line_num_offset - 1
-		new_application_code_list = new_application_code_list[:split_pt] + [generated_code] + new_application_code_list[split_pt:]
-		#used to deal with the ptr
-		new_application_code_list = "\n".join(new_application_code_list).split("\n")
+		new_application_code_list = new_application_code_list[:split_pt] + generated_code.split("\n") + new_application_code_list[split_pt:]
 		updated_opt_report += "Inserted code block at Line: " + str(loop_num + line_num_offset) + "\n" + generated_code + "\n"
 		line_num_offset += offset
-
 
 	if updated_opt_report == optimization_report:
 		updated_opt_report += "No cache optimizations done.\n"
