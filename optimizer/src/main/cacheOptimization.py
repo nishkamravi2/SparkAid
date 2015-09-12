@@ -186,9 +186,9 @@ def initBeforeLoop(application_code, rdd, end_limit, func_spans, func_rdd_args):
 	Finds all the rdd var names in the code
 	"""
 	#Check if the args of the function was one of the candidate
-	for rdd_arg in func_rdd_args:
-		if rdd_arg == rdd:
-			return True
+	# for rdd_arg in func_rdd_args:
+	# 	if rdd_arg == rdd:
+	# 		return True
 
 	span_with_limit = opt.spansWithEndLimit(func_spans, end_limit)
 	search_region = opt.extractSearchRegion(span_with_limit, application_code)
@@ -229,18 +229,24 @@ def generateNewApplicationCodeAndOptReport(application_code, line_insert_list):
 	line_insert_list = sorted(line_insert_list, key = lambda x: x[0])
 	list_application_code = application_code.split("\n")
 	line_num_offset = 0
+	new_application_code_list = list_application_code
 	for i in range(len(line_insert_list)):
 		loop_num = line_insert_list[i][0]
 		generated_code = line_insert_list[i][1]
 		offset = line_insert_list[i][2]
-		list_application_code = list_application_code[:loop_num + line_num_offset - 1] + [generated_code] + list_application_code[loop_num + line_num_offset - 1:]
+		split_pt = loop_num + line_num_offset - 1
+		new_application_code_list = new_application_code_list[:split_pt] + [generated_code] + new_application_code_list[split_pt:]
+		#used to deal with the ptr
+		new_application_code_list = "\n".join(new_application_code_list).split("\n")
 		updated_opt_report += "Inserted code block at Line: " + str(loop_num + line_num_offset) + "\n" + generated_code + "\n"
 		line_num_offset += offset
+
 
 	if updated_opt_report == optimization_report:
 		updated_opt_report += "No cache optimizations done.\n"
 
-	new_application_code = "\n".join(list_application_code)
+	new_application_code = "\n".join(new_application_code_list)
+
 	return new_application_code, updated_opt_report
 
 def functionCacheOpt(application_code, rdd_actions, rdd_functions, func_spans, func_rdd_args):
@@ -274,7 +280,7 @@ def functionCacheOpt(application_code, rdd_actions, rdd_functions, func_spans, f
 		loop_line_num = opt.getLineNumber(loop_start_position, application_code) 
 		#generate line insertion list
 		line_insert_list = generateLineInsertList(application_code, loop_line_num , cache_candidate_set, line_insert_list)
-		
+
 	return line_insert_list
 
 ###############################################################################
