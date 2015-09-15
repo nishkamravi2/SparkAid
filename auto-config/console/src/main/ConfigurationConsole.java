@@ -269,6 +269,7 @@ public class ConfigurationConsole {
 				outFile.createNewFile();
 			}
 			BufferedWriter b1 = new BufferedWriter(new FileWriter(outFile));	
+			filePath = filePath.trim();
 			b1.write(filePath);
 			b1.close();
 		}
