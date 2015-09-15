@@ -110,8 +110,6 @@ public class Common {
 		
 		public static void setExecutionBehavior(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 		    setDefaultParallelism(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setStorageMemoryFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		    setStorageUnrollFraction(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		}
 		
 		public static void setNetworking(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
@@ -344,14 +342,6 @@ public class Common {
 			optionsTable.put("spark.default.parallelism", defaultParallelism);
 			recommendationsTable.put("spark.default.parallelism","Try doubling this value for potential performance gains. Set the same value in the code. "
 					+ "E.g. sc.textFile( path/to/file, default-parallelism-value)");
-		}
-	
-		private static void setStorageMemoryFraction(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			recommendationsTable.put("spark.storage.memoryFraction", "Reduce this to 0.1 if there is no RDD caching/persistence in the app");
-		}
-	
-		private static void setStorageUnrollFraction(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			recommendationsTable.put("spark.storage.unrollFraction", "Reduce this to 0.1 if there is no RDD caching/persistence in the app");
 		}
 		
 		//Networking
