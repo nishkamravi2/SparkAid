@@ -47,6 +47,7 @@ public class ConfigurationConsole {
 		
 		//output tables
 		Hashtable<String, String> optionsTable = new Hashtable<String, String>();
+		Hashtable<String, String> defaultOptionsTable = new Hashtable<String, String>();
 		Hashtable<String, String> recommendationsTable = new Hashtable<String, String>();
 		Hashtable<String, String> commandLineParamsTable = new Hashtable<String, String>();
 		
@@ -156,6 +157,7 @@ public class ConfigurationConsole {
                 String optionKey = lineArray[0];
                 String optionValue = lineArray[1];
                 optionsTable.put(optionKey, optionValue);
+                defaultOptionsTable.put(optionKey, optionValue);
             }    
             bufferedReader.close();            
         }
@@ -180,8 +182,8 @@ public class ConfigurationConsole {
 		//configure necessary Streaming settings
 		Streaming.configureStreamingSettings(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		
-		createOutputFile(sparkFinalConf, optionsTable, "options");
-		createOutputFile(sparkConfAdvice, recommendationsTable, "recommendations");
+		createOutputFile(sparkFinalConf, optionsTable, defaultOptionsTable, "options");
+		createOutputFile(sparkConfAdvice, recommendationsTable, defaultOptionsTable, "recommendations");
 		
 		createCodePathFile(codeFilePath, codePath);
 		
@@ -232,7 +234,7 @@ public class ConfigurationConsole {
 		return categoryTable;
 	}
 	
-	private static void writeCategory(Hashtable <String, String> catTable , BufferedWriter b){
+	private static void writeCategory(Hashtable <String, String> catTable , Hashtable<String,String> defaultTable, BufferedWriter b, String fileType){
 		int startParamIndex = 71;
 		ArrayList <String> tableKeySet = new ArrayList<String>(catTable.keySet());
 		Collections.sort(tableKeySet);
@@ -245,6 +247,13 @@ public class ConfigurationConsole {
 				if (value.equals("")) { // if nothing was set, do not add it to outfile
 					continue;
 				}
+				if (fileType.equals("options")){
+					String defaultValue = defaultTable.get(key);
+					if (defaultValue == null || !defaultValue.equals(value)){
+						b.write("###################################################################### modified:\n");
+					}
+				}
+
 				b.write(key + spaceBuffer(spaceBufferLength) + value + "\n");
 			}
 		}
@@ -260,6 +269,7 @@ public class ConfigurationConsole {
 				outFile.createNewFile();
 			}
 			BufferedWriter b1 = new BufferedWriter(new FileWriter(outFile));	
+			filePath = filePath.trim();
 			b1.write(filePath);
 			b1.close();
 		}
@@ -268,7 +278,7 @@ public class ConfigurationConsole {
 		}
 	}
 	
-	private static void createOutputFile(String fileName, Hashtable<String,String> table, String fileType){
+	private static void createOutputFile(String fileName, Hashtable<String,String> table, Hashtable<String,String> defaultTable, String fileType){
 		try{
 			File outFile = new File(fileName);
 			if (!outFile.exists()) {
@@ -290,13 +300,13 @@ public class ConfigurationConsole {
 						+ "\n#Environment Variables (Set directly)\n"
 						+ "#################################################################################################################"
 						+ "\n\n");
-				writeCategory(environmentKeySet, b1);
+				writeCategory(environmentKeySet, defaultTable, b1, fileType);
 				b1.write("\n"
 						+ "#################################################################################################################"
 						+ "\n#Cloudera Manager/Environment Settings\n"
 						+ "#################################################################################################################"
 						+ "\n\n");
-				writeCategory(environmentCMKeySet, b1);
+				writeCategory(environmentCMKeySet, defaultTable, b1, fileType);
 				b1.write("\n");
 			}
 			
@@ -304,25 +314,25 @@ public class ConfigurationConsole {
 					+ "\n#Common Settings\n"
 					+ "#################################################################################################################"
 					+ "\n\n");
-			writeCategory(table, b1);
+			writeCategory(table, defaultTable, b1, fileType);
 			b1.write("\n"
 					+ "#################################################################################################################"
 					+ "\n#YARN Settings (ignore if not using YARN)\n"
 					+ "#################################################################################################################"
 					+ "\n\n");
-			writeCategory(yarnKeySet, b1);
+			writeCategory(yarnKeySet, defaultTable, b1, fileType);
 			b1.write("\n"
 					+ "#################################################################################################################"
 					+ "\n#Streaming Settings (ignore if not using Spark Streaming)\n"
 					+ "#################################################################################################################"
 					+ "\n\n");
-			writeCategory(streamingKeySet, b1);
+			writeCategory(streamingKeySet, defaultTable, b1, fileType);
 			b1.write("\n"
 					+ "#################################################################################################################"
 					+ "\n#Dynamic Allocation Settings (ignore if not using Dynamic Allocation)\n"
 					+ "#################################################################################################################"
 					+ "\n\n");
-			writeCategory(dynamicAllocationKeySet, b1);
+			writeCategory(dynamicAllocationKeySet, defaultTable, b1, fileType);
 			b1.close();
 		}
 		catch(Exception e){

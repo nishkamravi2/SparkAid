@@ -8,6 +8,7 @@ public class DynamicAllocation {
 	static String dynamicAllocationEnabled = "false"; //false
 	static String shuffleServiceEnabled = "false";
 	static String dynamicAllocationMaxExecutors = ""; //Integer.MAX_VALUE
+	static String dynamicAllocationMinExecutors = "0"; 
 	static String schedulerMaxRegisteredResourcesWaitingTime = "30000";
 	
 	public static void configureDynamicAllocationSettings(Hashtable<String, String> inputsTable,
@@ -21,6 +22,7 @@ public class DynamicAllocation {
 	public static void setDynamicAllocation(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 		setDynamicAllocationEnabled(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	    setDynamicAllocationMaxExecutors(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+	    setDynamicAllocationMinExecutors(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	    setShuffleServiceEnabled(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	    setSchedulerMaxRegisteredResourcesWaitingTime(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
@@ -39,6 +41,11 @@ public class DynamicAllocation {
 		dynamicAllocationMaxExecutors = optionsTable.get("spark.executor.instances");
 		optionsTable.put("spark.dynamicAllocation.maxExecutors", dynamicAllocationMaxExecutors);
 		removeExecutorInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+	}
+
+	private static void setDynamicAllocationMinExecutors(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		dynamicAllocationMinExecutors = "1";
+		optionsTable.put("spark.dynamicAllocation.minExecutors", dynamicAllocationMinExecutors);
 	}
 	
 	private static void setShuffleServiceEnabled(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
