@@ -51,7 +51,7 @@ public class Common {
 		
 		public static double driverMemorySafetyFraction = 0.80;
 		public static double executorUpperBoundLimitG = 64; //gb
-		static double unserializedFactor = 4; //experimentally determined at ~3
+		static double deserializationFactor = 4; //experimentally determined at ~3
 		static double serializedUncompressedFactor = 0.8; //experimentally determined at ~0.5
 		static double serializedCompressedFactor = serializedUncompressedFactor * 0.8;
 		
@@ -307,11 +307,11 @@ public class Common {
 			
 			double availableMemory = resourceFraction * (numNodes - numJobs) * memoryPerNode * storageSafetyFractionValue * storageMemoryFractionValue * storageMemoryAvailableFraction;
 			
-			double inputUnserialized = inputDataSize * unserializedFactor;
+			double inputDeserialized = inputDataSize * deserializationFactor;
 			double inputUncompressedSerialized = inputDataSize * serializedUncompressedFactor;
 			double inputCompressedSerialized = inputDataSize * serializedCompressedFactor;
 			
-			if (inputUnserialized < availableMemory){
+			if (inputDeserialized < availableMemory){
 				storageLevel = "MEMORY_ONLY";
 			}else if (inputUncompressedSerialized < availableMemory){
 				storageLevel = "MEMORY_ONLY_SER";
