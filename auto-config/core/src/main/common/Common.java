@@ -43,6 +43,9 @@ public class Common {
 		public static double systemOverheadBufferTier2 = 0.900;
 		public static double systemOverheadBufferTier3 = 0.950;
 
+		//Fraction of job resources assigned to driver
+		public static double driverSlice = 0.16;
+
 		//Spark Overhead Buffer
 		public static double sparkOverheadBuffer = 1.00;
 		public static double sparkOverheadBufferTier1 = 0.850;
@@ -128,25 +131,27 @@ public class Common {
 			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
 			double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode")); //in mb
 			int numNodes = Integer.parseInt(inputsTable.get("numNodes"));
-			int numJobs = (int)(1 / resourceFraction);
-			int numWorkerNodes = numNodes - numJobs;
+			int numWorkerNodes = (int)(resourceFraction * numNodes); 
 			int numCoresPerNode = Integer.parseInt(inputsTable.get("numCoresPerNode"));
 			double memoryPerWorkerNode = memoryPerNode;
 			//Calculate the memory available for raw Spark
 			double rawSparkMemoryPerNode = calculateRawSparkMem(memoryPerWorkerNode);
 			setDaemonMaxHeapSizeRecommendations(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable, rawSparkMemoryPerNode);
-			double effectiveMemoryPerNode = resourceFraction * rawSparkMemoryPerNode;
+			double effectiveMemoryPerNode = rawSparkMemoryPerNode;
 			//Calculate and set driver memory + cores
-			setDriverMemory(Integer.toString((int)(effectiveMemoryPerNode * driverMemorySafetyFraction)) , inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-			setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			int driverMemory = (int)Math.min(effectiveMemoryPerNode * numWorkerNodes * driverSlice, effectiveMemoryPerNode * driverMemorySafetyFraction);     
+			setDriverMemory(Integer.toString(driverMemory), inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+			int coresDriver = (int)Math.min(numCoresPerNode * numWorkerNodes * driverSlice, numCoresPerNode);
+			setDriverCores(Integer.toString(coresDriver), inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			//Calculate and set executor memory + instances
 			int calculatedNumExecutorsPerNode = (int)(effectiveMemoryPerNode / idealExecutorMemory);
 			calculateNumExecsAndMem(calculatedNumExecutorsPerNode, effectiveMemoryPerNode, idealExecutorMemory);
 			setExecutorMemory(Integer.toString((int)executorMemoryValue), optionsTable, recommendationsTable, commandLineParamsTable);
 			setPythonWorkerMemory(Integer.toString((int)executorMemoryValue), optionsTable, recommendationsTable, commandLineParamsTable);
-			setExecutorInstances (Integer.toString(numExecutorsPerNode * numWorkerNodes),  optionsTable, recommendationsTable, commandLineParamsTable);
+			int numExecutorInstances = (int)(numExecutorsPerNode * numWorkerNodes * (1 - driverSlice));
+			setExecutorInstances(Integer.toString(numExecutorInstances), optionsTable, recommendationsTable, commandLineParamsTable);
 			//Calculate and set executor cores
-			int effectiveCoresPerNode = (int) (resourceFraction * numCoresPerNode);
+			int effectiveCoresPerNode = numCoresPerNode;
 			int coresPerExecutor =  (int) (effectiveCoresPerNode / numExecutorsPerNode);
 			setExecutorCores(Integer.toString(coresPerExecutor), inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);	
 		}
@@ -208,8 +213,8 @@ public class Common {
 			optionsTable.put("spark.executor.instances", executorInstances);
 		}
 		
-		public static void setDriverCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-			driverCores = inputsTable.get("numCoresPerNode");
+		public static void setDriverCores(String cores, Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+			driverCores = cores;
 			optionsTable.put("spark.driver.cores", driverCores);
 			commandLineParamsTable.put("--driver-cores", driverCores);
 		}
@@ -297,7 +302,6 @@ public class Common {
 		private static void setStorageLevel(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			
 			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-			int numJobs = (int)(1/resourceFraction);
 			double numNodes = Double.parseDouble(inputsTable.get("numNodes"));
 			double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode"));
 			double inputDataSize = Double.parseDouble(inputsTable.get("inputDataSize"));
@@ -305,7 +309,7 @@ public class Common {
 			double storageMemoryFractionValue = Double.parseDouble((storageMemoryFraction));
 			double storageMemoryAvailableFraction = 1 - Double.parseDouble(storageUnrollFraction);
 			
-			double availableMemory = resourceFraction * (numNodes - numJobs) * memoryPerNode * storageSafetyFractionValue * storageMemoryFractionValue * storageMemoryAvailableFraction;
+			double availableMemory = resourceFraction * numNodes * (1 - driverSlice) * memoryPerNode * storageSafetyFractionValue * storageMemoryFractionValue * storageMemoryAvailableFraction;
 			
 			double inputDeserialized = inputDataSize * deserializationFactor;
 			double inputUncompressedSerialized = inputDataSize * serializedUncompressedFactor;
@@ -333,10 +337,9 @@ public class Common {
 
 		private static void setDefaultParallelism(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
 			double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
-			int numJobs = (int)(1/resourceFraction);
 			int numNodes = Integer.parseInt(inputsTable.get("numNodes"));
 			int numCoresPerNode = Integer.parseInt(inputsTable.get("numCoresPerNode"));
-			int totalCoresAvailable = (int)(numCoresPerNode * (numNodes - numJobs) * resourceFraction);
+			int totalCoresAvailable = (int)(numCoresPerNode * numNodes * (1 - driverSlice) * resourceFraction);
 			int calculatedParallelism = (int)(parallelismFactor * totalCoresAvailable);
 			defaultParallelism = Integer.toString(calculatedParallelism);
 			optionsTable.put("spark.default.parallelism", defaultParallelism);

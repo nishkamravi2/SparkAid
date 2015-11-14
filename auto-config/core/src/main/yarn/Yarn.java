@@ -33,23 +33,23 @@ public class Yarn {
 		double resourceFraction = Double.parseDouble(inputsTable.get("resourceFraction"));
 		double memoryPerNode = Double.parseDouble(inputsTable.get("memoryPerNode")); //in mb
 		int numNodes = Integer.parseInt(inputsTable.get("numNodes"));
-		int numJobs = (int)(1 / resourceFraction);
-		int numWorkerNodes = numNodes - numJobs;
+		int numWorkerNodes = (int)(resourceFraction * numNodes);
 		int numCoresPerNode = Integer.parseInt(inputsTable.get("numCoresPerNode"));
 		double memoryPerWorkerNode = memoryPerNode;
 		//Calculate the memory available for raw Spark
 		double rawSparkMemoryPerNode = Common.calculateRawSparkMem(memoryPerWorkerNode);
 		insertYarnNodeManagerMemRecommendation (Integer.toString((int)rawSparkMemoryPerNode) + "g", inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		insertYarnSchedulerMemRecommendation (Integer.toString((int)rawSparkMemoryPerNode) + "g", inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		double effectiveMemoryPerNode = rawSparkMemoryPerNode * resourceFraction;
+		double effectiveMemoryPerNode = rawSparkMemoryPerNode;
 		//Set driver memory + cores
-		int driverMemoryValue = (int) (effectiveMemoryPerNode * Common.driverMemorySafetyFraction);
+		int driverMemoryValue = (int)Math.min(effectiveMemoryPerNode * numWorkerNodes * Common.driverSlice, effectiveMemoryPerNode * Common.driverMemorySafetyFraction);
 		Common.setDriverMemory(Integer.toString(driverMemoryValue) , inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAMMemory(Integer.toString(driverMemoryValue) , inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnDriverMemoryOverhead(driverMemoryValue, inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAMMemoryOverhead(driverMemoryValue, inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		Common.setDriverCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
-		setYarnAMCores(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+                int coresDriver = (int)Math.min(numCoresPerNode * numWorkerNodes * Common.driverSlice, numCoresPerNode);
+		Common.setDriverCores(Integer.toString(coresDriver), inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
+		setYarnAMCores(Integer.toString(coresDriver), inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		//Calculate and Set Executor Memory + Overhead + Instances
 		double idealExecutorMemoryWithOverhead = Common.idealExecutorMemory * (1 + executorMemoryOverheadFraction);
 		int calculatedNumExecutorsPerNode = (int)(effectiveMemoryPerNode / idealExecutorMemoryWithOverhead);
@@ -58,8 +58,9 @@ public class Yarn {
 		Common.setExecutorMemory(Integer.toString((int)executorMemoryWithoutOverhead), optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnExecutorMemoryOverhead (executorMemoryWithoutOverhead, optionsTable, recommendationsTable, commandLineParamsTable);
 		//Calculate and set executor cores
-		Common.setExecutorInstances (Integer.toString(Common.numExecutorsPerNode * numWorkerNodes),  optionsTable, recommendationsTable, commandLineParamsTable);
-		int effectiveCoresPerNode = (int) (resourceFraction * numCoresPerNode);
+		int numExecutorInstances = (int)(Common.numExecutorsPerNode * numWorkerNodes * (1 - Common.driverSlice));
+		Common.setExecutorInstances (Integer.toString(numExecutorInstances),  optionsTable, recommendationsTable, commandLineParamsTable);
+		int effectiveCoresPerNode = numCoresPerNode;
 		int coresPerExecutor =  (int) (effectiveCoresPerNode / Common.numExecutorsPerNode);
 		Common.setExecutorCores(Integer.toString(coresPerExecutor), inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
@@ -100,8 +101,8 @@ public class Yarn {
 		optionsTable.put("spark.scheduler.minRegisteredResourcesRatio", schedulerMinRegisteredResourcesRatio);
 	}
 	
-	private static void setYarnAMCores(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		yarnAMCores = inputsTable.get("numCoresPerNode");
+	private static void setYarnAMCores(String coresDriver, Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
+		yarnAMCores = coresDriver;
 		optionsTable.put("spark.yarn.am.cores", yarnAMCores);
 	}
 	
