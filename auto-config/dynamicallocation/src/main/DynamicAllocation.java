@@ -38,7 +38,9 @@ public class DynamicAllocation {
 	}
 
 	private static void setDynamicAllocationMaxExecutors(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		dynamicAllocationMaxExecutors = optionsTable.get("spark.executor.instances");
+		int maxExecutors = Integer.parseInt(optionsTable.get("spark.executor.instances"));
+		maxExecutors = (int)(maxExecutors * 1.5);
+		dynamicAllocationMaxExecutors = maxExecutors + "";
 		optionsTable.put("spark.dynamicAllocation.maxExecutors", dynamicAllocationMaxExecutors);
 		removeExecutorInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 	}
@@ -54,7 +56,6 @@ public class DynamicAllocation {
 	}
 	
 	private static void setSchedulerMaxRegisteredResourcesWaitingTime(Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable){
-		schedulerMaxRegisteredResourcesWaitingTime = "5000";
 		optionsTable.put("spark.scheduler.maxRegisteredResourcesWaitingTime", schedulerMaxRegisteredResourcesWaitingTime);
 	}
 	
