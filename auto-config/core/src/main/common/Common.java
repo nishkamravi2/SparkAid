@@ -62,7 +62,7 @@ public class Common {
 		static double daemonMemoryMin = 0.5; //gb
 		static double workerMaxHeapsize = 4;
 		
-		static int numExecutorsPerNodeUpperBound = 6;
+		static int numExecutorsPerNodeUpperBound = 12;
 		static int numExecutorsPerNodeLowerBound = 2;
 		
 		static double parallelismFactor = 4;
