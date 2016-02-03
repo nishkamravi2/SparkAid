@@ -17,8 +17,8 @@ public class Yarn {
 	
 	//Variables for default Overhead Memory Setting, this is an inferred setting
 	static double executorMemoryOverheadFraction = 0.10; 
-	static double driverMemoryOverheadFraction = 0.07; 
-	static double yarnAMMemoryOverheadFraction = 0.07;
+	static double driverMemoryOverheadFraction = 0.10;
+	static double yarnAMMemoryOverheadFraction = 0.10;
 
 	public static void configureYarnSettings( Hashtable<String, String> inputsTable, Hashtable<String, String> optionsTable, Hashtable<String, String> recommendationsTable, Hashtable<String, String> commandLineParamsTable) {
 		setExecMemCoresInstances(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -43,6 +43,7 @@ public class Yarn {
 		double effectiveMemoryPerNode = rawSparkMemoryPerNode;
 		//Set driver memory + cores
 		int driverMemoryValue = (int)Math.min(effectiveMemoryPerNode * numWorkerNodes * Common.driverSlice, effectiveMemoryPerNode * Common.driverMemorySafetyFraction);
+		driverMemoryValue = (int)Math.min(Common.driverUpperBoundLimitG, driverMemoryValue);
 		Common.setDriverMemory(Integer.toString(driverMemoryValue) , inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnAMMemory(Integer.toString(driverMemoryValue) , inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnDriverMemoryOverhead(driverMemoryValue, inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
@@ -53,7 +54,7 @@ public class Yarn {
 		//Calculate and Set Executor Memory + Overhead + Instances
 		double idealExecutorMemoryWithOverhead = Common.idealExecutorMemory * (1 + executorMemoryOverheadFraction);
 		int calculatedNumExecutorsPerNode = (int)(effectiveMemoryPerNode / idealExecutorMemoryWithOverhead);
-		Common.calculateNumExecsAndMem(calculatedNumExecutorsPerNode, effectiveMemoryPerNode, idealExecutorMemoryWithOverhead);
+		Common.calculateNumExecsAndMem(calculatedNumExecutorsPerNode, effectiveMemoryPerNode, idealExecutorMemoryWithOverhead, numCoresPerNode/2);
 		double executorMemoryWithoutOverhead = Common.executorMemoryValue / (1 + executorMemoryOverheadFraction);
 		Common.setExecutorMemory(Integer.toString((int)executorMemoryWithoutOverhead), optionsTable, recommendationsTable, commandLineParamsTable);
 		setYarnExecutorMemoryOverhead (executorMemoryWithoutOverhead, optionsTable, recommendationsTable, commandLineParamsTable);

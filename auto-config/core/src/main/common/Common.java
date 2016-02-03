@@ -33,7 +33,7 @@ public class Common {
 		static String storageUnrollFraction = "0.2"; //fraction of storageMemoryFraction
 		
 		//External variables used for configurations
-		public static double idealExecutorMemory = 8; //gb
+		public static double idealExecutorMemory = 12; //gb
 		public static double executorMemoryValue = idealExecutorMemory;  
 		public static int numExecutorsPerNode = 0;
 		
@@ -53,7 +53,8 @@ public class Common {
 		public static double sparkOverheadBufferTier3 = 0.950;
 		
 		public static double driverMemorySafetyFraction = 0.80;
-		public static double executorUpperBoundLimitG = 64; //gb
+		public static double executorUpperBoundLimitG = 48; //gb
+		public static double driverUpperBoundLimitG = 64; //gb
 		static double deserializationFactor = 4; //experimentally determined at ~3
 		static double serializedUncompressedFactor = 0.8; //experimentally determined at ~0.5
 		static double serializedCompressedFactor = serializedUncompressedFactor * 0.8;
@@ -62,7 +63,6 @@ public class Common {
 		static double daemonMemoryMin = 0.5; //gb
 		static double workerMaxHeapsize = 4;
 		
-		static int numExecutorsPerNodeUpperBound = 12;
 		static int numExecutorsPerNodeLowerBound = 2;
 		
 		static double parallelismFactor = 4;
@@ -139,20 +139,20 @@ public class Common {
 			setDaemonMaxHeapSizeRecommendations(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable, rawSparkMemoryPerNode);
 			double effectiveMemoryPerNode = rawSparkMemoryPerNode;
 			//Calculate and set driver memory + cores
-			int driverMemory = (int)Math.min(effectiveMemoryPerNode * numWorkerNodes * driverSlice, effectiveMemoryPerNode * driverMemorySafetyFraction);     
+			int driverMemory = (int)Math.min(effectiveMemoryPerNode * numWorkerNodes * driverSlice, effectiveMemoryPerNode * driverMemorySafetyFraction);
+			driverMemory = (int)Math.min(driverUpperBoundLimitG, driverMemory);
 			setDriverMemory(Integer.toString(driverMemory), inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			int coresDriver = (int)Math.min(numCoresPerNode * numWorkerNodes * driverSlice, numCoresPerNode);
 			setDriverCores(Integer.toString(coresDriver), inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);
 			//Calculate and set executor memory + instances
 			int calculatedNumExecutorsPerNode = (int)(effectiveMemoryPerNode / idealExecutorMemory);
-			calculateNumExecsAndMem(calculatedNumExecutorsPerNode, effectiveMemoryPerNode, idealExecutorMemory);
+			calculateNumExecsAndMem(calculatedNumExecutorsPerNode, effectiveMemoryPerNode, idealExecutorMemory, numCoresPerNode/2);
 			setExecutorMemory(Integer.toString((int)executorMemoryValue), optionsTable, recommendationsTable, commandLineParamsTable);
 			setPythonWorkerMemory(Integer.toString((int)executorMemoryValue), optionsTable, recommendationsTable, commandLineParamsTable);
 			int numExecutorInstances = (int)(numExecutorsPerNode * numWorkerNodes * (1 - driverSlice));
 			setExecutorInstances(Integer.toString(numExecutorInstances), optionsTable, recommendationsTable, commandLineParamsTable);
 			//Calculate and set executor cores
-			int effectiveCoresPerNode = numCoresPerNode;
-			int coresPerExecutor =  (int) (effectiveCoresPerNode / numExecutorsPerNode);
+			int coresPerExecutor =  (int) (numCoresPerNode / numExecutorsPerNode);
 			setExecutorCores(Integer.toString(coresPerExecutor), inputsTable, optionsTable, recommendationsTable, commandLineParamsTable);	
 		}
 		
@@ -172,7 +172,7 @@ public class Common {
 			return memoryPerWorkerNode * systemOverheadBuffer * sparkOverheadBuffer;
 		}
 		
-		public static void calculateNumExecsAndMem(int calculatedNumExecutorsPerNode, double effectiveMemoryPerNode, double idealExecutorMemory){
+		public static void calculateNumExecsAndMem(int calculatedNumExecutorsPerNode, double effectiveMemoryPerNode, double idealExecutorMemory, int numExecutorsPerNodeUpperBound){
 			executorMemoryValue = idealExecutorMemory;
 			boolean recalculateFlag = false;
 			
