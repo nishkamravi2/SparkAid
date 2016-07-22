@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Scanner;
 import streaming.src.main.Streaming;
@@ -27,6 +28,7 @@ public class ConfigurationConsole {
 		 */
 		
 		// input config parameters
+		String instanceType = ""; // c3.4xlarge, c4.4xlarge, r3.2xlarge, m4.4xlarge
 		String inputDataSize = ""; // in GB
 		String numNodes = "";
 		String numCoresPerNode = "";
@@ -41,7 +43,14 @@ public class ConfigurationConsole {
 		String codePath = "";
 		String appJar = ""; // app Jar URL
 		String appArgs = ""; // app args as a single string
-		
+	
+		//instanceType maps
+		HashMap<String, String> instanceTypeMap = new HashMap<String, String>();
+		instanceTypeMap.put("c3.4xlarge", "16:30");
+		instanceTypeMap.put("c4.4xlarge", "16:30");
+		instanceTypeMap.put("r3.2xlarge", "8:61");
+		instanceTypeMap.put("m4.4xlarge", "16:64");
+
 		//input table
 		Hashtable<String, String> inputsTable = new Hashtable<String, String>();
 		
@@ -58,76 +67,51 @@ public class ConfigurationConsole {
 		String codeFilePath = "tmp-code-file-path.txt";
 	
 		//legal input arguments
+		String [] legalInstanceTypes = {"c3.4xlarge", "c4.4xlarge", "r3.2xlarge", "m4.4xlarge"};
 		String [] legalFileSystemInput = {"ext3","ext4","xfs"};
 		String [] legalDeployModeInput = {"client","cluster"};
 		String [] legalClusterManagerInput = {"standalone","yarn"};
 		String [] legalYesNoInput = {"y","n"};
-		
+
+		inputDataSize = "1000";
+		numNodes = "7";
+		resourceFraction = "1.0";
+		fileSystem = "ext4";
+		master = "dummy";
+		deployMode = "client";
+		clusterManager = "yarn";
+		dynamicAllocationFlag = "y";
+		className = "dummy";
+		codePath = "dummy";
+		appJar = "dummy";
+		appArgs = "dummy";
+
 		//get input parameters
 		if (args.length == 0){
 			printUsage();
 			Scanner scanner = new Scanner(System.in);
-			inputDataSize = errorIntCheck("Enter input data size in GB",  
-					"Invalid input. Please re-enter valid integer.", scanner);
-			numNodes = errorIntCheck("Enter number of nodes in cluster (including master):",  
-					"Invalid input. Please re-enter valid integer.", scanner);
-			numCoresPerNode = errorIntCheck("Enter number of cores per node: ", 
-					"Invalid input. Please re-enter valid integer.", scanner);
-			memoryPerNode = errorIntCheck("Enter memory per node in GB: ", 
-					"Invalid input. Please re-enter valid integer.", scanner);
-			resourceFraction = errorResourceFractionCheck("Enter fraction of cluster resources for this job (from 0.0 to 1.0): ", 
-					"Invalid input. Please re-enter valid double from 0.0 to 1.0.", scanner);
-			fileSystem = checkValidHelper("Enter file system of input raw data: ext3/ext4/xfs", legalFileSystemInput,
-					"Invalid input. Enter ext3/ext4/xfs.", scanner);
-			master = scanNextWithPrompt("Enter master URL:", scanner);
-			deployMode = checkValidHelper("Enter deploy mode: cluster / client", legalDeployModeInput,
-					"Invalid input. Enter cluster / client.", scanner);
-			clusterManager = checkValidHelper("Enter Cluster Manager: standalone / yarn", legalClusterManagerInput, 
-					"Invalid input. Enter standalone / yarn.", scanner);
-			dynamicAllocationFlag = checkValidHelper("Is this a Dynamic Allocation application? y/n", legalYesNoInput,
-					"Invalid input. Enter y/n.", scanner);
-			className = scanNextWithPrompt("Enter application class name: ", scanner);
-			codePath = scanNextWithPrompt("Enter application code path: ", scanner);
-			appJar = scanNextWithPrompt("Enter application JAR path", scanner);
-			appArgs = scanNextWithPrompt("Enter application arguments if any", scanner);
-		}
-		else if(args.length != 14) {
-			System.out.println("Invalid input, please enter 14 arguments. \n");
+			instanceType = checkValidHelper("Enter instance type (c3.4xlarge, c4.4xlarge, r3.2xlarge or m4.4xlarge): ",
+					legalInstanceTypes, "Invalid input. Enter c3.4xlarge/c4.4xlarge/r3.2xlarge/m4.4xlarge", scanner);
+			String[] mapInfo = instanceTypeMap.get(instanceType).split(":");
+			numCoresPerNode = mapInfo[0];
+			memoryPerNode = mapInfo[1];
+		} else if(args.length != 1) {
+			System.out.println("Invalid input, please enter instance type. \n");
 			System.out.println("Your input: " + Arrays.toString(args) + "\n");	
 			printUsage();
 			System.exit(0);
 		} else {
 			boolean invalidFlag = false;
-			//inputDataSize = check(args[0]);
-			inputDataSize = args[0];
-			if (checkIllegalInt(inputDataSize,"Invalid input data size arg.")){invalidFlag = true;}
-			numNodes = args[1];
-			if (checkIllegalInt(numNodes,"Invalid number of nodes.")){invalidFlag = true;}
-			numCoresPerNode = args[2];
-			if (checkIllegalInt(numCoresPerNode,"Invalid num cores per node.")){invalidFlag = true;}
-			memoryPerNode = args[3];
-			if (checkIllegalInt(memoryPerNode,"Invalid memory per node.")){invalidFlag = true;}
-			resourceFraction = args[4];
-			if (checkIllegalDouble(resourceFraction,"Invalid resource fraction.")){invalidFlag = true;}
-			fileSystem = args[5];
-			if (checkLegalInputs(fileSystem, legalFileSystemInput,"Invalid filesystem.")){invalidFlag = true;}
-			master = args[6];
-			deployMode = args[7];
-			if (checkLegalInputs(deployMode, legalDeployModeInput,"Invalid deploy mode.")){invalidFlag = true;}
-			clusterManager = args[8];
-			if (checkLegalInputs(clusterManager, legalClusterManagerInput,"Invalid cluster manager.")){invalidFlag = true;}
-			dynamicAllocationFlag = args[9];
-			if (checkLegalInputs(dynamicAllocationFlag, legalYesNoInput,"Invalid y/n flag.")){invalidFlag = true;}
-			className = args[10];
-			codePath = args[11];
-			appJar = args[12];
-			appArgs = args[13];
-			
+			instanceType = args[0];
+			if (checkLegalInputs(instanceType, legalInstanceTypes, "Invalid instance type:")) {invalidFlag = true;}
 			if (invalidFlag){
 				System.out.println("Please re-enter arguments properly. \n");
 				printUsage();
 				System.exit(0);
 			}
+			String[] mapInfo = instanceTypeMap.get(instanceType).split(":");
+			numCoresPerNode = mapInfo[0];
+			memoryPerNode = mapInfo[1];
 		}
 		
 		inputsTable.put("inputDataSize", inputDataSize);
@@ -185,10 +169,7 @@ public class ConfigurationConsole {
 		createOutputFile(sparkFinalConf, optionsTable, defaultOptionsTable, "options");
 		createOutputFile(sparkConfAdvice, recommendationsTable, defaultOptionsTable, "recommendations");
 		
-		createCodePathFile(codeFilePath, codePath);
-		
-		String cmdLineParams = generateParamsString(commandLineParamsTable);
-		constructCmdLine(inputsTable, optionsTable, recommendationsTable, commandLineParamsTable, cmdLineParams);
+		System.out.println("Auto-generated files in output folder: spark-final.conf, spark.conf.advice \n");
 	}
 	
 	private static String generateParamsString(Hashtable<String,String> t) {
@@ -343,22 +324,9 @@ public class ConfigurationConsole {
 	public static void printUsage() {
 		System.out.println("USAGE: \n"
 				+ "./run.sh \n"
-				+ "<input data size in GB> \n"
-				+ "<number of nodes in cluster including master> \n"
-				+ "<number of cores per node> \n"
-				+ "<memory per node in GB>\n"
-				+ "<fraction of resources used 0-1.0> \n"
-				+ "<filesystem type> \n"
-				+ "<master: standalone URL/yarn> \n"
-				+ "<deployMode: cluster/client> \n"
-				+ "<clusterManger: standalone/yarn> \n"
-				+ "<dynamicAllocation: y/n> \n"
-				+ "<app className> \n"
-				+ "<app codeFilePath> \n"
-				+ "<app JAR location> \n"
-				+ "<app arguments as one string>\n"
+				+ "<input instance type (c3.4xlarge/c4.4xlarge/r3.2xlarge/m4.4xlarge)> \n"
 				+ "\n"
-				+ "e.g ./run.sh 40 15 16 64 1.0 ext3 spark://hostname.com:7077 client standalone y Pagerank /path/to/code /path/to/Spark.jar \"\"\n"
+				+ "e.g ./run.sh m4.4xlarge\n"
 				+ "\n"
 				+ "YOU CAN ALSO FOLLOW PROMPTS\n");
 	}

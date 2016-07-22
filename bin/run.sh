@@ -3,4 +3,3 @@ if [ ! -d "build" ]; then
 fi
 
 java -classpath sparkaid.jar console.src.main.ConfigurationConsole "$@"
-python ../optimizer/src/main/main.py
