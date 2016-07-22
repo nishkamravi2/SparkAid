@@ -39,20 +39,20 @@ public class Common {
 		
 		//System Overhead, OS + Resource Manager (e.g. CM) + other processes running in background
 		public static double systemOverheadBuffer = 1.00;
-		public static double systemOverheadBufferTier1 = 0.850;
-		public static double systemOverheadBufferTier2 = 0.900;
-		public static double systemOverheadBufferTier3 = 0.950;
+		public static double systemOverheadBufferTier1 = 0.90;
+		public static double systemOverheadBufferTier2 = 0.95;
+		public static double systemOverheadBufferTier3 = 0.98;
 
 		//Fraction of job resources assigned to driver
 		public static double driverSlice = 0.16;
 
 		//Spark Overhead Buffer
 		public static double sparkOverheadBuffer = 1.00;
-		public static double sparkOverheadBufferTier1 = 0.850;
-		public static double sparkOverheadBufferTier2 = 0.900;
-		public static double sparkOverheadBufferTier3 = 0.950;
+		public static double sparkOverheadBufferTier1 = 0.90;
+		public static double sparkOverheadBufferTier2 = 0.95;
+		public static double sparkOverheadBufferTier3 = 0.98;
 		
-		public static double driverMemorySafetyFraction = 0.80;
+		public static double driverMemorySafetyFraction = 0.90;
 		public static double executorUpperBoundLimitG = 48; //gb
 		public static double driverUpperBoundLimitG = 64; //gb
 		static double deserializationFactor = 4; //experimentally determined at ~3
